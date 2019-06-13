@@ -119,4 +119,4 @@ if __name__ == '__main__':
     folder_name = ''
     mask_type = 'cc'
     gtab, data, affine, labels, white_matter, nii_file = load_dwi_files(folder_name)
-    
+    mask_mat = load_mask(folder_name,mask_type)
