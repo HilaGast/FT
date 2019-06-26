@@ -36,13 +36,13 @@ cc_mask = cc_img.get_data()
 ''' white_matter - the entire brain mask to track fibers
 seed_mask - the mask which determine where to start tracking'''
 white_matter = (labels == 3) | (labels == 2)  # 3-WM, 2-GM
-# seed_mask = white_matter
-seed_mask = cc_mask == 1
+seed_mask = white_matter
+#seed_mask = cc_mask == 1
 # white_matter = (seed_mask)
 
-seeds = utils.seeds_from_mask(seed_mask, density=3, affine=affine)
+seeds = utils.seeds_from_mask(seed_mask, density=1, affine=affine)
 
-csd_model = ConstrainedSphericalDeconvModel(gtab, None, sh_order=4)
+csd_model = ConstrainedSphericalDeconvModel(gtab, None, sh_order=8)
 
 csd_fit = csd_model.fit(data, mask=white_matter)
 

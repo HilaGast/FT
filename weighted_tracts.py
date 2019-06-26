@@ -20,7 +20,7 @@ def load_dwi_files(folder_name, small_delta=15.5):
         if file.endswith(".bvec"):
             bvec_file = os.path.join(folder_name, file)
         if file.endswith("brain_seg.nii"):
-            labels_file_name = os.path.join(folder_name,file)
+            labels_file_name = os.path.join(folder_name, file)
     bval_file = bvec_file[:-4:]+'bval'
     nii_file = bvec_file[:-4:]+'nii'
     hardi_img = nib.load(nii_file)
@@ -37,7 +37,7 @@ def load_dwi_files(folder_name, small_delta=15.5):
 def load_mask(folder_name, mask_type):
     file_list = os.listdir(folder_name)
     for file in file_list:
-        if fnmatch.fnmatch(file,'mask') and fnmatch.fnmatch(file, mask_type) and file.endswith('.nii'):
+        if 'mask' in file and mask_type in file and file.endswith('.nii'):
             mask_file = os.path.join(folder_name, file)
     mask_img = nib.load(mask_file)
     mask_mat = mask_img.get_data()
@@ -57,7 +57,7 @@ def create_seeds(folder_name, white_matter, affine, use_mask = False, mask_type=
 def create_csd_model(data, gtab, white_matter, sh_order=4):
     from dipy.reconst.csdeconv import ConstrainedSphericalDeconvModel
 
-    csd_model = ConstrainedSphericalDeconvModel(gtab, None, sh_order)
+    csd_model = ConstrainedSphericalDeconvModel(gtab, None, sh_order=sh_order)
     csd_fit = csd_model.fit(data, mask=white_matter)
 
     return csd_fit
@@ -95,7 +95,8 @@ def create_streamlines(csd_fit, classifier, seeds, affine):
     return streamlines
 
 
-def weighting_streamlines(streamlines,nii_file, weight_by = 'pasiS',hue = [0.0,1.0],saturation = [0.0,1.0],scale = [0,9]):
+def weighting_streamlines(streamlines, nii_file, weight_by = 'pasiS',hue = [0.0,1.0],saturation = [0.0,1.0], scale = [0,9]):
+    from dipy.viz import window, actor, colormap as cmap
     from dipy.tracking.streamline import transform_streamlines
     weight_by_file = nii_file[:-3:]+'_'+weight_by+'.nii'
     weight_by_img = nib.load(weight_by_file)
@@ -116,7 +117,12 @@ def weighting_streamlines(streamlines,nii_file, weight_by = 'pasiS',hue = [0.0,1
 
 
 if __name__ == '__main__':
-    folder_name = ''
+    folder_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V5\BeEf_subj7'
     mask_type = 'cc'
     gtab, data, affine, labels, white_matter, nii_file = load_dwi_files(folder_name)
     mask_mat = load_mask(folder_name,mask_type)
+    seeds = create_seeds(folder_name, white_matter, affine, use_mask = False, mask_type='cc')
+    csd_fit = create_csd_model(data, gtab, white_matter, sh_order=4)
+    fa, classifier = create_fa_classifier(gtab, data, white_matter)
+    streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
+    weighting_streamlines(streamlines, nii_file, weight_by='pasiS', hue=[0.0, 1.0], saturation=[0.0, 1.0], scale=[0, 9])
