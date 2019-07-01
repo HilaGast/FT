@@ -1,0 +1,39 @@
+import nibabel as nib
+import numpy as np
+import matplotlib.pyplot as plt
+from dipy.tracking import utils
+
+lab = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V5\BeEf_subj7\rAAL_highres_atlas.nii'
+lab_file = nib.load(lab)
+lab_labels = lab_file.get_data()
+affine = lab_file.get_affine()
+uni=np.unique(lab_labels)
+lab_labels_index = lab_labels
+for index,i in enumerate(uni):
+    lab_labels_index[lab_labels_index==i]=index
+M, grouping = utils.connectivity_matrix(streamlines, lab_labels_index, affine=affine,
+                                        return_mapping=True,
+                                        mapping_as_streamlines=True)
+M[:3, :] = 0
+M[:, :3] = 0
+
+labels_file = open(r'C:\Users\Admin\my_scripts\aal\origin\aal2.nii.txt','r',errors='ignore')
+labels_name = labels_file.readlines()
+labels_table = []
+labels_headers = []
+for line in labels_name:
+    if not line[0] == '#':
+       labels_table.append([col for col in line.split(" ") if col])
+    elif 'ColHeaders' in line:
+        labels_headers = [col for col in line.split(" ") if col]
+        labels_headers = stats_headers[2:]
+labels_file.close()
+for i, l in enumerate(labels_table):
+    labels_headers.append(l[1])
+
+
+
+plt.imshow(np.log1p(M), interpolation='nearest')
+plt.xlabel(labels_headers)
+plt.show()
+

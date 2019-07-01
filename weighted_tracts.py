@@ -1,10 +1,10 @@
 import os
-import fnmatch
 import nibabel as nib
 from dipy.tracking import utils
 from dipy.core.gradients import gradient_table
 from dipy.tracking.local import (ThresholdTissueClassifier, LocalTracking)
 import numpy as np
+
 
 
 def load_dwi_files(folder_name, small_delta=15.5):
@@ -39,12 +39,12 @@ def load_mask(folder_name, mask_type):
     for file in file_list:
         if 'mask' in file and mask_type in file and file.endswith('.nii'):
             mask_file = os.path.join(folder_name, file)
-    mask_img = nib.load(mask_file)
-    mask_mat = mask_img.get_data()
+            mask_img = nib.load(mask_file)
+            mask_mat = mask_img.get_data()
     return mask_mat
 
 
-def create_seeds(folder_name, white_matter, affine, use_mask = False, mask_type='cc'):
+def create_seeds(folder_name, white_matter, affine, use_mask = True, mask_type='cc'):
     if use_mask:
         mask_mat = load_mask(folder_name,mask_type)
         seed_mask = mask_mat == 1
@@ -98,14 +98,15 @@ def create_streamlines(csd_fit, classifier, seeds, affine):
 def weighting_streamlines(streamlines, nii_file, weight_by = 'pasiS',hue = [0.0,1.0],saturation = [0.0,1.0], scale = [0,9]):
     from dipy.viz import window, actor, colormap as cmap
     from dipy.tracking.streamline import transform_streamlines
-    weight_by_file = nii_file[:-3:]+'_'+weight_by+'.nii'
+
+    weight_by_file = nii_file[:-4:]+'_'+weight_by+'.nii'
     weight_by_img = nib.load(weight_by_file)
-    weight_by = weight_by_img.get_file()
+    weight_by_data = weight_by_img.get_data()
     affine = weight_by_img.get_affine()
     streamlines_native = transform_streamlines(streamlines, np.linalg.inv(affine))
     lut_cmap = actor.colormap_lookup_table(hue_range=hue,
                                            saturation_range=saturation, scale_range=scale)
-    streamlines_actor = actor.line(streamlines_native, weight_by, linewidth=0.1, lookup_colormap=lut_cmap)
+    streamlines_actor = actor.line(streamlines_native, weight_by_data, linewidth=0.1, lookup_colormap=lut_cmap)
     bar = actor.scalar_bar(lut_cmap)
 
     r = window.Renderer()
@@ -116,12 +117,30 @@ def weighting_streamlines(streamlines, nii_file, weight_by = 'pasiS',hue = [0.0,
     #return streamlines, streamlines_native,
 
 
+def load_ft(tract_path):
+    from dipy.io.streamline import load_trk
+
+    streams, hdr = load_trk(tract_path)
+    streamlines = Streamlines(streams)
+
+    return streamlines
+
+
+def save_ft(folder_name,streamlines,s_affine,labels):
+    from dipy.io.streamline import save_trk
+
+    dir_name = folder_name + '\streamlines'
+    if not os.path.exists(dir_name):
+        os.mkdir(dir_name)
+    tract_name = os.path.join(dir_name, (folder_name[-10::] + ".trk"))
+    save_trk(tract_name, streamlines, affine,
+             labels.shape)
 if __name__ == '__main__':
     folder_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V5\BeEf_subj7'
     mask_type = 'cc'
     gtab, data, affine, labels, white_matter, nii_file = load_dwi_files(folder_name)
     mask_mat = load_mask(folder_name,mask_type)
-    seeds = create_seeds(folder_name, white_matter, affine, use_mask = False, mask_type='cc')
+    seeds = create_seeds(folder_name, white_matter, affine, use_mask = True, mask_type='cc')
     csd_fit = create_csd_model(data, gtab, white_matter, sh_order=4)
     fa, classifier = create_fa_classifier(gtab, data, white_matter)
     streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
