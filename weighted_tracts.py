@@ -7,6 +7,7 @@ import numpy as np
 
 
 
+
 def load_dwi_files(folder_name, small_delta=15.5):
     '''
     param:
@@ -50,11 +51,11 @@ def create_seeds(folder_name, white_matter, affine, use_mask = True, mask_type='
         seed_mask = mask_mat == 1
     else:
         seed_mask = white_matter
-    seeds = utils.seeds_from_mask(seed_mask, density=3, affine=affine)
+    seeds = utils.seeds_from_mask(seed_mask, density=4, affine=affine)
     return seeds
 
 
-def create_csd_model(data, gtab, white_matter, sh_order=4):
+def create_csd_model(data, gtab, white_matter, sh_order=8):
     from dipy.reconst.csdeconv import ConstrainedSphericalDeconvModel
 
     csd_model = ConstrainedSphericalDeconvModel(gtab, None, sh_order=sh_order)
@@ -95,30 +96,38 @@ def create_streamlines(csd_fit, classifier, seeds, affine):
     return streamlines
 
 
-def weighting_streamlines(streamlines, nii_file, weight_by = 'pasiS',hue = [0.0,1.0],saturation = [0.0,1.0], scale = [0,9]):
+def weighting_streamlines(streamlines, nii_file, weight_by = 'pasiS',hue = [0.0,1.0],saturation = [0.0,1.0], scale = [0,6]):
     from dipy.viz import window, actor, colormap as cmap
-    from dipy.tracking.streamline import transform_streamlines
+    from dipy.tracking.streamline import transform_streamlines,values_from_volume
 
     weight_by_file = nii_file[:-4:]+'_'+weight_by+'.nii'
     weight_by_img = nib.load(weight_by_file)
     weight_by_data = weight_by_img.get_data()
     affine = weight_by_img.get_affine()
-    streamlines_native = transform_streamlines(streamlines, np.linalg.inv(affine))
+    stream = list(streamlines)
+    vol_per_tract = values_from_volume(weight_by_data, stream, affine=affine)
+    mean_vol_per_tract = []
+    for i, s in enumerate(vol_per_tract):
+        mean_vol_per_tract.append(np.mean(s))
+
+    #streamlines_native = transform_streamlines(streamlines, np.linalg.inv(affine))
     lut_cmap = actor.colormap_lookup_table(hue_range=hue,
                                            saturation_range=saturation, scale_range=scale)
-    streamlines_actor = actor.line(streamlines_native, weight_by_data, linewidth=0.1, lookup_colormap=lut_cmap)
+    streamlines_actor = actor.line(streamlines, mean_vol_per_tract, linewidth=0.1, lookup_colormap=lut_cmap)
     bar = actor.scalar_bar(lut_cmap)
-
     r = window.Renderer()
     r.add(streamlines_actor)
     r.add(bar)
-    window.record(r, out_path='bundle2.png', size=(800, 800))
+#    pasi_weighted_img = folder_name+'\streamlines\pasi_weighted.png'
+    mean_pasi_weighted_img = folder_name+'\streamlines\mean_pasi_weighted.png'
     window.show(r)
-    #return streamlines, streamlines_native,
+    r.set_camera(r.camera_info())
+    window.record(r, out_path=mean_pasi_weighted_img, size=(800, 800))
 
 
 def load_ft(tract_path):
     from dipy.io.streamline import load_trk
+    from dipy.tracking.streamline import Streamlines
 
     streams, hdr = load_trk(tract_path)
     streamlines = Streamlines(streams)
@@ -126,22 +135,96 @@ def load_ft(tract_path):
     return streamlines
 
 
-def save_ft(folder_name,streamlines,s_affine,labels):
+def save_ft(folder_name,streamlines,affine, labels):
     from dipy.io.streamline import save_trk
 
     dir_name = folder_name + '\streamlines'
     if not os.path.exists(dir_name):
         os.mkdir(dir_name)
-    tract_name = os.path.join(dir_name, (folder_name[-10::] + ".trk"))
-    save_trk(tract_name, streamlines, affine,
-             labels.shape)
+    tract_name = os.path.join(dir_name, (folder_name.split(sep="\\")[-1] + ".trk")) #I should change it to more general script, the name is the last path part.
+    save_trk(tract_name, streamlines, affine=np.eye(4), shape=labels.shape, vox_size=np.array([1.7,1.7,1.7]))
+
+
+def weighted_connectivity_matrix(streamlines, folder_name, nii_file, weight_by='pasiS'):
+    import matplotlib.pyplot as plt
+    from dipy.tracking import utils
+    from dipy.tracking.streamline import values_from_volume
+
+    lab = folder_name+r'\rAAL_highres_atlas.nii'
+    lab_file = nib.load(lab)
+    lab_labels = lab_file.get_data()
+    affine = lab_file.get_affine()
+    uni = np.unique(lab_labels)
+    lab_labels_index = lab_labels
+    for index, i in enumerate(uni):
+        lab_labels_index[lab_labels_index == i] = index
+    labels_file = open(r'C:\Users\Admin\my_scripts\aal\origin\aal2nii.txt', 'r', errors='ignore')
+    labels_name = labels_file.readlines()
+    labels_table = []
+    labels_headers = []
+    for line in labels_name:
+        if not line[0] == '#':
+            labels_table.append([col for col in line.split(" ") if col])
+        elif 'ColHeaders' in line:
+            labels_headers = [col for col in line.split(" ") if col]
+            labels_headers = labels_headers[2:]
+    labels_file.close()
+    for i, l in enumerate(labels_table):
+        labels_headers.append(l[1])
+
+    # non-weighted:
+    m, grouping = utils.connectivity_matrix(streamlines, lab_labels_index, affine=affine,
+                                            return_mapping=True,
+                                            mapping_as_streamlines=True)
+    log_m = np.log1p(m)
+    new_data = np.zeros(np.array(log_m.shape) * 5)
+    for j in range(log_m.shape[0]):
+        for k in range(log_m.shape[1]):
+            new_data[j * 5: (j + 1) * 5, k * 5: (k + 1) * 5] = log_m[j, k]
+
+    plt.imshow(new_data, interpolation='nearest', cmap='hot', origin='upper')
+    plt.colorbar()
+    plt.xlabel(labels_headers)
+    plt.show()
+    plt.imsave(folder_name+r'\con_mat.png', new_data)
+
+    # weighted:
+    weight_by_file = nii_file[:-4:]+'_'+weight_by+'.nii'
+    weight_by_img = nib.load(weight_by_file)
+    weight_by_data = weight_by_img.get_data()
+    affine = weight_by_img.get_affine()
+    m_weighted = np.zeros((117, 117), dtype='int64')
+    for pair,tracts in grouping.items():
+        mean_vol_per_tract = []
+        vol_per_tract = values_from_volume(weight_by_data, tracts, affine=affine)
+        for i, s in enumerate(vol_per_tract):
+            mean_vol_per_tract.append(np.mean(s))
+        mean_path_vol = np.mean(mean_vol_per_tract)
+        m_weighted[pair[0], pair[1]] = mean_path_vol
+        m_weighted[pair[1], pair[0]] = mean_path_vol
+
+    log_m = np.log1p(m_weighted)
+    new_data = np.zeros(np.array(log_m.shape) * 5)
+    for j in range(log_m.shape[0]):
+        for k in range(log_m.shape[1]):
+            new_data[j * 5: (j + 1) * 5, k * 5: (k + 1) * 5] = log_m[j, k]
+
+    plt.imshow(new_data, interpolation='nearest', cmap='hot', origin='upper')
+    plt.colorbar()
+    plt.xlabel(labels_headers)
+    plt.show()
+    plt.imsave(folder_name+r'\con_weighted_mat.png', new_data)
+
+
 if __name__ == '__main__':
     folder_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V5\BeEf_subj7'
     mask_type = 'cc'
     gtab, data, affine, labels, white_matter, nii_file = load_dwi_files(folder_name)
     mask_mat = load_mask(folder_name,mask_type)
-    seeds = create_seeds(folder_name, white_matter, affine, use_mask = True, mask_type='cc')
-    csd_fit = create_csd_model(data, gtab, white_matter, sh_order=4)
+    seeds = create_seeds(folder_name, white_matter, affine, use_mask=True, mask_type='cc')
+    csd_fit = create_csd_model(data, gtab, white_matter, sh_order=8)
     fa, classifier = create_fa_classifier(gtab, data, white_matter)
     streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
-    weighting_streamlines(streamlines, nii_file, weight_by='pasiS', hue=[0.0, 1.0], saturation=[0.0, 1.0], scale=[0, 9])
+    #weighting_streamlines(streamlines, nii_file, weight_by='pasiS', hue=[0.0, 1.0], saturation=[0.0, 1.0], scale=[0, 6])
+    #save_ft(folder_name,streamlines,affine, labels)
+    weighted_connectivity_matrix(streamlines, folder_name, nii_file, weight_by='pasiS')

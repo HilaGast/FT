@@ -88,7 +88,7 @@ r = window.Renderer()
 r.add(streamlines_actor)
 
 # Save still images for this static example.
-window.record(r, n_frames=1, out_path='deterministic.png', size=(800, 800))
+window.record(r, n_frames=3, out_path=r'C:\Users\Admin\my_scripts\Ax3D_Pack\V5\BeEf_subj7\streamlines\deterministic.png', size=(800, 800))
 window.show(r)
 
 

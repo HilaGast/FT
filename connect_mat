@@ -3,7 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from dipy.tracking import utils
 
-lab = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V5\BeEf_subj7\rAAL_highres_atlas.nii'
+
+
+lab = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V5\NaYa_subj9\rAAL_highres_atlas.nii'
 lab_file = nib.load(lab)
 lab_labels = lab_file.get_data()
 affine = lab_file.get_affine()
@@ -17,7 +19,7 @@ M, grouping = utils.connectivity_matrix(streamlines, lab_labels_index, affine=af
 M[:3, :] = 0
 M[:, :3] = 0
 
-labels_file = open(r'C:\Users\Admin\my_scripts\aal\origin\aal2.nii.txt','r',errors='ignore')
+labels_file = open(r'C:\Users\Admin\my_scripts\aal\origin\aal2nii.txt','r',errors='ignore')
 labels_name = labels_file.readlines()
 labels_table = []
 labels_headers = []
@@ -31,9 +33,13 @@ labels_file.close()
 for i, l in enumerate(labels_table):
     labels_headers.append(l[1])
 
+data = np.log1p(M)
+new_data = np.zeros(np.array(data.shape) * 5)
+for j in range(data.shape[0]):
+    for k in range(data.shape[1]):
+        new_data[j * 5: (j+1) * 5, k * 5: (k+1) * 5] = data[j, k]
 
-
-plt.imshow(np.log1p(M), interpolation='nearest')
+plt.imshow(new_data, interpolation='nearest')
 plt.xlabel(labels_headers)
 plt.show()
-
+plt.imsave(r'C:\Users\Admin\my_scripts\Ax3D_Pack\V5\NaYa_subj9\con_mat.png',new_data)
