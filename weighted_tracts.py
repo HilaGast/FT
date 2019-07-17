@@ -51,11 +51,11 @@ def create_seeds(folder_name, white_matter, affine, use_mask = True, mask_type='
         seed_mask = mask_mat == 1
     else:
         seed_mask = white_matter
-    seeds = utils.seeds_from_mask(seed_mask, density=4, affine=affine)
+    seeds = utils.seeds_from_mask(seed_mask, density=1, affine=affine)
     return seeds
 
 
-def create_csd_model(data, gtab, white_matter, sh_order=8):
+def create_csd_model(data, gtab, white_matter, sh_order=6):
     from dipy.reconst.csdeconv import ConstrainedSphericalDeconvModel
 
     csd_model = ConstrainedSphericalDeconvModel(gtab, None, sh_order=sh_order)
@@ -85,7 +85,7 @@ def create_streamlines(csd_fit, classifier, seeds, affine):
                                                                  max_angle=40.,
                                                                  sphere=default_sphere)
 
-    streamlines = Streamlines(LocalTracking(detmax_dg, classifier, seeds, affine, step_size=.1))
+    streamlines = Streamlines(LocalTracking(detmax_dg, classifier, seeds, affine, step_size=.5))
 
     long_streamlines = np.ones((len(streamlines)), bool)
     for i in range(0, len(streamlines)):
@@ -97,6 +97,19 @@ def create_streamlines(csd_fit, classifier, seeds, affine):
 
 
 def weighting_streamlines(streamlines, nii_file, weight_by = 'pasiS',hue = [0.0,1.0],saturation = [0.0,1.0], scale = [0,6]):
+    '''
+    weight_by = 'pasiS'
+    hue = [0.0,1.0]
+    saturation = [0.0,1.0]
+    scale = [0,6]
+    :param streamlines:
+    :param nii_file:
+    :param weight_by:
+    :param hue:
+    :param saturation:
+    :param scale:
+    :return:
+    '''
     from dipy.viz import window, actor, colormap as cmap
     from dipy.tracking.streamline import transform_streamlines,values_from_volume
 
@@ -106,9 +119,12 @@ def weighting_streamlines(streamlines, nii_file, weight_by = 'pasiS',hue = [0.0,
     affine = weight_by_img.get_affine()
     stream = list(streamlines)
     vol_per_tract = values_from_volume(weight_by_data, stream, affine=affine)
+    vol_vec = weight_by_data.flatten()
+    q = np.quantile(vol_vec[vol_vec>0], 0.9)
     mean_vol_per_tract = []
     for i, s in enumerate(vol_per_tract):
-        mean_vol_per_tract.append(np.mean(s))
+        s = np.asanyarray(s)
+        mean_vol_per_tract.append(np.mean(s[s < q]))
 
     #streamlines_native = transform_streamlines(streamlines, np.linalg.inv(affine))
     lut_cmap = actor.colormap_lookup_table(hue_range=hue,
@@ -197,7 +213,7 @@ def weighted_connectivity_matrix(streamlines, folder_name, nii_file, weight_by='
     for pair,tracts in grouping.items():
         mean_vol_per_tract = []
         vol_per_tract = values_from_volume(weight_by_data, tracts, affine=affine)
-        for i, s in enumerate(vol_per_tract):
+        for s in vol_per_tract:
             mean_vol_per_tract.append(np.mean(s))
         mean_path_vol = np.mean(mean_vol_per_tract)
         m_weighted[pair[0], pair[1]] = mean_path_vol
@@ -217,12 +233,12 @@ def weighted_connectivity_matrix(streamlines, folder_name, nii_file, weight_by='
 
 
 if __name__ == '__main__':
-    folder_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V5\BeEf_subj7'
+    folder_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V5\NaYa_subj9'
     mask_type = 'cc'
     gtab, data, affine, labels, white_matter, nii_file = load_dwi_files(folder_name)
     mask_mat = load_mask(folder_name,mask_type)
     seeds = create_seeds(folder_name, white_matter, affine, use_mask=True, mask_type='cc')
-    csd_fit = create_csd_model(data, gtab, white_matter, sh_order=8)
+    csd_fit = create_csd_model(data, gtab, white_matter, sh_order=4)
     fa, classifier = create_fa_classifier(gtab, data, white_matter)
     streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
     #weighting_streamlines(streamlines, nii_file, weight_by='pasiS', hue=[0.0, 1.0], saturation=[0.0, 1.0], scale=[0, 6])
