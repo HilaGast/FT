@@ -51,7 +51,7 @@ def create_seeds(folder_name, white_matter, affine, use_mask = True, mask_type='
         seed_mask = mask_mat == 1
     else:
         seed_mask = white_matter
-    seeds = utils.seeds_from_mask(seed_mask, density=1, affine=affine)
+    seeds = utils.seeds_from_mask(seed_mask, density=2, affine=affine)
     return seeds
 
 
@@ -71,7 +71,7 @@ def create_fa_classifier(gtab,data,white_matter):
     tensor_model = dti.TensorModel(gtab)
     tenfit = tensor_model.fit(data, mask=white_matter)
     fa = fractional_anisotropy(tenfit.evals)
-    classifier = ThresholdTissueClassifier(fa, .2)
+    classifier = ThresholdTissueClassifier(fa, .22)
 
     return fa, classifier
 
@@ -85,7 +85,7 @@ def create_streamlines(csd_fit, classifier, seeds, affine):
                                                                  max_angle=40.,
                                                                  sphere=default_sphere)
 
-    streamlines = Streamlines(LocalTracking(detmax_dg, classifier, seeds, affine, step_size=.5))
+    streamlines = Streamlines(LocalTracking(detmax_dg, classifier, seeds, affine, step_size=.1))
 
     long_streamlines = np.ones((len(streamlines)), bool)
     for i in range(0, len(streamlines)):
@@ -102,13 +102,6 @@ def weighting_streamlines(streamlines, nii_file, weight_by = 'pasiS',hue = [0.0,
     hue = [0.0,1.0]
     saturation = [0.0,1.0]
     scale = [0,6]
-    :param streamlines:
-    :param nii_file:
-    :param weight_by:
-    :param hue:
-    :param saturation:
-    :param scale:
-    :return:
     '''
     from dipy.viz import window, actor, colormap as cmap
     from dipy.tracking.streamline import transform_streamlines,values_from_volume
@@ -119,22 +112,29 @@ def weighting_streamlines(streamlines, nii_file, weight_by = 'pasiS',hue = [0.0,
     affine = weight_by_img.get_affine()
     stream = list(streamlines)
     vol_per_tract = values_from_volume(weight_by_data, stream, affine=affine)
-    vol_vec = weight_by_data.flatten()
-    q = np.quantile(vol_vec[vol_vec>0], 0.9)
-    mean_vol_per_tract = []
-    for i, s in enumerate(vol_per_tract):
-        s = np.asanyarray(s)
-        mean_vol_per_tract.append(np.mean(s[s < q]))
+    pfr_file = nii_file[:-4:] + '_pfrS.nii'
+    pfr_img = nib.load(pfr_file)
+    pfr_data = pfr_img.get_data()
+    pfr_per_tract = values_from_volume(pfr_data, stream, affine=affine)
 
-    #streamlines_native = transform_streamlines(streamlines, np.linalg.inv(affine))
+    #Leave out from the calculation of mean value per tract, a chosen quantile:
+    vol_vec = weight_by_data.flatten()
+    q = np.quantile(vol_vec[vol_vec>0], 0.95)
+    mean_vol_per_tract = []
+    for s, pfr in zip(vol_per_tract, pfr_per_tract):
+        s = np.asanyarray(s)
+        non_out = [s < q]
+        pfr = np.asanyarray(pfr)
+        high_pfr = [pfr > 60]
+        mean_vol_per_tract.append(np.mean(s[tuple(non_out and high_pfr)]))
+
     lut_cmap = actor.colormap_lookup_table(hue_range=hue,
                                            saturation_range=saturation, scale_range=scale)
-    streamlines_actor = actor.line(streamlines, mean_vol_per_tract, linewidth=0.1, lookup_colormap=lut_cmap)
+    streamlines_actor = actor.line(streamlines, mean_vol_per_tract, linewidth=0.6, lookup_colormap=lut_cmap)
     bar = actor.scalar_bar(lut_cmap)
     r = window.Renderer()
     r.add(streamlines_actor)
     r.add(bar)
-#    pasi_weighted_img = folder_name+'\streamlines\pasi_weighted.png'
     mean_pasi_weighted_img = folder_name+'\streamlines\mean_pasi_weighted.png'
     window.show(r)
     r.set_camera(r.camera_info())
@@ -200,9 +200,10 @@ def weighted_connectivity_matrix(streamlines, folder_name, nii_file, weight_by='
 
     plt.imshow(new_data, interpolation='nearest', cmap='hot', origin='upper')
     plt.colorbar()
-    plt.xlabel(labels_headers)
+    #plt.xlabel(labels_headers)
+    plt.title('Non-weighted connectivity matrix', fontsize=16)
+    plt.savefig(folder_name+r'\non-weighted(whole brain).png')
     plt.show()
-    plt.imsave(folder_name+r'\con_mat.png', new_data)
 
     # weighted:
     weight_by_file = nii_file[:-4:]+'_'+weight_by+'.nii'
@@ -227,9 +228,10 @@ def weighted_connectivity_matrix(streamlines, folder_name, nii_file, weight_by='
 
     plt.imshow(new_data, interpolation='nearest', cmap='hot', origin='upper')
     plt.colorbar()
-    plt.xlabel(labels_headers)
+    #plt.xlabel(labels_headers)
+    plt.title('Weighted connectivity matrix', fontsize=16)
+    plt.savefig(folder_name+r'\weighted(whole brain).png')
     plt.show()
-    plt.imsave(folder_name+r'\con_weighted_mat.png', new_data)
 
 
 if __name__ == '__main__':
@@ -237,10 +239,10 @@ if __name__ == '__main__':
     mask_type = 'cc'
     gtab, data, affine, labels, white_matter, nii_file = load_dwi_files(folder_name)
     mask_mat = load_mask(folder_name,mask_type)
-    seeds = create_seeds(folder_name, white_matter, affine, use_mask=True, mask_type='cc')
-    csd_fit = create_csd_model(data, gtab, white_matter, sh_order=4)
+    seeds = create_seeds(folder_name, white_matter, affine, use_mask=False, mask_type='cc')
+    csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
     fa, classifier = create_fa_classifier(gtab, data, white_matter)
     streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
-    #weighting_streamlines(streamlines, nii_file, weight_by='pasiS', hue=[0.0, 1.0], saturation=[0.0, 1.0], scale=[0, 6])
+    #weighting_streamlines(streamlines, nii_file, weight_by='pasiS', hue=[0.0, 1.0], saturation=[0.0, 1.0], scale=[0, 10])
     #save_ft(folder_name,streamlines,affine, labels)
     weighted_connectivity_matrix(streamlines, folder_name, nii_file, weight_by='pasiS')
