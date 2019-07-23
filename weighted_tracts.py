@@ -30,7 +30,7 @@ def load_dwi_files(folder_name, small_delta=15.5):
     gtab = gradient_table(bval_file, bvec_file, small_delta=small_delta)
     labels_img = nib.load(labels_file_name)
     labels = labels_img.get_data()
-    white_matter = (labels == 3) | (labels == 2)  # 3-WM, 2-GM
+    white_matter = (labels == 3) #| (labels == 2)  # 3-WM, 2-GM
 
     return gtab,data,affine,labels,white_matter,nii_file
 
@@ -51,7 +51,7 @@ def create_seeds(folder_name, white_matter, affine, use_mask = True, mask_type='
         seed_mask = mask_mat == 1
     else:
         seed_mask = white_matter
-    seeds = utils.seeds_from_mask(seed_mask, density=1, affine=affine)
+    seeds = utils.seeds_from_mask(seed_mask, density=2, affine=affine)
     return seeds
 
 
@@ -71,7 +71,7 @@ def create_fa_classifier(gtab,data,white_matter):
     tensor_model = dti.TensorModel(gtab)
     tenfit = tensor_model.fit(data, mask=white_matter)
     fa = fractional_anisotropy(tenfit.evals)
-    classifier = ThresholdTissueClassifier(fa, .22)
+    classifier = ThresholdTissueClassifier(fa, .18)
 
     return fa, classifier
 
@@ -89,7 +89,7 @@ def create_streamlines(csd_fit, classifier, seeds, affine):
 
     long_streamlines = np.ones((len(streamlines)), bool)
     for i in range(0, len(streamlines)):
-        if streamlines[i].shape[0] < 70:
+        if streamlines[i].shape[0] < 100:
             long_streamlines[i] = False
     streamlines = streamlines[long_streamlines]
 
@@ -244,7 +244,7 @@ def weighted_connectivity_matrix(streamlines, folder_name, nii_file, weight_by='
 
 
 if __name__ == '__main__':
-    folder_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V5\BeSa_subj5'
+    folder_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V5\DlYo_subj10'
     mask_type = 'cc'
     gtab, data, affine, labels, white_matter, nii_file = load_dwi_files(folder_name)
     mask_mat = load_mask(folder_name,mask_type)
@@ -253,5 +253,5 @@ if __name__ == '__main__':
     fa, classifier = create_fa_classifier(gtab, data, white_matter)
     streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
     #weighting_streamlines(streamlines, nii_file, weight_by='pasiS', hue=[0.0, 1.0], saturation=[0.0, 1.0], scale=[0, 10])
-    save_ft(folder_name,streamlines,affine, labels)
+    save_ft(folder_name,streamlines, labels)
     weighted_connectivity_matrix(streamlines, folder_name, nii_file, weight_by='pasiS')
