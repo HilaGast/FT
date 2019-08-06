@@ -45,13 +45,13 @@ def load_mask(folder_name, mask_type):
     return mask_mat
 
 
-def create_seeds(folder_name, white_matter, affine, use_mask = True, mask_type='cc'):
+def create_seeds(folder_name, white_matter, affine, use_mask = True, mask_type='cc',den = 1):
     if use_mask:
         mask_mat = load_mask(folder_name,mask_type)
         seed_mask = mask_mat == 1
     else:
         seed_mask = white_matter
-    seeds = utils.seeds_from_mask(seed_mask, density=2, affine=affine)
+    seeds = utils.seeds_from_mask(seed_mask, density=den, affine=affine)
     return seeds
 
 
@@ -126,7 +126,7 @@ def weighting_streamlines(streamlines, nii_file, weight_by = 'pasiS',hue = [0.0,
         non_out = [s < q]
         pfr = np.asanyarray(pfr)
         high_pfr = [pfr > 60]
-        mean_vol_per_tract.append(np.mean(s[tuple(non_out and high_pfr)]))
+        mean_vol_per_tract.append(np.nanmean(s[tuple(non_out and high_pfr)]))
 
     lut_cmap = actor.colormap_lookup_table(hue_range=hue,
                                            saturation_range=saturation, scale_range=scale)
@@ -138,7 +138,7 @@ def weighting_streamlines(streamlines, nii_file, weight_by = 'pasiS',hue = [0.0,
     mean_pasi_weighted_img = folder_name+'\streamlines\mean_pasi_weighted.png'
     window.show(r)
     r.set_camera(r.camera_info())
-    window.record(r, out_path=mean_pasi_weighted_img, size=(800, 800))
+    #window.record(r, out_path=mean_pasi_weighted_img, size=(800, 800))
 
 
 def load_ft(tract_path):
@@ -163,6 +163,7 @@ def save_ft(folder_name,streamlines, labels):
 
 def weighted_connectivity_matrix(streamlines, folder_name, nii_file, weight_by='pasiS'):
     import matplotlib.pyplot as plt
+    import matplotlib.cm as cm
     from dipy.tracking import utils
     from dipy.tracking.streamline import values_from_volume
 
@@ -199,10 +200,12 @@ def weighted_connectivity_matrix(streamlines, folder_name, nii_file, weight_by='
 
     mm = m[idx]
     mm = mm[:,idx]
-    log_m = np.log1p(mm)
-    new_data = log_m
+    new_data = 1/mm # values distribute between 0 and 1, 1 represents distant nodes (only 1 tract)
+    new_data[new_data>1]=2
     plt.figure(1,[24,20])
-    plt.imshow(new_data, interpolation='nearest', cmap='hot', origin='upper')
+    cmap = cm.hot_r
+    cmap.set_over('black')
+    plt.imshow(new_data, interpolation='nearest', cmap=cmap, origin='upper',vmax=1)
     plt.colorbar()
     plt.xticks(ticks=np.arange(0,len(new_data),1),labels=h)
     plt.yticks(ticks=np.arange(0,len(new_data),1),labels=h)
@@ -223,16 +226,16 @@ def weighted_connectivity_matrix(streamlines, folder_name, nii_file, weight_by='
         vol_per_tract = values_from_volume(weight_by_data, tracts, affine=affine)
         for s in vol_per_tract:
             mean_vol_per_tract.append(np.mean(s))
-        mean_path_vol = np.mean(mean_vol_per_tract)
+        mean_path_vol = np.nanmean(mean_vol_per_tract)
         m_weighted[pair[0], pair[1]] = mean_path_vol
         m_weighted[pair[1], pair[0]] = mean_path_vol
 
     mm_weighted = m_weighted[idx]
     mm_weighted = mm_weighted[:,idx]
-    log_m = np.log1p(mm_weighted)
-    new_data = log_m
+    new_data = mm_weighted*0.81
+    new_data = (new_data-new_data.min())/(new_data.max()-new_data.min())
     plt.figure(1,[24,20])
-    plt.imshow(new_data, interpolation='nearest', cmap='hot', origin='upper')
+    plt.imshow(new_data, interpolation='nearest', cmap=cmap, origin='upper', vmax=1)
     plt.colorbar()
     plt.xticks(ticks=np.arange(0,len(new_data),1),labels=h)
     plt.yticks(ticks=np.arange(0,len(new_data),1),labels=h)
@@ -244,14 +247,30 @@ def weighted_connectivity_matrix(streamlines, folder_name, nii_file, weight_by='
 
 
 if __name__ == '__main__':
-    folder_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V5\DlYo_subj10'
-    mask_type = 'cc'
-    gtab, data, affine, labels, white_matter, nii_file = load_dwi_files(folder_name)
-    mask_mat = load_mask(folder_name,mask_type)
-    seeds = create_seeds(folder_name, white_matter, affine, use_mask=False, mask_type='cc')
-    csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
-    fa, classifier = create_fa_classifier(gtab, data, white_matter)
-    streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
-    #weighting_streamlines(streamlines, nii_file, weight_by='pasiS', hue=[0.0, 1.0], saturation=[0.0, 1.0], scale=[0, 10])
-    save_ft(folder_name,streamlines, labels)
-    weighted_connectivity_matrix(streamlines, folder_name, nii_file, weight_by='pasiS')
+    subj = [r'\FrMi_subj6',
+            r'\GaHi_subj1',
+            r'\LiRo_subj4',
+            r'\SaId_subj8',
+            r'\ShEl_subj2',
+            r'\BeSa_subj5',
+            r'\BeEf_subj7',
+            r'\DlYo_subj10',
+            r'\AhLi_subj3',
+            r'\NaYa_subj9']
+    for s in subj:
+        folder_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V5' + s
+        mask_type = 'cc'
+        gtab, data, affine, labels, white_matter, nii_file = load_dwi_files(folder_name)
+        mask_mat = load_mask(folder_name,mask_type)
+        '''seeds = create_seeds(folder_name, white_matter, affine, use_mask=True, mask_type='cc', den=5)
+        csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
+        fa, classifier = create_fa_classifier(gtab, data, white_matter)
+        streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
+        weighting_streamlines(streamlines, nii_file, weight_by='pasiS', hue=[0.0, 1.0], saturation=[0.0, 1.0], scale=[0, 8])
+'''
+        seeds = create_seeds(folder_name, white_matter, affine, use_mask=False, den=1)
+        csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
+        fa, classifier = create_fa_classifier(gtab, data, white_matter)
+        streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
+        save_ft(folder_name,streamlines, labels)
+        weighted_connectivity_matrix(streamlines, folder_name, nii_file, weight_by='pasiS')
