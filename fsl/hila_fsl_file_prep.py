@@ -1,13 +1,21 @@
 
 import os
 
-subj_name = r'ShEl_subj2/'
-mprage_file_name = r'20190121_122555T1wMPRAGERLs002a1001.nii'
-first_charmed_file_name = r'f20190121_101217ep2dd155D60MB3APs005a001_01.nii'
-atlas_template = r'C:\Users\Admin\my_scripts\aal\origin\AAL_highres_template.nii'
+subj_name = r'NaYa_subj9/'
+mprage_file_name = r'20190211_111306T1wMPRAGERLs002a1001.nii'
+first_charmed_file_name = r'xf20190211_134016ep2dd155D60MB3APs004a001.nii'
+# for aal
+#atlas_template = r'C:\Users\Admin\my_scripts\aal\origin\AAL_highres_template.nii'
+#atlas_template = atlas_template.replace('C:', '/mnt/c')
+#atlas_label = r'C:\Users\Admin\my_scripts\aal\origin\AAL_highres_atlas.nii'
+#atlas_label = atlas_label.replace('C:', '/mnt/c')
+#for megaatlas:
+atlas_template = r'C:\Users\Admin\my_scripts\aal\megaatlas\MegaAtla_Template.nii'
 atlas_template = atlas_template.replace('C:', '/mnt/c')
-atlas_label = r'C:\Users\Admin\my_scripts\aal\origin\AAL_highres_atlas.nii'
+atlas_label = r'C:\Users\Admin\my_scripts\aal\megaatlas\MegaAtlas_Labels.nii'
 atlas_label = atlas_label.replace('C:', '/mnt/c')
+
+
 
 main_folder = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V5/'
 main_folder = main_folder.replace('C:', '/mnt/c')
@@ -69,20 +77,22 @@ cmd = cmd.replace(os.sep,'/')
 os.system(cmd)
 
 # fnirt for MNI based on flirt results:
-warp_name = subj_folder + 'atlas2subj.nii'
+#warp_name = subj_folder + 'atlas2subj.nii'
+warp_name = subj_folder + 'atlas2subjmegaatlas.nii'
+
 cmd = 'bash -lc "fnirt --ref={0} --in={1} --aff={2} --cout={3}"'.format(out_brain, atlas_brain, atlas_registered_flirt_mat, warp_name)
 cmd = cmd.replace(os.sep,'/')
 os.system(cmd)
 
 # apply fnirt warp on atlas template:
 atlas_registered = os.path.join(subj_folder+ 'rr' + atlas_brain.split(sep="\\")[-1])
-cmd = 'bash -lc "applywarp --ref={0} --in={1} --out={2} --warp={3}"'.format(out_brain, atlas_brain, atlas_registered, warp_name)
+cmd = 'bash -lc "applywarp --ref={0} --in={1} --out={2} --warp={3} --interp={4}"'.format(out_brain, atlas_brain, atlas_registered, warp_name, 'nn')
 cmd = cmd.replace(os.sep,'/')
 os.system(cmd)
 
 # apply fnirt warp on atlas labels:
 atlas_labels_registered = os.path.join(subj_folder+ 'r' + atlas_label.split(sep="\\")[-1])
-cmd = 'bash -lc "applywarp --ref={0} --in={1} --out={2} --warp={3}"'.format(out_brain, atlas_label, atlas_labels_registered, warp_name)
+cmd = 'bash -lc "applywarp --ref={0} --in={1} --out={2} --warp={3} --interp={4}"'.format(out_brain, atlas_label, atlas_labels_registered, warp_name, 'nn')
 cmd = cmd.replace(os.sep,'/')
 os.system(cmd)
 

@@ -138,7 +138,7 @@ def weighting_streamlines(streamlines, nii_file, weight_by = 'pasiS',hue = [0.0,
     mean_pasi_weighted_img = folder_name+'\streamlines\mean_pasi_weighted.png'
     window.show(r)
     r.set_camera(r.camera_info())
-    #window.record(r, out_path=mean_pasi_weighted_img, size=(800, 800))
+    window.record(r, out_path=mean_pasi_weighted_img, size=(800, 800))
 
 
 def load_ft(tract_path):
@@ -161,13 +161,10 @@ def save_ft(folder_name,streamlines, labels):
     save_trk(tract_name, streamlines, affine=np.eye(4), shape=labels.shape, vox_size=np.array([1.7,1.7,1.7]))
 
 
-def weighted_connectivity_matrix(streamlines, folder_name, nii_file, weight_by='pasiS'):
-    import matplotlib.pyplot as plt
-    import matplotlib.cm as cm
-    from dipy.tracking import utils
-    from dipy.tracking.streamline import values_from_volume
-
-    lab = folder_name+r'\rAAL_highres_atlas.nii'
+def nodes_by_index(folder_name):
+    import numpy as np
+    import nibabel as nib
+    lab = folder_name + r'\rMegaAtlas_Labels.nii'
     lab_file = nib.load(lab)
     lab_labels = lab_file.get_data()
     affine = lab_file.affine
@@ -175,8 +172,24 @@ def weighted_connectivity_matrix(streamlines, folder_name, nii_file, weight_by='
     lab_labels_index = lab_labels
     for index, i in enumerate(uni):
         lab_labels_index[lab_labels_index == i] = index
-    labels_file = open(r'C:\Users\Admin\my_scripts\aal\origin\aal2nii.txt', 'r', errors='ignore')
+    return lab_labels_index, affine
+
+
+def nodes_by_index_mega(folder_name):
+    import nibabel as nib
+    lab = folder_name + r'\rMegaAtlas_Labels.nii'
+    lab_file = nib.load(lab)
+    lab_labels = lab_file.get_data()
+    affine = lab_file.affine
+    lab_labels_index = [labels for labels in lab_labels]
+    lab_labels_index = np.asarray(lab_labels_index, dtype='int')
+    return lab_labels_index, affine
+
+
+def nodes_labels(index_to_text_file):
+    labels_file = open(index_to_text_file, 'r', errors='ignore')
     labels_name = labels_file.readlines()
+    labels_file.close()
     labels_table = []
     labels_headers = []
     for line in labels_name:
@@ -185,43 +198,81 @@ def weighted_connectivity_matrix(streamlines, folder_name, nii_file, weight_by='
         elif 'ColHeaders' in line:
             labels_headers = [col for col in line.split(" ") if col]
             labels_headers = labels_headers[2:]
-    labels_file.close()
     for i, l in enumerate(labels_table):
         labels_headers.append(l[1])
 
-    # non-weighted:
+    return labels_headers
+
+
+def nodes_labels_mega(index_to_text_file):
+    labels_file = open(index_to_text_file, 'r', errors='ignore')
+    labels_name = labels_file.readlines()
+    labels_file.close()
+    labels_table = []
+    labels_headers = []
+    idx = []
+    for line in labels_name:
+        if not line[0] == '#':
+            labels_table.append([col for col in line.split("\t") if col])
+        elif 'ColHeaders' in line:
+            labels_headers = [col for col in line.split(" ") if col]
+            labels_headers = labels_headers[2:]
+    for l in labels_table:
+        head = l[1]
+        labels_headers.append(head[:-1])
+        idx.append(int(l[0])-1)
+    return labels_headers, idx
+
+
+def non_weighted_con_mat(streamlines, lab_labels_index, affine, folder_name):
+    from dipy.tracking import utils
+    import numpy as np
+
     m, grouping = utils.connectivity_matrix(streamlines, lab_labels_index, affine=affine,
                                             return_mapping=True,
                                             mapping_as_streamlines=True)
-    idxL = np.arange(0,len(m),2)
-    idxR = np.arange(1,len(m),2)
-    idx = list(idxL)+ list(idxR)
-    h = [labels_headers[i] for i in idx]
+    idxL = np.arange(0, len(m), 2)
+    idxR = np.arange(1, len(m), 2)
+    idx = list(idxL) + list(idxR)
 
     mm = m[idx]
-    mm = mm[:,idx]
-    new_data = 1/mm # values distribute between 0 and 1, 1 represents distant nodes (only 1 tract)
-    new_data[new_data>1]=2
-    plt.figure(1,[24,20])
-    cmap = cm.hot_r
-    cmap.set_over('black')
-    plt.imshow(new_data, interpolation='nearest', cmap=cmap, origin='upper',vmax=1)
-    plt.colorbar()
-    plt.xticks(ticks=np.arange(0,len(new_data),1),labels=h)
-    plt.yticks(ticks=np.arange(0,len(new_data),1),labels=h)
-    plt.title('Non-weighted connectivity matrix', fontsize=16)
-    plt.tick_params(axis='x',pad=5.0, labelrotation=90, labelsize=9)
-    plt.tick_params(axis='y',pad=5.0, labelsize=9)
-    plt.savefig(folder_name+r'\non-weighted(whole brain).png')
-    plt.show()
+    mm = mm[:, idx]
+    new_data = 1 / mm  # values distribute between 0 and 1, 1 represents distant nodes (only 1 tract)
+    new_data[new_data > 1] = 2
+    np.save(folder_name + r'\non-weighted', new_data)
 
-    # weighted:
-    weight_by_file = nii_file[:-4:]+'_'+weight_by+'.nii'
+    return new_data, m, grouping, idx
+
+
+def non_weighted_con_mat_mega(streamlines, lab_labels_index, affine, idx, folder_name):
+    from dipy.tracking import utils
+    import numpy as np
+
+    m, grouping = utils.connectivity_matrix(streamlines, lab_labels_index, affine=affine,
+                                            return_mapping=True,
+                                            mapping_as_streamlines=True)
+    mm = m[1:]
+    mm = mm[:,1:]
+    mm = mm[idx]
+    mm = mm[:, idx]
+    new_data = 1 / mm  # values distribute between 0 and 1, 1 represents distant nodes (only 1 tract)
+    new_data[new_data > 1] = 2
+    np.save(folder_name + r'\non-weighted_mega', new_data)
+
+    return new_data, m, grouping
+
+
+def weighted_con_mat(nii_file, weight_by, grouping, idx, folder_name):
+    from dipy.tracking.streamline import values_from_volume
+    import numpy as np
+    import nibabel as nib
+
+    weight_by_file = nii_file[:-4:] + '_' + weight_by + '.nii'
     weight_by_img = nib.load(weight_by_file)
     weight_by_data = weight_by_img.get_data()
     affine = weight_by_img.affine
-    m_weighted = np.zeros((117, 117), dtype='int64')
-    for pair,tracts in grouping.items():
+    m_weighted = np.zeros((len(idx), len(idx)), dtype='float64')  # !!!!!!!!!!
+    for pair, tracts in grouping.items():
         mean_vol_per_tract = []
         vol_per_tract = values_from_volume(weight_by_data, tracts, affine=affine)
         for s in vol_per_tract:
@@ -231,19 +282,118 @@ def weighted_connectivity_matrix(streamlines, folder_name, nii_file, weight_by='
         m_weighted[pair[1], pair[0]] = mean_path_vol
 
     mm_weighted = m_weighted[idx]
-    mm_weighted = mm_weighted[:,idx]
-    new_data = mm_weighted*0.81
-    new_data = (new_data-new_data.min())/(new_data.max()-new_data.min())
-    plt.figure(1,[24,20])
-    plt.imshow(new_data, interpolation='nearest', cmap=cmap, origin='upper', vmax=1)
+    mm_weighted = mm_weighted[:, idx]
+    mm_weighted[mm_weighted<0.01] = 0
+    new_data = (10-mm_weighted)/10 # normalization between 0 and 1
+    new_data[new_data ==1] = 2
+    np.save(folder_name + r'\weighted', new_data)
+
+    return new_data, mm_weighted
+
+
+def weighted_con_mat_mega(nii_file, weight_by, grouping, idx, folder_name):
+    from dipy.tracking.streamline import values_from_volume
+    import numpy as np
+    import nibabel as nib
+
+    weight_by_file = nii_file[:-4:] + '_' + weight_by + '.nii'
+    weight_by_img = nib.load(weight_by_file)
+    weight_by_data = weight_by_img.get_data()
+    affine = weight_by_img.affine
+    m_weighted = np.zeros((len(idx),len(idx)), dtype='float64')
+    for pair, tracts in grouping.items():
+        if pair[0] == 0 or pair[1] == 0:
+            continue
+        else:
+            mean_vol_per_tract = []
+            vol_per_tract = values_from_volume(weight_by_data, tracts, affine=affine)
+            for s in vol_per_tract:
+                mean_vol_per_tract.append(np.mean(s))
+            mean_path_vol = np.nanmean(mean_vol_per_tract)
+            m_weighted[pair[0]-1, pair[1]-1] = mean_path_vol
+            m_weighted[pair[1]-1, pair[0]-1] = mean_path_vol
+
+    mm_weighted = m_weighted[idx]
+    mm_weighted = mm_weighted[:, idx]
+    mm_weighted[mm_weighted<0.01] = 0
+    new_data = (10-mm_weighted)/10 # normalization between 0 and 1
+    new_data[new_data ==1] = 2
+    np.save(folder_name + r'\weighted_mega', new_data)
+
+    return new_data, mm_weighted
+
+
+def draw_con_mat(data, h, fig_name, is_weighted=False):
+    import matplotlib.colors as colors
+    import matplotlib.pyplot as plt
+    import matplotlib.cm as cm
+    import numpy as np
+
+    min_val = data[np.isfinite(data)].min()
+    max_val = data[data <= 1].max()
+    data = (data - min_val) / (max_val - min_val) # changes between subjects!
+
+    if is_weighted:
+        mat_title = 'Weighted connectivity matrix'
+    else:
+        mat_title = 'Non-weighted connectivity matrix'
+    plt.figure(1, [24, 20])
+    cmap = cm.YlOrRd
+    cmap.set_over('black')
+    plt.imshow(data, interpolation='nearest', cmap=cmap, origin='upper', vmax=1.5, norm=colors.LogNorm(vmax=1))
     plt.colorbar()
-    plt.xticks(ticks=np.arange(0,len(new_data),1),labels=h)
-    plt.yticks(ticks=np.arange(0,len(new_data),1),labels=h)
-    plt.title('Weighted connectivity matrix', fontsize=16)
-    plt.tick_params(axis='x',pad=5.0, labelrotation=90, labelsize=9)
-    plt.tick_params(axis='y',pad=5.0, labelsize=9)
-    plt.savefig(folder_name+r'\Weighted(whole brain).png')
+    plt.xticks(ticks=np.arange(0, len(data), 1), labels=h)
+    plt.yticks(ticks=np.arange(0, len(data), 1), labels=h)
+    plt.title(mat_title, fontsize=20)
+    plt.tick_params(axis='x', pad=8.0, labelrotation=90, labelsize=9)
+    plt.tick_params(axis='y', pad=8.0, labelsize=9)
+    plt.savefig(fig_name)
     plt.show()
+
+
+def weighted_connectivity_matrix(streamlines, folder_name, nii_file, weight_by='pasiS'):
+    lab_labels_index, affine = nodes_by_index(folder_name)
+
+    index_to_text_file = r'C:\Users\Admin\my_scripts\aal\origin\aal2nii.txt'
+    labels_headers = nodes_labels(index_to_text_file)
+
+    # non-weighted:
+
+    new_data, m, grouping, idx = non_weighted_con_mat(streamlines, lab_labels_index, affine, folder_name)
+
+    h = [labels_headers[i] for i in idx]
+
+    fig_name = folder_name + r'\non-weighted(whole brain).png'
+    draw_con_mat(new_data, h, fig_name, is_weighted=False)
+
+    # weighted:
+
+    new_data, mm_weighted = weighted_con_mat(nii_file, weight_by, grouping, idx, folder_name)
+
+    fig_name = folder_name + r'\Weighted(whole brain).png'
+    draw_con_mat(new_data, h, fig_name, is_weighted=True)
+
+
+def weighted_connectivity_matrix_mega(streamlines, folder_name, nii_file, weight_by='pasiS'):
+    lab_labels_index, affine = nodes_by_index_mega(folder_name)
+
+    index_to_text_file = r'C:\Users\Admin\my_scripts\aal\megaatlas\megaatlas2nii.txt'
+    labels_headers, idx = nodes_labels_mega(index_to_text_file)
+
+    # non-weighted:
+
+    new_data, m, grouping = non_weighted_con_mat_mega(streamlines, lab_labels_index, affine, idx, folder_name)
+    h = labels_headers
+
+    fig_name = folder_name + r'\non-weighted(whole brain, MegaAtlas).png'
+    draw_con_mat(new_data, h, fig_name, is_weighted=False)
+
+    # weighted:
+
+    new_data, mm_weighted = weighted_con_mat_mega(nii_file, weight_by, grouping, idx, folder_name)
+
+    fig_name = folder_name + r'\Weighted(whole brain, MegaAtlas).png'
+    draw_con_mat(new_data, h, fig_name, is_weighted=True)
 
 
 if __name__ == '__main__':
@@ -257,12 +407,13 @@ if __name__ == '__main__':
             r'\DlYo_subj10',
             r'\AhLi_subj3',
             r'\NaYa_subj9']
+    subj = [r'\NaYa_subj9','']
     for s in subj:
         folder_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V5' + s
         mask_type = 'cc'
         gtab, data, affine, labels, white_matter, nii_file = load_dwi_files(folder_name)
-        mask_mat = load_mask(folder_name,mask_type)
-        '''seeds = create_seeds(folder_name, white_matter, affine, use_mask=True, mask_type='cc', den=5)
+        '''mask_mat = load_mask(folder_name,mask_type)
+        seeds = create_seeds(folder_name, white_matter, affine, use_mask=True, mask_type='cc', den=5)
         csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
         fa, classifier = create_fa_classifier(gtab, data, white_matter)
         streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
@@ -273,4 +424,4 @@ if __name__ == '__main__':
         fa, classifier = create_fa_classifier(gtab, data, white_matter)
         streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
         save_ft(folder_name,streamlines, labels)
-        weighted_connectivity_matrix(streamlines, folder_name, nii_file, weight_by='pasiS')
+        weighted_connectivity_matrix_mega(streamlines, folder_name, nii_file, weight_by='pasiS')
