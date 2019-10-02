@@ -1,9 +1,9 @@
 
 import os
 
-subj_name = r'NaYa_subj9/'
-mprage_file_name = r'20190211_111306T1wMPRAGERLs002a1001.nii'
-first_charmed_file_name = r'xf20190211_134016ep2dd155D60MB3APs004a001.nii'
+subj_name = r'GaHi_subj01/'
+mprage_file_name = r'20181224_160154T1ws002a1001.nii'
+first_charmed_file_name = r'f20181224_160154ep2dadvdiffD59d155000s005a001_01.nii'
 # for aal
 #atlas_template = r'C:\Users\Admin\my_scripts\aal\origin\AAL_highres_template.nii'
 #atlas_template = atlas_template.replace('C:', '/mnt/c')
@@ -12,7 +12,7 @@ first_charmed_file_name = r'xf20190211_134016ep2dd155D60MB3APs004a001.nii'
 #for megaatlas:
 atlas_template = r'C:\Users\Admin\my_scripts\aal\megaatlas\MegaAtla_Template.nii'
 atlas_template = atlas_template.replace('C:', '/mnt/c')
-atlas_label = r'C:\Users\Admin\my_scripts\aal\megaatlas\MegaAtlas_Labels.nii'
+atlas_label = r'C:\Users\Admin\my_scripts\aal\megaatlas\MegaAtlas_cortex_Labels.nii'
 atlas_label = atlas_label.replace('C:', '/mnt/c')
 
 
@@ -49,7 +49,7 @@ os.system(cmd)
 # BET for registered MPRAGE:
 out_brain = out_registered[:-4]+'_brain'
 
-cmd = 'bash -lc "bet {0} {1} {2} {3}"'.format(out_registered[:-4], out_brain,'-f 0.45','-g 0.2')
+cmd = 'bash -lc "bet {0} {1} {2} {3}"'.format(out_registered[:-4], out_brain,'-f 0.40','-g 0.20')
 cmd = cmd.replace(os.sep,'/')
 os.system(cmd)
 

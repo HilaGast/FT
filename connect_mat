@@ -107,11 +107,3 @@ plt.hist(new_data[new_data<1.5],bins=100)
 plt.show()
 
 
-import scipy.io as sio
-mat=sio.loadmat(r'C:\Users\Admin\my_scripts\aal\megaatlas\rsfmri.mat')
-mat = mat['rsfmri']
-mat_rev = 1-mat
-fig_name = folder_name + r'\rsfmri(whole brain, MegaAtlas).png'
-data = mat_rev
-data = data[idx]
-data = data[:,idx]
