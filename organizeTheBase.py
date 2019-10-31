@@ -63,5 +63,5 @@ if __name__ == '__main__':
     copy_files()
     for sub in glob(r'C:\Users\admin\Desktop\subj_for_v5\*'):
         dicom2nii(sub)
-        rename(os.path.join(sub, 'nifti'))
-    clean()
+        #rename(os.path.join(sub, 'nifti'))
+    #clean()

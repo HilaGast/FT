@@ -1,29 +1,34 @@
 import matplotlib.pyplot as plt
-from FT.all_subj import all_subj_names
+from FT.all_subj import all_subj_names,all_subj_folders
 import numpy as np
 
 def all_g_prop():
     import networkx as nx
-    subj = all_subj_names.copy()
-    weighted_mat = r'\weighted_mega_wholebrain_cortex_nonnorm.npy'
-    nonweighted_mat = r'\non-weighted_mega_wholebrain_cortex_nonnorm.npy'
+    subj = all_subj_folders.copy()
+    names = all_subj_names
+    #weighted_mat = r'\weighted_mega_wholebrain_cortex_nonnorm.npy'
+    #nonweighted_mat = r'\non-weighted_mega_wholebrain_cortex_nonnorm.npy'
+    weighted_mat = r'\weighted_mega_wholebrain_cortex.npy'
+    nonweighted_mat = r'\non-weighted_mega_wholebrain_cortex.npy'
     data = np.empty([2,len(subj),3])
     i=0
-    for s in subj:
+    for s,n in zip(subj,names):
 
-        folder_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V5' + s
+        folder_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep' + s
         #non-weighted:
         mat_file_name = folder_name+nonweighted_mat
         mat = np.load(mat_file_name)
-        #mat[mat > 1] = np.inf
+        mat[mat > 1] = 0
         mat[mat < 0] = 0
         #opmat = 1-mat
         #opmat[opmat<0] = 0
         #mat[mat > 1] = 100
-        deg = np.sum(mat[np.isfinite(mat)], axis=0)
-        mean_deg = np.nanmean(deg)
+        deg = np.sum(mat, axis=0)
+        mean_deg = np.nanmean(deg[np.isfinite(deg)], axis=0)
         G = nx.from_numpy_array(mat)
-        mean_shortest_path = nx.average_shortest_path_length(G,weight='weight')
+        for g in nx.connected_component_subgraphs(G):
+            if g._node.__len__()>10:
+                mean_shortest_path = nx.average_shortest_path_length(g,weight='weight')
         #G = nx.from_numpy_array(opmat)
         mean_clustering = nx.average_clustering(G, weight='weight')
         data[0,i,0] = mean_deg
@@ -33,16 +38,17 @@ def all_g_prop():
         #weighted:
         mat_file_name = folder_name+weighted_mat
         mat = np.load(mat_file_name)
-        #mat[mat > 1] = np.inf
+        mat[mat > 1] = 0
         mat[mat < 0] = 0
         #opmat = 1-mat
         #opmat[opmat<0] = 0
         #mat[mat > 1] = 100
-        deg = np.sum(mat[np.isfinite(mat)], axis=0)
-        mean_deg = np.nanmean(deg)
+        deg = np.sum(mat, axis=0)
+        mean_deg = np.nanmean(deg[np.isfinite(deg)], axis=0)
         G = nx.from_numpy_array(mat)
-        mean_shortest_path = nx.average_shortest_path_length(G,weight='weight')
-        #G = nx.from_numpy_array(opmat)
+        for g in nx.connected_component_subgraphs(G):
+            if g._node.__len__()>10:
+                mean_shortest_path = nx.average_shortest_path_length(g,weight='weight')        #G = nx.from_numpy_array(opmat)
         mean_clustering = nx.average_clustering(G, weight='weight')
         data[1,i,0] = mean_deg
         data[1,i,1] = mean_shortest_path
@@ -75,6 +81,6 @@ if __name__ == '__main__':
     ax2.scatter(data[0, :, 2], data[1, :, 2])
 
 
-ax0.set_ylabel('AxCaliber weighted graph', fontsize=12)
-ax1.set_xlabel('Number of tracts weighted graph', fontsize=12)
-plt.show()
+    ax0.set_ylabel('AxCaliber weighted graph', fontsize=12)
+    ax1.set_xlabel('Number of tracts weighted graph', fontsize=12)
+    plt.show()

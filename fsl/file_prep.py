@@ -1,20 +1,17 @@
-from FT.all_subj import all_subj_names
 import os
 from FT.fsl.eddy_correct_diff import eddy_corr
-
 #for megaatlas:
 atlas_template = r'C:\Users\Admin\my_scripts\aal\megaatlas\MegaAtla_Template.nii'
 atlas_template = atlas_template.replace('C:', '/mnt/c')
 atlas_label = r'C:\Users\Admin\my_scripts\aal\megaatlas\MegaAtlas_cortex_Labels.nii'
 atlas_label = atlas_label.replace('C:', '/mnt/c')
 
-main_folder = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V5/'
-folder_name = main_folder
-main_folder = main_folder.replace('C:', '/mnt/c')
+folder_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6'
 
-subj = all_subj_names[16::]
+all_subj_folders = os.listdir(folder_name)
+subj = all_subj_folders[3::]
 for s in subj:
-    subj_name = s[1::] + r'/'
+    subj_name = r'/' + s + r'/'
     subj_folder = folder_name + subj_name
     subj_folder = subj_folder.replace(os.sep,'/')
 
@@ -28,10 +25,8 @@ for s in subj:
 
     subj_folder = subj_folder.replace('C:', '/mnt/c')
 
-    ''' FINISH IT!'''
 
-    eddy_corr(subj_folder,diff_file_name,pa_file_name) #################################################################
-
+    eddy_corr(subj_folder,diff_file_name,pa_file_name)
 
 
 
@@ -74,15 +69,15 @@ for s in subj:
     # BET for mni template:
 
 
-# if not performed before, run:
-#atlas_brain = atlas_template[:-4] + '_brain'
-#cmd = 'bash -lc "bet {0} {1} {2} {3}"'.format(atlas_template[:-4], atlas_brain,'-f 0.45','-g -0.1')
-#cmd = cmd.replace(os.sep,'/')
-#os.system(cmd)
+    # if not performed before, run:
+    #atlas_brain = atlas_template[:-4] + '_brain'
+    #cmd = 'bash -lc "bet {0} {1} {2} {3}"'.format(atlas_template[:-4], atlas_brain,'-f 0.45','-g -0.1')
+    #cmd = cmd.replace(os.sep,'/')
+    #os.system(cmd)
 
-## Registration from MNI to regisered MPRAGE:
+    ## Registration from MNI to regisered MPRAGE:
 
-# flirt for MNI to registered MPRAGE for primary guess:
+    # flirt for MNI to registered MPRAGE for primary guess:
     options = r'-bins 256 -cost corratio -searchrx -90 90 -searchry -90 90 -searchrz -90 90 -dof 12 -interp trilinear'
     atlas_brain = atlas_template[:-4] + '_brain.nii'
 
