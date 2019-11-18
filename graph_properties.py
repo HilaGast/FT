@@ -8,8 +8,8 @@ def all_g_prop():
     names = all_subj_names
     #weighted_mat = r'\weighted_mega_wholebrain_cortex_nonnorm.npy'
     #nonweighted_mat = r'\non-weighted_mega_wholebrain_cortex_nonnorm.npy'
-    weighted_mat = r'\weighted_mega_wholebrain_cortex.npy'
-    nonweighted_mat = r'\non-weighted_mega_wholebrain_cortex.npy'
+    weighted_mat = r'\weighted_mega_wholebrain_plus.npy'
+    nonweighted_mat = r'\non-weighted_mega_wholebrain_plus.npy'
     data = np.empty([2,len(subj),3])
     i=0
     for s,n in zip(subj,names):

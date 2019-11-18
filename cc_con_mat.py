@@ -6,15 +6,14 @@ import nibabel as nib
 import os
 
 
-def load_fibers(s,n,index_to_text_file,fig_type):
-    main_folder = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep' + s
+def load_fibers(main_folder,n,index_to_text_file,fig_type,nii_file):
     tract_file = main_folder + r'\streamlines' + n + '_'+fig_type+'.trk'
-    streamlines = load_ft(tract_file)
+    streamlines = load_ft(tract_file,nii_file)
     lab_labels_index, affine = nodes_by_index_mega(main_folder)
     labels_headers, idx = nodes_labels_mega(index_to_text_file)
     new_data, m, grouping = non_weighted_con_mat_mega(streamlines, lab_labels_index, affine, idx, main_folder)
     h = labels_headers
-    return main_folder, labels_headers, idx, m, grouping, h
+    return labels_headers, idx, m, grouping, h
 
 
 def create_empty_vars():
@@ -77,16 +76,18 @@ if __name__ == '__main__':
     subj = all_subj_folders
     names = all_subj_names
     index_to_text_file = r'C:\Users\Admin\my_scripts\aal\megaatlas\megaatlascortex2nii.txt'
-    fig_types = ['cc_cortex','genu_cortex','body_cortex','splenium_cortex']
+    fig_types = ['cc_1d','genu_1d','body_1d','splenium_1d']
     weight_by='1.5_2_AxPasi5'
+    a= True
     for s, n in zip(subj, names):
         for fig_type in fig_types:
-            main_folder, labels_headers, idx, m, grouping, h = load_fibers(s, n, index_to_text_file,fig_type)
-            if os.path.exists(os.path.join(main_folder, 'non-weighted('+fig_type+', MegaAtlas).png')):
+            main_folder = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep' + s
+            gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(main_folder)
+            labels_headers, idx, m, grouping, h = load_fibers(main_folder, n, index_to_text_file,fig_type,nii_file)
+            #if os.path.exists(os.path.join(main_folder, 'non-weighted('+fig_type+', MegaAtlas).png')):
             #if not os.path.exists(os.path.join(main_folder, 'non-weighted(' + fig_type + ', MegaAtlas).png')):
-
+            if a:
                 clean_grouping, m_clean, clean_streamlines, m_weighted = create_empty_vars()
-                gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(main_folder)
                 weight_by_data, affine = extract_weighted_data(bvec_file,weight_by)
                 clean_grouping, clean_streamlines = clean_non_cc(grouping, idx, clean_grouping, clean_streamlines)
                 m_clean, m_weighted = cleaned_tracts_to_mat(clean_grouping, m_clean, weight_by_data, affine, m_weighted)
@@ -94,21 +95,18 @@ if __name__ == '__main__':
                 mm = m_clean[idx]
                 mm = mm[:, idx]
                 new_data = 1 / mm  # values distribute between 0 and 1, 1 represents distant nodes (only 1 tract)
-                new_data[new_data > 1] = 2
                 np.save(main_folder + r'\non-weighted_mega_'+fig_type+'_nonnorm_cleaned', mm)
                 np.save(main_folder + r'\non-weighted_mega_'+fig_type+'_cleaned', new_data)
 
-                #save_ft(main_folder, n, clean_streamlines, file_name='_'+ fig_type+'_cleaned.trk')
-                #fig_name = main_folder + r'\non-weighted('+fig_type+', MegaAtlas).png'
-                #draw_con_mat(new_data, h, fig_name, is_weighted=False)
+                save_ft(main_folder, n, clean_streamlines, nii_file, file_name='_'+ fig_type+'_cleaned.trk')
+                fig_name = main_folder + r'\non-weighted('+fig_type+', MegaAtlas).png'
+                draw_con_mat(new_data, h, fig_name, is_weighted=False)
 
                 mm_weighted = m_weighted[idx]
                 mm_weighted = mm_weighted[:, idx]
-                mm_weighted[mm_weighted<0.01] = 0
-                new_data = (10-mm_weighted)/10 # normalization between 0 and 1
-                new_data[new_data ==1] = 2
+                new_data = 1 / (mm_weighted * 1.7 * 8.75)  # 1.7 - voxel resolution, 8.75 - axon diameter 2 ACV constant
                 np.save(main_folder + r'\weighted_mega_'+fig_type+'_nonnorm_cleaned', mm_weighted)
                 np.save(main_folder + r'\weighted_mega_'+fig_type+'_cleaned', new_data)
 
-                #fig_name = main_folder + r'\weighted('+fig_type+', MegaAtlas).png'
-                #draw_con_mat(new_data, h, fig_name, is_weighted=True)
+                fig_name = main_folder + r'\weighted('+fig_type+', MegaAtlas).png'
+                draw_con_mat(new_data, h, fig_name, is_weighted=True)

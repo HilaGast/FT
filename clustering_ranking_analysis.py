@@ -4,14 +4,15 @@ import numpy as np
 import pandas as pd
 from FT.weighted_tracts import nodes_labels_mega
 import networkx as nx
+import scipy.io as sio
 
 
 def all_g_prop():
     subj = all_subj_folders.copy()
-    weighted_mat = r'\weighted_mega_wholebrain_cortex.npy'
-    nonweighted_mat = r'\non-weighted_mega_wholebrain_cortex.npy'
+    weighted_mat = r'\weighted_mega_wholebrain_plus.npy'
+    nonweighted_mat = r'\non-weighted_mega_wholebrain_plus.npy'
 
-    index_to_text_file = r'C:\Users\Admin\my_scripts\aal\megaatlas\megaatlascortex2nii.txt'
+    index_to_text_file = r'C:\Users\Admin\my_scripts\aal\megaatlas\megaatlas2nii.txt'
     labels_headers, idx = nodes_labels_mega(index_to_text_file)
 
     return subj, weighted_mat, nonweighted_mat, labels_headers, idx
@@ -58,7 +59,7 @@ if __name__ == '__main__':
         mat_file_name = folder_name + nonweighted_mat
         mat = np.load(mat_file_name)
         mat[mat < 0] = 0
-        #mat[mat > 1] = 0
+        mat[mat > 1] = 0
 
         G = nx.from_numpy_array(mat)
         clustering_nw_vals = nx.clustering(G, weight='weight')
@@ -68,7 +69,7 @@ if __name__ == '__main__':
         mat_file_name = folder_name + weighted_mat
         mat = np.load(mat_file_name)
         mat[mat < 0] = 0
-        #mat[mat > 1] = 0
+        mat[mat > 1] = 0
 
         G = nx.from_numpy_array(mat)
         clustering_w_vals = nx.clustering(G, weight='weight')
@@ -83,7 +84,7 @@ if __name__ == '__main__':
         rank_table['mutual'] = (rank_table['weighted_ranks'] + rank_table['non-weighted_ranks'])
         rank_table['mutual_rank'] = rank_table['mutual'].rank().astype('int64')
 
-        #save_df_as_csv(folder_name, rank_table)
+        save_df_as_csv(folder_name, rank_table)
 
         nodes_nw[i,:] = np.asarray(rank_table['non-weighted_ranks'])
         nodes_w[i,:] = np.asarray(rank_table['weighted_ranks'])
@@ -91,6 +92,13 @@ if __name__ == '__main__':
         #nodes_nw = nodes_nw + list(rank_table['non-weighted_vals'])
         #nodes_w = nodes_w + list(rank_table['weighted_vals'])
 
+    nw_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\Testings\clus_nw.mat'
+    w_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\Testings\clus_w.mat'
+    sio.savemat(nw_name, {'nw_clustering_coeff_mat': nodes_nw})
+    sio.savemat(w_name, {'w_clustering_coeff_mat': nodes_w})
+
+    np.save(r'C:\Users\Admin\my_scripts\Ax3D_Pack\Testings\clus_nw',nodes_nw)
+    np.save(r'C:\Users\Admin\my_scripts\Ax3D_Pack\Testings\clus_w',nodes_w)
 
 
     plt.figure(figsize=[30, 15])

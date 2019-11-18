@@ -13,8 +13,8 @@ for n,s in zip(names,subj):
 
     for m in masks:
         tract_path = dir_name + n + '_' + m +'.trk'
-        streamlines = load_ft(tract_path)
-        fig_name = m + '_horizontal'
+        streamlines = load_ft(tract_path,nii_file)
+        fig_name = m + '_example'
         weighting_streamlines(folder_name, streamlines, bvec_file, weight_by='1.5_2_AxPasi5', hue=[0.0, 1.0],
                               saturation=[0.0, 1.0], scale=[2, 7], fig_type=fig_name)
 

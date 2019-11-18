@@ -2,7 +2,7 @@ import os
 import nibabel as nib
 from dipy.tracking import utils
 from dipy.core.gradients import gradient_table
-from dipy.tracking.local import (ThresholdTissueClassifier, LocalTracking)
+from dipy.tracking.local_tracking import LocalTracking
 import numpy as np
 from FT.all_subj import all_subj_names, all_subj_folders
 
@@ -44,20 +44,21 @@ def load_mask(folder_name, mask_type):
     return mask_mat
 
 
-def create_seeds(folder_name, white_matter, affine, use_mask = True, mask_type='cc',den = 1):
+def create_seeds(folder_name, lab_labels_index, affine, use_mask = True, mask_type='cc',den = 1):
     if use_mask:
         mask_mat = load_mask(folder_name,mask_type)
         seed_mask = mask_mat == 1
     else:
-        seed_mask = white_matter
+        seed_mask = lab_labels_index>0 #GM seeds
     seeds = utils.seeds_from_mask(seed_mask, density=den, affine=affine)
     return seeds
 
 
 def create_csd_model(data, gtab, white_matter, sh_order=6):
-    from dipy.reconst.csdeconv import ConstrainedSphericalDeconvModel
+    from dipy.reconst.csdeconv import ConstrainedSphericalDeconvModel,auto_response
+    response, ratio = auto_response(gtab, data, roi_radius=10, fa_thr=0.7)
 
-    csd_model = ConstrainedSphericalDeconvModel(gtab, None, sh_order=sh_order)
+    csd_model = ConstrainedSphericalDeconvModel(gtab, response, sh_order=sh_order)
     csd_fit = csd_model.fit(data, mask=white_matter)
 
     return csd_fit
@@ -66,13 +67,33 @@ def create_csd_model(data, gtab, white_matter, sh_order=6):
 def create_fa_classifier(gtab,data,white_matter):
     import dipy.reconst.dti as dti
     from dipy.reconst.dti import fractional_anisotropy
+    from dipy.tracking.stopping_criterion import ThresholdStoppingCriterion
 
     tensor_model = dti.TensorModel(gtab)
     tenfit = tensor_model.fit(data, mask=white_matter)
     fa = fractional_anisotropy(tenfit.evals)
-    classifier = ThresholdTissueClassifier(fa, .18)
+    classifier = ThresholdStoppingCriterion(fa, .18)
 
     return fa, classifier
+
+
+def create_act_classifier(fa,folder_name,labels):  # Does not working
+    from dipy.tracking.stopping_criterion import ActStoppingCriterion
+    background = np.ones(labels.shape)
+    background[(np.asarray(labels)>0) > 0] = 0
+    include_map = np.zeros(fa.shape)
+    lab = folder_name + r'\rMegaAtlas_cortex_Labels.nii'
+    lab_file = nib.load(lab)
+    lab_labels = lab_file.get_data()
+    include_map[background>0] = 1
+    include_map[lab_labels > 0] = 1
+    include_map[fa>0.18] = 1
+    include_map = include_map==1
+    exclude_map = labels==1
+
+    act_classifier = ActStoppingCriterion(include_map, exclude_map)
+
+    return act_classifier
 
 
 def create_streamlines(csd_fit, classifier, seeds, affine):
@@ -81,10 +102,10 @@ def create_streamlines(csd_fit, classifier, seeds, affine):
     from dipy.tracking.streamline import Streamlines
 
     detmax_dg = DeterministicMaximumDirectionGetter.from_shcoeff(csd_fit.shm_coeff,
-                                                                 max_angle=40.,
+                                                                 max_angle=30.,
                                                                  sphere=default_sphere)
 
-    streamlines = Streamlines(LocalTracking(detmax_dg, classifier, seeds, affine, step_size=.5))
+    streamlines = Streamlines(LocalTracking(detmax_dg, classifier, seeds, affine, step_size=.5,return_all=False))
 
     long_streamlines = np.ones((len(streamlines)), bool)
     for i in range(0, len(streamlines)):
@@ -110,7 +131,7 @@ def weighting_streamlines(folder_name, streamlines, bvec_file, weight_by = '1.5_
     stream = list(streamlines)
     vol_per_tract = values_from_volume(weight_by_data, stream, affine=affine)
 
-    pfr_data = load_weight_by_img(bvec_file,'_1.5_2_AxFr5.nii')[0]
+    pfr_data = load_weight_by_img(bvec_file,'1.5_2_AxFr5')[0]
 
     pfr_per_tract = values_from_volume(pfr_data, stream, affine=affine)
 
@@ -138,31 +159,31 @@ def weighting_streamlines(folder_name, streamlines, bvec_file, weight_by = '1.5_
     window.record(r, out_path=mean_pasi_weighted_img, size=(800, 800))
 
 
-def load_ft(tract_path):
-    from dipy.io.streamline import load_trk
-    from dipy.tracking.streamline import Streamlines
+def load_ft(tract_path, nii_file):
+    from dipy.io.streamline import load_trk,Space
 
-    streams, hdr = load_trk(tract_path)
-    streamlines = Streamlines(streams)
+    streams = load_trk(tract_path, nii_file, Space.RASMM)
+    streamlines = streams.get_streamlines_copy()
 
     return streamlines
 
 
-def save_ft(folder_name, subj_name, streamlines, shape = None, file_name = "_wholebrain.trk"):
+def save_ft(folder_name, subj_name, streamlines, nii_file, file_name = "_wholebrain.trk"):
     from dipy.io.streamline import save_trk
+    from dipy.io.stateful_tractogram import StatefulTractogram, Space
 
     dir_name = folder_name + '\streamlines'
     if not os.path.exists(dir_name):
         os.mkdir(dir_name)
 
     tract_name = dir_name + subj_name + file_name
-    save_trk(tract_name, streamlines, affine=np.eye(4), shape=shape, vox_size=np.array([1.7,1.7,1.7]))
+    save_trk(StatefulTractogram(streamlines,nii_file,Space.RASMM),tract_name)
 
 
 def nodes_by_index(folder_name):
     import numpy as np
     import nibabel as nib
-    lab = folder_name + r'\rMegaAtlas_Labels.nii'
+    lab = folder_name + r'\rMegaAtlas_Labels_highres.nii'
     lab_file = nib.load(lab)
     lab_labels = lab_file.get_data()
     affine = lab_file.affine
@@ -175,7 +196,7 @@ def nodes_by_index(folder_name):
 
 def nodes_by_index_mega(folder_name):
     import nibabel as nib
-    lab = folder_name + r'\rMegaAtlas_cortex_Labels.nii'
+    lab = folder_name + r'\rMegaAtlas_Labels_highres.nii'
     lab_file = nib.load(lab)
     lab_labels = lab_file.get_data()
     affine = lab_file.affine
@@ -211,7 +232,7 @@ def non_weighted_con_mat_mega(streamlines, lab_labels_index, affine, idx, folder
     if len(fig_type) >> 0:
         fig_type = '_'+fig_type
 
-    m, grouping = utils.connectivity_matrix(streamlines, lab_labels_index, affine=affine,
+    m, grouping = utils.connectivity_matrix(streamlines, affine, lab_labels_index,
                                             return_mapping=True,
                                             mapping_as_streamlines=True)
     mm = m[1:]
@@ -285,7 +306,6 @@ def draw_con_mat(data, h, fig_name, is_weighted=False):
         plt.tick_params(axis='y', pad=10.0, labelsize=11)
         plt.savefig(fig_name)
         plt.show()
-    #, norm = colors.LogNorm(vmax=max_val)
     else:
         data[~np.isfinite(data)] = 100
         mat_title = 'Number of tracts weighted connectivity matrix'
@@ -307,7 +327,7 @@ def weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_t
 
     lab_labels_index, affine = nodes_by_index_mega(folder_name)
 
-    index_to_text_file = r'C:\Users\Admin\my_scripts\aal\megaatlas\megaatlascortex2nii.txt'
+    index_to_text_file = r'C:\Users\Admin\my_scripts\aal\megaatlas\megaatlas2nii.txt'
     labels_headers, idx = nodes_labels_mega(index_to_text_file)
 
     # non-weighted:
@@ -339,17 +359,26 @@ if __name__ == '__main__':
     subj = all_subj_folders
     names = all_subj_names
     #masks = ['cc_cortex_cleaned','genu_cortex_cleaned','body_cortex_cleaned','splenium_cortex_cleaned']
-    #masks = ['cc_cortex','genu_cortex','body_cortex','splenium_cortex']
+    #masks = ['cc','genu','body','splenium']
 
     for s,n in zip(subj,names):
         folder_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep' + s
-        #dir_name = folder_name + '\streamlines'
+        dir_name = folder_name + '\streamlines'
         gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name)
-        seeds = create_seeds(folder_name, white_matter, affine, use_mask = False, mask_type='cc',den = 3)
+        lab_labels_index = nodes_by_index_mega(folder_name)[0]
         csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
         fa, classifier = create_fa_classifier(gtab, data, white_matter)
+        seeds = create_seeds(folder_name, lab_labels_index, affine, use_mask = False, mask_type='cc',den = 1)
         streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
-        save_ft(folder_name,n,streamlines,file_name="_wholebrain_3d.trk")
+        save_ft(folder_name,n,streamlines,nii_file, file_name="_wholebrain_1d_plus.trk")
+        weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_plus',
+                                          weight_by='1.5_2_AxPasi5')
+
+
+        #for m in masks:
+        #    seeds = create_seeds(folder_name, lab_labels_index, affine, use_mask=True, mask_type=m, den=7)
+        #    streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
+        #    save_ft(folder_name, n, streamlines, nii_file, file_name="_" + m + "_7d.trk")
 
 
 
