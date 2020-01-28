@@ -105,7 +105,7 @@ def create_streamlines(csd_fit, classifier, seeds, affine):
                                                                  max_angle=30.,
                                                                  sphere=default_sphere)
 
-    streamlines = Streamlines(LocalTracking(detmax_dg, classifier, seeds, affine, step_size=.5,return_all=False))
+    streamlines = Streamlines(LocalTracking(detmax_dg, classifier, seeds, affine, step_size=1,return_all=False))
 
     long_streamlines = np.ones((len(streamlines)), bool)
     for i in range(0, len(streamlines)):
@@ -116,12 +116,12 @@ def create_streamlines(csd_fit, classifier, seeds, affine):
     return streamlines
 
 
-def weighting_streamlines(folder_name, streamlines, bvec_file, weight_by = '1.5_2_AxPasi5',hue = [0.0,1.0],saturation = [0.0,1.0], scale = [2,6],fig_type=''):
+def weighting_streamlines(folder_name, streamlines, bvec_file, weight_by = '1.5_2_AxPasi5',hue = [0.0,1.0],saturation = [0.0,1.0], scale = [2,7],fig_type=''):
     '''
     weight_by = '1.5_2_AxPasi5'
     hue = [0.0,1.0]
     saturation = [0.0,1.0]
-    scale = [2,6]
+    scale = [3,6]
     '''
     from dipy.viz import window, actor
     from dipy.tracking.streamline import values_from_volume
@@ -148,7 +148,7 @@ def weighting_streamlines(folder_name, streamlines, bvec_file, weight_by = '1.5_
 
     lut_cmap = actor.colormap_lookup_table(hue_range=hue,
                                            saturation_range=saturation, scale_range=scale)
-    streamlines_actor = actor.line(streamlines, mean_vol_per_tract, linewidth=0.6, lookup_colormap=lut_cmap)
+    streamlines_actor = actor.line(streamlines, mean_vol_per_tract, linewidth=1, lookup_colormap=lut_cmap)
     bar = actor.scalar_bar(lut_cmap)
     r = window.Renderer()
     r.add(streamlines_actor)
@@ -196,7 +196,9 @@ def nodes_by_index(folder_name):
 
 def nodes_by_index_mega(folder_name):
     import nibabel as nib
+#    lab = folder_name + r'\rMegaAtlas_Labels.nii'
     lab = folder_name + r'\rMegaAtlas_Labels_highres.nii'
+
     lab_file = nib.load(lab)
     lab_labels = lab_file.get_data()
     affine = lab_file.affine
@@ -257,6 +259,10 @@ def weighted_con_mat_mega(bvec_file, weight_by, grouping, idx, folder_name,fig_t
 
     weight_by_data, affine = load_weight_by_img(bvec_file,weight_by)
 
+    pfr_data = load_weight_by_img(bvec_file,'1.5_2_AxFr5')[0]
+
+    vol_vec = weight_by_data.flatten()
+    q = np.quantile(vol_vec[vol_vec>0], 0.95)
     m_weighted = np.zeros((len(idx),len(idx)), dtype='float64')
     for pair, tracts in grouping.items():
         if pair[0] == 0 or pair[1] == 0:
@@ -264,8 +270,13 @@ def weighted_con_mat_mega(bvec_file, weight_by, grouping, idx, folder_name,fig_t
         else:
             mean_vol_per_tract = []
             vol_per_tract = values_from_volume(weight_by_data, tracts, affine=affine)
-            for s in vol_per_tract:
-                mean_vol_per_tract.append(np.nanmean(s))
+            pfr_per_tract = values_from_volume(pfr_data, tracts, affine=affine)
+            for s, pfr in zip(vol_per_tract, pfr_per_tract):
+                s = np.asanyarray(s)
+                non_out = [s < q]
+                pfr = np.asanyarray(pfr)
+                high_pfr = [pfr > 0.5]
+                mean_vol_per_tract.append(np.nanmean(s[tuple(non_out and high_pfr)]))
             mean_path_vol = np.nanmean(mean_vol_per_tract)
             m_weighted[pair[0]-1, pair[1]-1] = mean_path_vol
             m_weighted[pair[1]-1, pair[0]-1] = mean_path_vol
@@ -274,7 +285,7 @@ def weighted_con_mat_mega(bvec_file, weight_by, grouping, idx, folder_name,fig_t
     mm_weighted = mm_weighted[:, idx]
     #mm_weighted[mm_weighted<0.01] = 0
     #new_data = (10-mm_weighted)/10 # normalization between 0 and 1
-    new_data = 1/(mm_weighted*1.7*8.75) #1.7 - voxel resolution, 8.75 - axon diameter 2 ACV constant
+    new_data = 1/(mm_weighted*8.75) #8.75 - axon diameter 2 ACV constant
     #new_data[new_data ==1] = 2
     np.save(folder_name + r'\weighted_mega'+fig_type, new_data)
     np.save(folder_name + r'\weighted_mega'+fig_type+'_nonnorm', mm_weighted)
@@ -288,16 +299,16 @@ def draw_con_mat(data, h, fig_name, is_weighted=False):
     import matplotlib.pyplot as plt
     import matplotlib.cm as cm
     import numpy as np
-    max_val = np.max(data[np.isfinite(data)]) * 1.01
+    max_val = np.max(data[np.isfinite(data)])
     data[~np.isfinite(data)] = np.nan
     if is_weighted:
-        data[data>0.8*max_val] = 0.8*max_val
-        data[~np.isfinite(data)] = 100
+        #data[data>0.8*max_val] = 0.8*max_val
+        data[~np.isfinite(data)] = max_val
         mat_title = 'AxCaliber weighted connectivity matrix'
         plt.figure(1, [30, 24])
         cmap = cm.YlOrRd
         cmap.set_over('black')
-        plt.imshow(data, interpolation='nearest', cmap=cmap, origin='upper',vmax=0.8*max_val)
+        plt.imshow(data, interpolation='nearest', cmap=cmap, origin='upper',vmax=0.99*max_val)
         plt.colorbar()
         plt.xticks(ticks=np.arange(0, len(data), 1), labels=h)
         plt.yticks(ticks=np.arange(0, len(data), 1), labels=h)
@@ -307,12 +318,12 @@ def draw_con_mat(data, h, fig_name, is_weighted=False):
         plt.savefig(fig_name)
         plt.show()
     else:
-        data[~np.isfinite(data)] = 100
+        data[~np.isfinite(data)] = max_val
         mat_title = 'Number of tracts weighted connectivity matrix'
         plt.figure(1, [30, 24])
         cmap = cm.YlOrRd
         cmap.set_over('black')
-        plt.imshow(data, interpolation='nearest', cmap=cmap, origin='upper',vmax=max_val, norm = colors.LogNorm(vmax=max_val))
+        plt.imshow(data, interpolation='nearest', cmap=cmap, origin='upper',vmax=0.99*max_val, norm = colors.LogNorm(vmax=0.99*max_val))
         plt.colorbar()
         plt.xticks(ticks=np.arange(0, len(data), 1), labels=h)
         plt.yticks(ticks=np.arange(0, len(data), 1), labels=h)
@@ -366,12 +377,14 @@ if __name__ == '__main__':
         dir_name = folder_name + '\streamlines'
         gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name)
         lab_labels_index = nodes_by_index_mega(folder_name)[0]
-        csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
-        fa, classifier = create_fa_classifier(gtab, data, white_matter)
-        seeds = create_seeds(folder_name, lab_labels_index, affine, use_mask = False, mask_type='cc',den = 1)
-        streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
-        save_ft(folder_name,n,streamlines,nii_file, file_name="_wholebrain_1d_plus.trk")
-        weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_plus',
+        #csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
+        #fa, classifier = create_fa_classifier(gtab, data, white_matter)
+        #seeds = create_seeds(folder_name, lab_labels_index, affine, use_mask=False, mask_type='cc', den=4)
+        #streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
+        #save_ft(folder_name,n,streamlines,nii_file, file_name="_fx_5d_plus_new.trk")
+        tract_path = folder_name+r'\streamlines'+n+'_wholebrain_1d_plus.trk'
+        streamlines = load_ft(tract_path, nii_file)
+        weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_plus_new2',
                                           weight_by='1.5_2_AxPasi5')
 
 
@@ -381,23 +394,3 @@ if __name__ == '__main__':
         #    save_ft(folder_name, n, streamlines, nii_file, file_name="_" + m + "_7d.trk")
 
 
-
-
-'''
-        
-        for m in masks:
-            tract_path = dir_name + n + '_' + m + '.trk'
-            streamlines = load_ft(tract_path)
-            weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type=m, weight_by='1.5_2_AxPasi5')
-
-                #if 'cc' in mask_type:
-                #    weighting_streamlines(streamlines, bvec_file, weight_by='1.5_2_AxPasi5', fig_type='_cc_cortex_before_clean')
-
-
-        #if not os.path.exists(dir_name):
-            csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
-            fa, classifier = create_fa_classifier(gtab, data, white_matter)
-            seeds = create_seeds(folder_name, white_matter, affine, use_mask=False, mask_type='', den=1)
-            streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
-            save_ft(folder_name, n, streamlines, file_name='_wholebrain.trk')
-'''

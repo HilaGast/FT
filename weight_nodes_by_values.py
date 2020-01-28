@@ -11,8 +11,8 @@ def load_labels_nii_file(labels_file_name):
 
 def load_node_weights(folder_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\Testings'):
 
-    mat = np.load(folder_name+r'\clus_nw.npy')
-    #w_mat = np.load(folder_name+r'\nodedeg_w.npy')
+    #mat = np.load(folder_name+r'\clus_w.npy')
+    mat = np.load(folder_name+r'\nodedeg_nw.npy')
 
 
     return mat
@@ -33,7 +33,7 @@ def weight_labels(labels_img, w_mat):
 def save_weighted_nii_nodes(new_nii, folder_name):
 
 
-    nib.save(new_nii,folder_name+r'\nw_clus_coeff.nii')
+    nib.save(new_nii,folder_name+r'\nw_node_deg.nii')
 
 
 if __name__ == '__main__':

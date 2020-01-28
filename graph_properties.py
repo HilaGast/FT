@@ -48,7 +48,7 @@ def all_g_prop():
         G = nx.from_numpy_array(mat)
         for g in nx.connected_component_subgraphs(G):
             if g._node.__len__()>10:
-                mean_shortest_path = nx.average_shortest_path_length(g,weight='weight')        #G = nx.from_numpy_array(opmat)
+                mean_shortest_path = nx.average_shortest_path_length(g,weight='weight')
         mean_clustering = nx.average_clustering(G, weight='weight')
         data[1,i,0] = mean_deg
         data[1,i,1] = mean_shortest_path

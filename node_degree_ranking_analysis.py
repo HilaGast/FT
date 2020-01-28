@@ -1,8 +1,6 @@
 import matplotlib.pyplot as plt
-from FT.all_subj import all_subj_names,all_subj_folders
 import numpy as np
 import pandas as pd
-from FT.weighted_tracts import nodes_labels_mega
 from FT.clustering_ranking_analysis import all_g_prop
 
 
@@ -12,9 +10,9 @@ from FT.clustering_ranking_analysis import all_g_prop
 
 
 if __name__ == '__main__':
-    subj, weighted_mat, nonweighted_mat, labels_headers, idx =all_g_prop()
-    nodes_nw = np.zeros([len(subj),len(idx)])
-    nodes_w = np.zeros([len(subj),len(idx)])
+    subj, weighted_mat, nonweighted_mat, labels_headers, id =all_g_prop()
+    nodes_nw = np.zeros([len(subj),len(id)])
+    nodes_w = np.zeros([len(subj),len(id)])
     for i,s in enumerate(subj):
 
         folder_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep' + s
@@ -22,6 +20,8 @@ if __name__ == '__main__':
         #non-weighted:
         mat_file_name = folder_name+nonweighted_mat
         mat = np.load(mat_file_name)
+        mat = mat[id]
+        mat = mat[:,id]
         mat[mat > 1] = 0
         mat[mat < 0] = 0
         deg_nw_vals = np.sum(mat, axis=0)
@@ -30,6 +30,8 @@ if __name__ == '__main__':
         #weighted:
         mat_file_name = folder_name+weighted_mat
         mat = np.load(mat_file_name)
+        mat = mat[id]
+        mat = mat[:,id]
         mat[mat > 1] = 0
         mat[mat < 0] = 0
         deg_w_vals = np.sum(mat, axis=0)
@@ -42,7 +44,7 @@ if __name__ == '__main__':
 
 
         index_to_text_file = r'C:\Users\Admin\my_scripts\aal\megaatlas\megaatlas2nii.txt'
-        labels_headers, idx = nodes_labels_mega(index_to_text_file)
+        #labels_headers, idx = nodes_labels_mega(index_to_text_file)
 
         rank_table['cortex_part'] =  labels_headers
         rank_table['mutual'] = (rank_table['weighted_ranks']+rank_table['non-weighted_ranks'])

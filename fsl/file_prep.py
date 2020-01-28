@@ -12,13 +12,15 @@ def basic_files(cortex_only=True):
 
     atlas_template = r'C:\Users\Admin\my_scripts\aal\megaatlas\Schaefer_template.nii'
     atlas_template = atlas_template.replace('C:', '/mnt/c')
+    atlas_mask = r'C:\Users\Admin\my_scripts\aal\megaatlas\atlas_masks.nii'
+    atlas_mask = atlas_mask.replace('C:', '/mnt/c')
 
     folder_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep'
 
     all_subj_folders = os.listdir(folder_name)
     subj = all_subj_folders
 
-    return subj, folder_name, atlas_template, atlas_label
+    return subj, folder_name, atlas_template, atlas_label,atlas_mask
 
 
 def subj_files(subj_folder):
@@ -133,6 +135,13 @@ def apply_fnirt_warp_on_label(subj_folder, atlas_label, out_registered, warp_nam
     return atlas_labels_registered
 
 
+def apply_fnirt_warp_on_masks(subj_folder, atlas_mask, out_registered, warp_name):
+    atlas_mask_registered = os.path.join(subj_folder+ 'r' + atlas_mask.split(sep="\\")[-1])
+    cmd = 'bash -lc "applywarp --ref={0} --in={1} --out={2} --warp={3} --interp={4}"'.format(out_registered, atlas_mask, atlas_mask_registered, warp_name, 'nn')
+    cmd = cmd.replace(os.sep,'/')
+    os.system(cmd)
+
+
 def fast_seg(out_registered):
     options = r'-t 1 -n 3 -H 0.1 -I 4 -l 10.0 -o'
     cmd = 'bash -lc "fast {0} {1} {2}"'.format(options, out_registered, out_registered)
@@ -140,7 +149,7 @@ def fast_seg(out_registered):
     os.system(cmd)
 
 
-def all_func_to_run(s, folder_name, atlas_template, atlas_label):
+def all_func_to_run(s, folder_name, atlas_template, atlas_label,atlas_mask):
     subj_name = r'/' + s + r'/'
     subj_folder = folder_name + subj_name
     subj_folder = subj_folder.replace(os.sep, '/')
@@ -183,6 +192,9 @@ def all_func_to_run(s, folder_name, atlas_template, atlas_label):
     '''apply fnirt warp on atlas labels:   '''
     atlas_labels_registered = apply_fnirt_warp_on_label(subj_folder, atlas_label, out_registered, warp_name)
 
+    '''apply fnirt warp on atlas labels:   '''
+    apply_fnirt_warp_on_masks(subj_folder, atlas_mask, out_registered, warp_name)
+
     '''FAST segmentation:   '''
     # fast_seg(out_registered)
 
@@ -191,9 +203,9 @@ def all_func_to_run(s, folder_name, atlas_template, atlas_label):
 
 if __name__ == '__main__':
     from multiprocessing import Process
-    subj, folder_name, atlas_template, atlas_label = basic_files(False)
-    s= subj[1]
-    all_func_to_run(s, folder_name, atlas_template, atlas_label)
+    subj, folder_name, atlas_template, atlas_label,atlas_mask = basic_files(False)
+    for s in subj[1::]:
+        all_func_to_run(s, folder_name, atlas_template, atlas_label,atlas_mask)
 
 
     '''multi procesing:'''
