@@ -7,6 +7,7 @@ from FT.single_fascicle_vizualization import *
 def load_vars(volume_file, main_folder,s,n,img_name = r'' ):
     folder_name = main_folder + s
     s_img = folder_name + r'\streamlines' + img_name
+    mask_type='cc'
     scale = [3.5, 6.2]
     hue = [0.25, -0.05]  # Hot
     saturation = [0.1, 1.0]
@@ -17,7 +18,7 @@ def load_vars(volume_file, main_folder,s,n,img_name = r'' ):
     shape = volume.shape
     affine = volume_file.affine
     nii_file = load_dwi_files(folder_name)[5]
-    s_list, vec_vols = streamline_mean_fascicle_value_weighted(folder_name, n, nii_file)
+    s_list, vec_vols = streamline_mean_fascicle_value_weighted(folder_name, n, nii_file,mask_type)
     return folder_name, s_img, scale, hue, saturation, axial, saggital, coronal, volume, shape, affine, s_list, vec_vols
 
 

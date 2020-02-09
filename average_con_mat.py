@@ -67,7 +67,7 @@ if __name__ == '__main__':
         #norm:
         fig_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep' + name
         #non-norm:
-        fig_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep'+name+'_nonnorm'
+        fig_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep'+name
         np.save(fig_name,mat)
         #mat[mat>1] = np.nan
         draw_con_mat(mat, h, fig_name, is_weighted=isw)

@@ -3,6 +3,8 @@ from dipy.viz import window, actor
 from FT.all_subj import all_subj_folders, all_subj_names
 import numpy as np
 from FT.weighted_tracts import *
+from FT.remove_cci_outliers import remove_cci_outliers
+
 
 def show_cc_parts_weighted(streamlines_g,streamlines_b,streamlines_s, g_mean, b_mean, s_mean, folder_name, lut_cmap, bar):
 
@@ -77,8 +79,8 @@ def create_streamline_dict(streamlines, lab_labels_index, affine):
 
 def load_mat_of_median_vals(mat_type = 'w_plus'):
 
-    median_vals_folder = r'C:\Users\Admin\my_scripts\Ax3D_Pack\mean_vals\plus2'
-    mat_path = median_vals_folder+ '\mean_'+ mat_type+'_nonnorm.npy'
+    median_vals_folder = r'C:\Users\Admin\my_scripts\Ax3D_Pack\mean_vals\plus3'
+    mat_path = median_vals_folder+ '\mean_'+ mat_type+'.npy'
     #mat_path = r'C:\Users\Admin\my_scripts\Ax3D_Pack\mean_vals\plus\weighted_mega_wholebrain_plus_new2_nonnorm.npy'
     mat_medians = np.load(mat_path)
 
@@ -215,8 +217,7 @@ def choose_specific_bundle(streamlines, affine, folder_name,mask_type):
     return masked_streamlines
 
 
-def streamline_mean_fascicle_value_weighted(folder_name, n, nii_file):
-    from dipy.tracking.streamline import Streamlines
+def streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, mask_type):
 
     #tract_path = folder_name+r'\streamlines'+n+'_cc_1d_cleaned.trk'
     tract_path = folder_name+r'\streamlines'+n+'_wholebrain_3d_plus_new.trk'
@@ -225,7 +226,7 @@ def streamline_mean_fascicle_value_weighted(folder_name, n, nii_file):
 
 
     lab_labels_index, affine = nodes_by_index_mega(folder_name)
-    masked_streamlines = choose_specific_bundle(streamlines, affine, folder_name,mask_type='cing')
+    masked_streamlines = choose_specific_bundle(streamlines, affine, folder_name, mask_type)
     streamline_dict = create_streamline_dict(masked_streamlines, lab_labels_index, affine)
 
     #streamline_dict = clean_non_cc(streamline_dict) ##
@@ -243,24 +244,26 @@ def streamline_mean_fascicle_value_weighted(folder_name, n, nii_file):
         for j in range(i+1):  #
             edge_s_list = []
             #print(i,j)
-            if (i + 1, j + 1) in streamline_dict: #and mat_medians[i, j] > 1:
+            if (i + 1, j + 1) in streamline_dict and mat_medians[i, j] > 0:
                 edge_s_list += streamline_dict[(i + 1, j + 1)]
-            if (j + 1, i + 1) in streamline_dict: #and mat_medians[i, j] > 1:
+            if (j + 1, i + 1) in streamline_dict and mat_medians[i, j] > 0:
                 edge_s_list += streamline_dict[(j + 1, i + 1)]
             edge_vec_vols = [mat_medians[i,j]]*edge_s_list.__len__()
 
             s_list = s_list+edge_s_list
             vec_vols = vec_vols+edge_vec_vols
 
+    keep_s,keep_i = remove_cci_outliers(s_list)
+    new_s = []
+    new_s += [s_list[s1] for s1 in keep_i]
+    vec_vols = [vec_vols[v] for v in keep_i]
+    #show_fascicles_wholebrain(new_s, vec_vols,folder_name, mask_type, downsamp=1)
+    return new_s, vec_vols
 
-    show_fascicles_wholebrain(s_list, vec_vols,folder_name,downsamp=1)
-    return s_list, vec_vols
-    #show_fascicles_wholebrain(s_list, vec_vols,folder_name,downsamp=2)
 
+def show_fascicles_wholebrain(s_list, vec_vols, folder_name, mask_type, downsamp = 1):
 
-def show_fascicles_wholebrain(s_list, vec_vols, folder_name, downsamp = 1):
-
-    s_img = folder_name+r'\streamlines'+r'\fascicles_AxCaliber_weighted_3d_ilf.png'
+    s_img = folder_name+r'\streamlines'+r'\fascicles_AxCaliber_weighted_3d_'+mask_type+'.png'
     #hue = [0.4, 0.7] # blues
     hue = [0.25, -0.05] #Hot
     #hue = [0, 1] #All
@@ -268,7 +271,7 @@ def show_fascicles_wholebrain(s_list, vec_vols, folder_name, downsamp = 1):
     saturation = [0.1, 1.0]
     weighted=True
     if weighted:
-        scale = [3.5,7]
+        scale = [0, 3]
 
 
     else:
@@ -305,7 +308,7 @@ if __name__ == '__main__':
     n = all_subj_names[0]
     nii_file = load_dwi_files(folder_name)[5]
 
-    s_list, vec_vols = streamline_mean_fascicle_value_weighted(folder_name, n, nii_file)
+    s_list, vec_vols = streamline_mean_fascicle_value_weighted(folder_name, n, nii_file,'cc')
     #cc_part_viz_running_script(n,folder_name)
 
 
