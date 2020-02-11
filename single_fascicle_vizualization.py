@@ -261,15 +261,16 @@ def streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, mask_type)
     return new_s, vec_vols
 
 
-def show_fascicles_wholebrain(s_list, vec_vols, folder_name, mask_type, downsamp = 1):
+def show_fascicles_wholebrain(s_list, vec_vols, folder_name, mask_type, downsamp=1, scale=[0, 3], hue=[0.25, -0.05]):
 
     s_img = folder_name+r'\streamlines'+r'\fascicles_AxCaliber_weighted_3d_'+mask_type+'.png'
     #hue = [0.4, 0.7] # blues
-    hue = [0.25, -0.05] #Hot
+    #hue = [0.25, -0.05] #Hot
     #hue = [0, 1] #All
 
     saturation = [0.1, 1.0]
     weighted=True
+    '''
     if weighted:
         scale = [0, 3]
 
@@ -278,7 +279,7 @@ def show_fascicles_wholebrain(s_list, vec_vols, folder_name, mask_type, downsamp
         scale = [0, 6]
         vec_vols = np.log(vec_vols)
         #vec_vols = vec_vols-np.nanmin(vec_vols)/(np.nanmax(vec_vols)-np.nanmin(vec_vols))
-
+    '''
 
     if downsamp != 1:
         vec_vols = vec_vols[::downsamp]

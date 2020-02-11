@@ -10,7 +10,7 @@ def distance_vec_rep_of_fibers(fi):
 
     p1 = fi[0,:]
     dist_vec = np.zeros(fi.shape[0])
-    for pi,i in zip(fi.iterrows,range(fi.shape[0])):
+    for pi,i in zip(fi,range(fi.shape[0])):
         disti = np.linalg.norm(p1-pi)
         dist_vec[i] = disti
 
@@ -49,9 +49,9 @@ def least_squares_poly_rep(fi,comp,dist_mat):
     elif comp == 'Z':
         ax = 2
 
-    dup_mat = dist_mat.T * dist_mat
+    dup_mat = np.matmul(dist_mat.T, dist_mat)
     inv_dup_mat = pinv(dup_mat)
-    poly_vec = inv_dup_mat * dist_mat.T * fi[:,ax]
+    poly_vec = np.matmul(np.matmul(inv_dup_mat, dist_mat.T), fi[:,ax])
 
     return poly_vec
 
