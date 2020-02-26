@@ -111,7 +111,7 @@ def clean_non_cc(grouping):
     return clean_grouping
 
 
-def choose_specific_bundle(streamlines, affine, folder_name,mask_type):
+def choose_specific_bundle(streamlines, affine, folder_name,mask_type, n, nii_file):
     from dipy.tracking import utils
     from dipy.tracking.streamline import Streamlines
 
@@ -213,7 +213,7 @@ def choose_specific_bundle(streamlines, affine, folder_name,mask_type):
     masked_streamlines = utils.target(masked_streamlines, affine, mask_exclude, include=False)
 
     masked_streamlines = Streamlines(masked_streamlines)
-
+    save_ft(folder_name, n, masked_streamlines, nii_file, file_name='_'+mask_type+'.trk')
     return masked_streamlines
 
 
@@ -226,7 +226,7 @@ def streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, mask_type)
 
 
     lab_labels_index, affine = nodes_by_index_mega(folder_name)
-    masked_streamlines = choose_specific_bundle(streamlines, affine, folder_name, mask_type)
+    masked_streamlines = choose_specific_bundle(streamlines, affine, folder_name, mask_type, n, nii_file)
     streamline_dict = create_streamline_dict(masked_streamlines, lab_labels_index, affine)
 
     #streamline_dict = clean_non_cc(streamline_dict) ##
@@ -259,16 +259,17 @@ def streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, mask_type)
     vec_vols = [vec_vols[v] for v in keep_i]
     #show_fascicles_wholebrain(new_s, vec_vols,folder_name, mask_type, downsamp=1)
     return new_s, vec_vols
+    #return s_list, vec_vols
 
 
-def show_fascicles_wholebrain(s_list, vec_vols, folder_name, mask_type, downsamp=1, scale=[0, 3], hue=[0.25, -0.05]):
+
+def show_fascicles_wholebrain(s_list, vec_vols, folder_name, mask_type, downsamp=1, scale=[0, 3], hue=[0.25, -0.05],saturation = [0.1, 1.0]):
 
     s_img = folder_name+r'\streamlines'+r'\fascicles_AxCaliber_weighted_3d_'+mask_type+'.png'
     #hue = [0.4, 0.7] # blues
     #hue = [0.25, -0.05] #Hot
     #hue = [0, 1] #All
 
-    saturation = [0.1, 1.0]
     weighted=True
     '''
     if weighted:
@@ -309,8 +310,15 @@ if __name__ == '__main__':
     n = all_subj_names[0]
     nii_file = load_dwi_files(folder_name)[5]
 
-    s_list, vec_vols = streamline_mean_fascicle_value_weighted(folder_name, n, nii_file,'cc')
+    #s_list, vec_vols = streamline_mean_fascicle_value_weighted(folder_name, n, nii_file,'cc')
     #cc_part_viz_running_script(n,folder_name)
+    tract_path = folder_name+r'\streamlines'+n+'_wholebrain_3d_plus_new.trk'
+
+    streamlines = load_ft(tract_path, nii_file)
+
+
+    lab_labels_index, affine = nodes_by_index_mega(folder_name)
+    masked_streamlines = choose_specific_bundle(streamlines, affine, folder_name, 'cr', n, nii_file)
 
 
 
