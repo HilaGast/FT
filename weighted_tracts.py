@@ -367,8 +367,8 @@ def load_weight_by_img(bvec_file, weight_by):
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    subj = all_subj_folders
-    names = all_subj_names
+    subj = all_subj_folders[1::]
+    names = all_subj_names[1::]
     #masks = ['cc_cortex_cleaned','genu_cortex_cleaned','body_cortex_cleaned','splenium_cortex_cleaned']
     #masks = ['cc','genu','body','splenium']
 
@@ -376,21 +376,15 @@ if __name__ == '__main__':
         folder_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep' + s
         dir_name = folder_name + '\streamlines'
         gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name)
+        csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
+        fa, classifier = create_fa_classifier(gtab, data, white_matter)
         lab_labels_index = nodes_by_index_mega(folder_name)[0]
-        #csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
-        #fa, classifier = create_fa_classifier(gtab, data, white_matter)
-        #seeds = create_seeds(folder_name, lab_labels_index, affine, use_mask=False, mask_type='cc', den=4)
-        #streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
-        #save_ft(folder_name,n,streamlines,nii_file, file_name="_fx_5d_plus_new.trk")
-        tract_path = folder_name+r'\streamlines'+n+'_wholebrain_1d_plus.trk'
-        streamlines = load_ft(tract_path, nii_file)
-        weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_plus_new2',
-                                          weight_by='1.5_2_AxPasi5')
-
-
-        #for m in masks:
-        #    seeds = create_seeds(folder_name, lab_labels_index, affine, use_mask=True, mask_type=m, den=7)
-        #    streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
-        #    save_ft(folder_name, n, streamlines, nii_file, file_name="_" + m + "_7d.trk")
+        seeds = create_seeds(folder_name, lab_labels_index, affine, use_mask=False, mask_type='cc', den=3)
+        streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
+        save_ft(folder_name,n,streamlines,nii_file, file_name="_wholebrain_3d.trk")
+        #tract_path = folder_name+r'\streamlines'+n+'_wholebrain_1d_plus.trk'
+        #streamlines = load_ft(tract_path, nii_file)
+        #weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_plus_new2',
+        #                                  weight_by='1.5_2_AxPasi5')
 
 

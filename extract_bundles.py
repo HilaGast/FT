@@ -3,12 +3,12 @@ import numpy as np
 from dipy.segment.bundles import RecoBundles
 from dipy.align.streamlinear import whole_brain_slr
 from fury import actor, window
-from dipy.io.stateful_tractogram import Space, StatefulTractogram
-from dipy.io.streamline import load_trk, save_trk
+from dipy.io.streamline import load_trk
 from os.path import join as pjoin
 import os
 from FT.all_subj import all_subj_folders, all_subj_names
 from FT.weighted_tracts import save_ft,load_dwi_files
+from FT.remove_cci_outliers import remove_cci_outliers
 
 def find_home():
     if 'DIPY_HOME' in os.environ:
@@ -52,34 +52,38 @@ def find_bundle(dipy_home,moved,bundle_num, rt=50,mct=0.1):
     return recognized_bundle,bundle_labels, model
 
 
-if __name__ == '__main__':
-    file_bundle_name = r'C_L_recognized_bundle'
-    bundle_num = 33
+def extract_one_bundle(file_bundle_name, bundle_num, subji, rt, mct):
     dipy_home = find_home()
     atlas_file, all_bundles_files = get_bundle_atlas_hcp842()
     sft_atlas = load_trk(atlas_file, "same", bbox_valid_check=False)
     atlas = sft_atlas.streamlines
     main_folder = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep'
-    folder_name = main_folder+all_subj_folders[0]
-    n = all_subj_names[0]
-
+    folder_name = main_folder+all_subj_folders[subji]
+    n = all_subj_names[subji]
     sft_target = load_trk(folder_name + r'\streamlines'+n+r'_wholebrain_3d.trk', "same", bbox_valid_check=False)
     target = sft_target.streamlines
-
     #show_atlas_target_graph(atlas, target,outpath=r'',interactive=True)
+
     moved, transform, qb_centroids1, qb_centroids2 = whole_brain_slr(
     atlas, target, x0='affine', verbose=True, progressive=True,
     rng=np.random.RandomState(1984))
-
-
     #np.save("slr_transform.npy", transform)
     #show_atlas_target_graph(atlas, moved,outpath=r'',interactive=True)
-    rt=50
-    mct=0.1
+    #rt=50
+    #mct=0.1
     recognized_bundle,bundle_labels, model = find_bundle(dipy_home,moved,bundle_num, rt, mct)
     nii_file = load_dwi_files(folder_name)[5]
-    save_ft(folder_name, n, target[bundle_labels], nii_file, file_name='_'+file_bundle_name+'.trk')
-    interactive = True
+    bundle = target[bundle_labels]
+    keep_s,keep_i = remove_cci_outliers(bundle)
+    new_s = []
+    new_s += [bundle[s1] for s1 in keep_i]
+    save_ft(folder_name, n, new_s, nii_file, file_name='_'+file_bundle_name+'.trk')
+
+    return model,recognized_bundle,bundle_labels
+
+
+def show_model_reco_bundles(model,recognized_bundle,folder_name,file_bundle_name,interactive=True):
+
     ren = window.Renderer()
     ren.SetBackground(1, 1, 1)
     ren.add(actor.line(model, colors=(.1, .7, .26))) #green
@@ -90,4 +94,19 @@ if __name__ == '__main__':
 
     ren.set_camera(ren.camera_info())
     window.record(ren, out_path=pjoin(folder_name,file_bundle_name)+'.png', size=(600, 600))
+
+
+if __name__ == '__main__':
+    file_bundle_name = r'SLF_L_recognized_bundle'
+    bundle_num = 68
+    rt=20
+    mct=0.01
+    for subji,subj in enumerate(all_subj_names[1::]):
+        model, recognized_bundle, bundle_labels = extract_one_bundle(file_bundle_name, bundle_num, subji, rt, mct)
+        print(f'finished to extract {file_bundle_name} for subj {subj}')
+
+
+
+
+
 

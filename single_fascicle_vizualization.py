@@ -217,19 +217,22 @@ def choose_specific_bundle(streamlines, affine, folder_name,mask_type, n, nii_fi
     return masked_streamlines
 
 
+def find_bundle(folder_name, n, nii_file, mask_type):
+    tract_path = folder_name+r'\streamlines'+n+'_wholebrain_3d_plus_new.trk'
+    streamlines = load_ft(tract_path, nii_file)
+    affine = nodes_by_index_mega(folder_name)[1]
+    masked_streamlines = choose_specific_bundle(streamlines, affine, folder_name, mask_type, n, nii_file)
+
+    return masked_streamlines
+
+
 def streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, mask_type):
 
-    #tract_path = folder_name+r'\streamlines'+n+'_cc_1d_cleaned.trk'
-    tract_path = folder_name+r'\streamlines'+n+'_wholebrain_3d_plus_new.trk'
-
-    streamlines = load_ft(tract_path, nii_file)
-
+    #masked_streamlines = find_bundle(folder_name, n, nii_file, mask_type)
+    masked_streamlines = load_ft(r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep\YA_lab_Andrew_AhLi_20181129_0919\streamlines\AhLi_slf_L_manu_clean.trk',nii_file)
 
     lab_labels_index, affine = nodes_by_index_mega(folder_name)
-    masked_streamlines = choose_specific_bundle(streamlines, affine, folder_name, mask_type, n, nii_file)
     streamline_dict = create_streamline_dict(masked_streamlines, lab_labels_index, affine)
-
-    #streamline_dict = clean_non_cc(streamline_dict) ##
 
     mat_medians = load_mat_of_median_vals(mat_type = 'w_plus')
     index_to_text_file = r'C:\Users\Admin\my_scripts\aal\megaatlas\megaatlas2nii.txt'
@@ -257,6 +260,7 @@ def streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, mask_type)
     new_s = []
     new_s += [s_list[s1] for s1 in keep_i]
     vec_vols = [vec_vols[v] for v in keep_i]
+    save_ft(folder_name, n, new_s, nii_file, file_name='_'+mask_type+'_cci_clean.trk')
     #show_fascicles_wholebrain(new_s, vec_vols,folder_name, mask_type, downsamp=1)
     return new_s, vec_vols
     #return s_list, vec_vols
@@ -318,7 +322,7 @@ if __name__ == '__main__':
 
 
     lab_labels_index, affine = nodes_by_index_mega(folder_name)
-    masked_streamlines = choose_specific_bundle(streamlines, affine, folder_name, 'cr', n, nii_file)
+    masked_streamlines = choose_specific_bundle(streamlines, affine, folder_name, 'slf', n, nii_file)
 
 
 
