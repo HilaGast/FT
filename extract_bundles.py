@@ -97,11 +97,11 @@ def show_model_reco_bundles(model,recognized_bundle,folder_name,file_bundle_name
 
 
 if __name__ == '__main__':
-    file_bundle_name = r'SLF_L_recognized_bundle'
-    bundle_num = 68
+    file_bundle_name = r'AF_L_recognized_bundle'
+    bundle_num = 1
     rt=20
     mct=0.01
-    for subji,subj in enumerate(all_subj_names[1::]):
+    for subji,subj in enumerate(all_subj_names):
         model, recognized_bundle, bundle_labels = extract_one_bundle(file_bundle_name, bundle_num, subji, rt, mct)
         print(f'finished to extract {file_bundle_name} for subj {subj}')
 

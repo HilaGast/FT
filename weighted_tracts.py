@@ -123,7 +123,6 @@ def weighting_streamlines(folder_name, streamlines, bvec_file, weight_by = '1.5_
     saturation = [0.0,1.0]
     scale = [3,6]
     '''
-    from dipy.viz import window, actor
     from dipy.tracking.streamline import values_from_volume
 
     weight_by_data, affine = load_weight_by_img(bvec_file,weight_by)
@@ -145,7 +144,12 @@ def weighting_streamlines(folder_name, streamlines, bvec_file, weight_by = '1.5_
         pfr = np.asanyarray(pfr)
         high_pfr = [pfr > 0.5]
         mean_vol_per_tract.append(np.nanmean(s[tuple(non_out and high_pfr)]))
+    return mean_vol_per_tract
+    #show_tracts(hue,saturation,scale,streamlines,mean_vol_per_tract,folder_name,fig_type)
 
+
+def show_tracts(hue,saturation,scale,streamlines,mean_vol_per_tract,folder_name,fig_type):
+    from dipy.viz import window, actor
     lut_cmap = actor.colormap_lookup_table(hue_range=hue,
                                            saturation_range=saturation, scale_range=scale)
     streamlines_actor = actor.line(streamlines, mean_vol_per_tract, linewidth=1, lookup_colormap=lut_cmap)

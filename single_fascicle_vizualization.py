@@ -229,7 +229,7 @@ def find_bundle(folder_name, n, nii_file, mask_type):
 def streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, mask_type):
 
     #masked_streamlines = find_bundle(folder_name, n, nii_file, mask_type)
-    masked_streamlines = load_ft(r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep\YA_lab_Andrew_AhLi_20181129_0919\streamlines\AhLi_slf_L_manu_clean.trk',nii_file)
+    masked_streamlines = load_ft(folder_name+r'\streamlines\AtLe_slf_L_recognized_bundle.trk',nii_file)
 
     lab_labels_index, affine = nodes_by_index_mega(folder_name)
     streamline_dict = create_streamline_dict(masked_streamlines, lab_labels_index, affine)
@@ -267,7 +267,7 @@ def streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, mask_type)
 
 
 
-def show_fascicles_wholebrain(s_list, vec_vols, folder_name, mask_type, downsamp=1, scale=[0, 3], hue=[0.25, -0.05],saturation = [0.1, 1.0]):
+def show_fascicles_wholebrain(s_list, vec_vols, folder_name, mask_type, downsamp=1, scale=[3, 6], hue=[0.25, -0.05],saturation = [0.1, 1.0]):
 
     s_img = folder_name+r'\streamlines'+r'\fascicles_AxCaliber_weighted_3d_'+mask_type+'.png'
     #hue = [0.4, 0.7] # blues
