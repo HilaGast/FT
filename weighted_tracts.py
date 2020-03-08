@@ -24,11 +24,11 @@ def load_dwi_files(folder_name, small_delta=15.5):
     bval_file = bvec_file[:-4:]+'bval'
     nii_file = os.path.join(folder_name,'diff_corrected.nii')
     hardi_img = nib.load(nii_file)
-    data = hardi_img.get_data()
+    data = hardi_img.get_fdata()
     affine = hardi_img.affine
     gtab = gradient_table(bval_file, bvec_file, small_delta=small_delta)
     labels_img = nib.load(labels_file_name)
-    labels = labels_img.get_data()
+    labels = labels_img.get_fdata()
     white_matter = (labels == 3) #| (labels == 2)  # 3-WM, 2-GM
 
     return gtab,data,affine,labels,white_matter,nii_file,bvec_file
@@ -200,7 +200,7 @@ def nodes_by_index_mega(folder_name):
     lab = folder_name + r'\rMegaAtlas_Labels_highres.nii'
 
     lab_file = nib.load(lab)
-    lab_labels = lab_file.get_data()
+    lab_labels = lab_file.get_fdata()
     affine = lab_file.affine
     lab_labels_index = [labels for labels in lab_labels]
     lab_labels_index = np.asarray(lab_labels_index, dtype='int')
@@ -367,13 +367,14 @@ def load_weight_by_img(bvec_file, weight_by):
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    subj = all_subj_folders[1::]
-    names = all_subj_names[1::]
+    subj = all_subj_folders
+    names = all_subj_names
     #masks = ['cc_cortex_cleaned','genu_cortex_cleaned','body_cortex_cleaned','splenium_cortex_cleaned']
     #masks = ['cc','genu','body','splenium']
 
     for s,n in zip(subj,names):
         folder_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep' + s
+        #folder_name = r'D:\after_file_prep' + s #in the server
         dir_name = folder_name + '\streamlines'
         gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name)
         csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
