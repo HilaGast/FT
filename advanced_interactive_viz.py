@@ -90,7 +90,7 @@ class AdvanceInteractive:
             if self.bundle in file and '.trk' in file:
                 self.bundle_file = pjoin(self.folder_name + r'\streamlines', file)
                 self.s_list = load_ft(self.bundle_file,self.nii_file)
-            break
+                break
 
     def load_vols(self):
         self.vols = weighting_streamlines(self.folder_name,self.s_list,self.bvec_file)
@@ -242,8 +242,8 @@ if __name__ == '__main__':
     main_folder = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep'
     s = all_subj_folders[1]
     n = all_subj_names[1]
-    img_name = r'\fascicles_AxCaliber_weighted_3d_af.png'
-    bundle = r'AF_L'
+    img_name = r'\fascicles_AxCaliber_weighted_3d_slf.png'
+    bundle = r'ILF_L'
     slices = [False, True, False] #slices[0]-axial, slices[1]-saggital, slices[2]-coronal
     file_list = os.listdir(main_folder + s)
 
@@ -256,10 +256,15 @@ if __name__ == '__main__':
     bundlei = AdvanceInteractive(main_folder,slice_file, s, n, img_name, bundle, slices)
     bundlei.load_bund()
     bundlei.load_vols()
-    #bundlei.show_bundle_slices()
+    bundlei.show_bundle_slices()
 
     method = 'mam'
     tracts_num = bundlei.s_list.__len__()
     X = clustering_input(method,tracts_num,bundlei.s_list,bundlei.vols)
-
+    methods = ['agglomerative','kmeans']
+    method = methods[1]
+    g=[2,3,4,5,6]
+    for i in g:
+        model = compute_clustering_model(method,X,i)
+        weighted_clusters(model, bundlei.s_list, bundlei.vols,bundlei.folder_name, file_name = 'clustered_'+bundle+'_'+str(i))
 

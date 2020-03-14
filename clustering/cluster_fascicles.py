@@ -114,7 +114,7 @@ def compute_clustering_model(method,X,n):
     return model
 
 
-def weighted_clusters(model,streamlines,vec_vols, file_name = ''):
+def weighted_clusters(model,streamlines,vec_vols, folder_name, file_name = ''):
     labels = list(set(model.labels_))
     labels_vec = model.labels_
     vec_mean_vol = np.zeros(len(vec_vols))
@@ -131,7 +131,7 @@ def weighted_clusters(model,streamlines,vec_vols, file_name = ''):
             vec_mean_vol[i] = mean_vol
     #stats,p=f_oneway(v_list[0],v_list[1],v_list[2])
     #print(f'F={stats:.3f}, p={p:.5f}')
-    show_fascicles_wholebrain(streamlines, vec_mean_vol, folder_name, file_name, downsamp=1, scale=[5,6],hue = [0.25,-0.05],saturation = [0.1, 1])
+    show_fascicles_wholebrain(streamlines, vec_mean_vol, folder_name, file_name, downsamp=1, scale=[5,7],hue = [0.25,-0.05],saturation = [0.1, 1])
 
 if __name__ == '__main__':
     main_folder = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep'
@@ -152,6 +152,6 @@ if __name__ == '__main__':
     g=[2,3,4,5,6]
     for n in g:
         model = compute_clustering_model(method,X,n)
-        weighted_clusters(model,streamlines,vec_vols, file_name = 'clustered_'+fascicle+'_'+str(n))
+        weighted_clusters(model,streamlines,vec_vols, folder_name, file_name = 'clustered_'+fascicle+'_'+str(n))
 
 
