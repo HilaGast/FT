@@ -7,6 +7,9 @@ from FT.single_fascicle_vizualization import streamline_mean_fascicle_value_weig
 from FT.clustering.poly_representaion_fibers import poly_xyz_vec_calc
 from scipy.stats import f_oneway
 from dipy.segment.bundles import bundles_distances_mam
+from os.path import join as pjoin
+from dipy.io.streamline import load_trk
+
 
 
 def clustering_input(method,tracts_num,streamlines,vec_vols):
@@ -138,8 +141,15 @@ if __name__ == '__main__':
     folder_name = main_folder + all_subj_folders[0]
     n = all_subj_names[0]
     nii_file = load_dwi_files(folder_name)[5]
-    fascicle = 'cing'
-    streamlines,vec_vols = streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, fascicle)
+    fascicle = 'SLF_L_reco'
+    file_list = os.listdir(folder_name + r'\streamlines')
+    for file in file_list:
+        if fascicle in file and '.trk' in file:
+            fascicle_file_name = pjoin(folder_name + r'\streamlines', file)
+            s_list = load_trk(fascicle_file_name, "same", bbox_valid_check=False)
+            masked_streamlines = s_list.streamlines
+            break
+    streamlines,vec_vols = streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, fascicle,masked_streamlines)
     method = 'mam'
     tracts_num = streamlines.__len__()
 

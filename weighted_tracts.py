@@ -29,7 +29,7 @@ def load_dwi_files(folder_name, small_delta=15.5):
     gtab = gradient_table(bval_file, bvec_file, small_delta=small_delta)
     labels_img = nib.load(labels_file_name)
     labels = labels_img.get_fdata()
-    white_matter = (labels == 3) #| (labels == 2)  # 3-WM, 2-GM
+    white_matter = (labels == 3) | (labels == 2)  # 3-WM, 2-GM
 
     return gtab,data,affine,labels,white_matter,nii_file,bvec_file
 
@@ -44,12 +44,19 @@ def load_mask(folder_name, mask_type):
     return mask_mat
 
 
-def create_seeds(folder_name, lab_labels_index, affine, use_mask = True, mask_type='cc',den = 1):
+def create_seeds(folder_name, mask4seeds, affine, use_mask = True, mask_type='cc',den = 1):
     if use_mask:
         mask_mat = load_mask(folder_name,mask_type)
-        seed_mask = mask_mat == 1
+        if mask_type=='cc':
+            seed_mask = mask_mat == 1
+        elif mask_type=='slf_masks_manual':
+            a= mask_mat>0
+            b=mask_mat!=5
+            c=mask_mat!=10
+            seed_mask = a & b & c
+
     else:
-        seed_mask = lab_labels_index>0 #GM seeds
+        seed_mask = mask4seeds>0 #either lab_label_index>0 or wm mask>0
     seeds = utils.seeds_from_mask(seed_mask, density=den, affine=affine)
     return seeds
 
@@ -371,8 +378,8 @@ def load_weight_by_img(bvec_file, weight_by):
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    subj = all_subj_folders
-    names = all_subj_names
+    subj = all_subj_folders[:6]
+    names = all_subj_names[:5]
     #masks = ['cc_cortex_cleaned','genu_cortex_cleaned','body_cortex_cleaned','splenium_cortex_cleaned']
     #masks = ['cc','genu','body','splenium']
 
@@ -384,9 +391,11 @@ if __name__ == '__main__':
         csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
         fa, classifier = create_fa_classifier(gtab, data, white_matter)
         lab_labels_index = nodes_by_index_mega(folder_name)[0]
-        seeds = create_seeds(folder_name, lab_labels_index, affine, use_mask=False, mask_type='cc', den=3)
+        seeds = create_seeds(folder_name, white_matter, affine, use_mask=False, mask_type='slf_masks_manual', den=3)
         streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
-        save_ft(folder_name,n,streamlines,nii_file, file_name="_wholebrain_3d.trk")
+        save_ft(folder_name,n,streamlines,nii_file, file_name="_wholebrain_3d_wmask.trk")
+
+
         #tract_path = folder_name+r'\streamlines'+n+'_wholebrain_1d_plus.trk'
         #streamlines = load_ft(tract_path, nii_file)
         #weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_plus_new2',

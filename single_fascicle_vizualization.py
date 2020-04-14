@@ -226,10 +226,7 @@ def find_bundle(folder_name, n, nii_file, mask_type):
     return masked_streamlines
 
 
-def streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, mask_type):
-
-    #masked_streamlines = find_bundle(folder_name, n, nii_file, mask_type)
-    masked_streamlines = load_ft(folder_name+r'\streamlines\AtLe_slf_L_recognized_bundle.trk',nii_file)
+def streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, mask_type,masked_streamlines):
 
     lab_labels_index, affine = nodes_by_index_mega(folder_name)
     streamline_dict = create_streamline_dict(masked_streamlines, lab_labels_index, affine)
@@ -256,14 +253,14 @@ def streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, mask_type)
             s_list = s_list+edge_s_list
             vec_vols = vec_vols+edge_vec_vols
 
-    keep_s,keep_i = remove_cci_outliers(s_list)
-    new_s = []
-    new_s += [s_list[s1] for s1 in keep_i]
-    vec_vols = [vec_vols[v] for v in keep_i]
-    save_ft(folder_name, n, new_s, nii_file, file_name='_'+mask_type+'_cci_clean.trk')
+    #keep_s,keep_i = remove_cci_outliers(s_list)
+    #new_s = []
+    #new_s += [s_list[s1] for s1 in keep_i]
+    #vec_vols = [vec_vols[v] for v in keep_i]
+    #save_ft(folder_name, n, new_s, nii_file, file_name='_'+mask_type+'_cci_clean.trk')
     #show_fascicles_wholebrain(new_s, vec_vols,folder_name, mask_type, downsamp=1)
-    return new_s, vec_vols
-    #return s_list, vec_vols
+    #return new_s, vec_vols
+    return s_list, vec_vols
 
 
 
@@ -320,9 +317,9 @@ if __name__ == '__main__':
 
     streamlines = load_ft(tract_path, nii_file)
 
-
+    masked_streamlines = find_bundle(folder_name, n, nii_file, 'slfn')
     lab_labels_index, affine = nodes_by_index_mega(folder_name)
-    masked_streamlines = choose_specific_bundle(streamlines, affine, folder_name, 'slf', n, nii_file)
+    masked_streamlines = choose_specific_bundle(streamlines, affine, folder_name, 'slf', n, nii_file, masked_streamlines)
 
 
 

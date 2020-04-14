@@ -3,7 +3,7 @@ import numpy as np
 from dipy.segment.bundles import RecoBundles
 from dipy.align.streamlinear import whole_brain_slr
 from fury import actor, window
-from dipy.io.streamline import load_trk
+from dipy.io.streamline import load_trk,save_trk
 from os.path import join as pjoin
 import os
 from FT.all_subj import all_subj_folders, all_subj_names
@@ -67,12 +67,14 @@ def extract_one_bundle(file_bundle_name, bundle_num, subji, rt, mct):
     moved, transform, qb_centroids1, qb_centroids2 = whole_brain_slr(
     atlas, target, x0='affine', verbose=True, progressive=True,
     rng=np.random.RandomState(1984))
-    #np.save("slr_transform.npy", transform)
+    ref = r'C:\Users\Admin\my_scripts\aal\megaatlas\Schaefer_template_brain.nii'
+    #save_ft(folder_name, n, moved, ref, file_name='_'+file_bundle_name+'.trk')
+    #return n, folder_name, file_bundle_name
+    '''#np.save("slr_transform.npy", transform)
     #show_atlas_target_graph(atlas, moved,outpath=r'',interactive=True)
-    #rt=50
-    #mct=0.1
-    recognized_bundle,bundle_labels, model = find_bundle(dipy_home,moved,bundle_num, rt, mct)
+    '''
     nii_file = load_dwi_files(folder_name)[5]
+    recognized_bundle,bundle_labels, model = find_bundle(dipy_home,moved,bundle_num, rt, mct)
     bundle = target[bundle_labels]
     keep_s,keep_i = remove_cci_outliers(bundle)
     new_s = []
@@ -97,11 +99,12 @@ def show_model_reco_bundles(model,recognized_bundle,folder_name,file_bundle_name
 
 
 if __name__ == '__main__':
-    file_bundle_name = r'AF_L_recognized_bundle'
-    bundle_num = 1
+    file_bundle_name = r'SLF_L_mct1rt20'
+    bundle_num = 68
     rt=20
-    mct=0.01
-    for subji,subj in enumerate(all_subj_names):
+    mct=1
+    #mct=0.01
+    for subji,subj in enumerate(all_subj_names[1:5]):
         model, recognized_bundle, bundle_labels = extract_one_bundle(file_bundle_name, bundle_num, subji, rt, mct)
         print(f'finished to extract {file_bundle_name} for subj {subj}')
 
