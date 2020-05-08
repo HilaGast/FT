@@ -11,10 +11,9 @@ from os.path import join as pjoin
 from dipy.io.streamline import load_trk
 
 
-
 def clustering_input(method,tracts_num,streamlines,vec_vols):
     if method == 'cartesian':
-        subsample = 100
+        subsample = 25
         subsamp_sls = set_number_of_points(streamlines, subsample)
 
         f_mat = np.zeros([tracts_num, subsample * 3 * 2])
@@ -43,6 +42,8 @@ def clustering_input(method,tracts_num,streamlines,vec_vols):
             f_mat[i] = f_vec
 
     elif method == 'mam':
+        subsample = 25
+        streamlines = set_number_of_points(streamlines, subsample)
 
         f_mat = np.zeros([tracts_num,4])
         #f_mat = np.zeros([tracts_num,3])
@@ -129,19 +130,26 @@ def weighted_clusters(model,streamlines,vec_vols, folder_name, file_name = ''):
         mean_vol = np.mean(vols)
         std_vol = np.std(vols)
         v_list.append(vols)
-        print(f'mean:{mean_vol}, std:{std_vol}')
+        print(f'mean:{mean_vol:.3f}, std:{std_vol:.3f}')
         for i in l_idx:
             vec_mean_vol[i] = mean_vol
     #stats,p=f_oneway(v_list[0],v_list[1],v_list[2])
     #print(f'F={stats:.3f}, p={p:.5f}')
     show_fascicles_wholebrain(streamlines, vec_mean_vol, folder_name, file_name, downsamp=1, scale=[5,7],hue = [0.25,-0.05],saturation = [0.1, 1])
 
+def load_model(i,folder_name,method, fascicle):
+    import joblib
+    file_name = folder_name+f'\model_{fascicle}_{method}_{str(i)}.pkl'
+    model = joblib.load(file_name)
+    return model
+
+
 if __name__ == '__main__':
-    main_folder = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep'
-    folder_name = main_folder + all_subj_folders[0]
-    n = all_subj_names[0]
+    main_folder = subj_folder
+    folder_name = main_folder + all_subj_folders[1]
+    n = all_subj_names[1]
     nii_file = load_dwi_files(folder_name)[5]
-    fascicle = 'SLF_L_reco'
+    fascicle = 'AF_L_mct001rt20_4d'
     file_list = os.listdir(folder_name + r'\streamlines')
     for file in file_list:
         if fascicle in file and '.trk' in file:
@@ -153,15 +161,16 @@ if __name__ == '__main__':
     method = 'mam'
     tracts_num = streamlines.__len__()
 
-    X = clustering_input(method,tracts_num,streamlines,vec_vols)
+    #X = clustering_input(method,tracts_num,streamlines,vec_vols)
     methods = ['agglomerative','kmeans']
-    method = methods[1]
+    method = methods[0]
 
-    show_23456_groups(method,streamlines,folder_name,X,fascicle)
+    #show_23456_groups(method,streamlines,folder_name,X,fascicle)
 
-    g=[2,3,4,5,6]
+    g=[2,3]
     for n in g:
-        model = compute_clustering_model(method,X,n)
+        #model = compute_clustering_model(method,X,n)
+        model = load_model(n,folder_name,method, fascicle)
         weighted_clusters(model,streamlines,vec_vols, folder_name, file_name = 'clustered_'+fascicle+'_'+str(n))
 
 
