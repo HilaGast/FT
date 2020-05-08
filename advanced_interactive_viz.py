@@ -2,9 +2,10 @@ import numpy as np
 from dipy.viz import actor, window, ui
 import nibabel as nib
 from FT.single_fascicle_vizualization import *
-from os.path import join as pjoin
 from FT.weighted_tracts import weighting_streamlines,load_dwi_files,load_weight_by_img
 from FT.clustering.cluster_fascicles import *
+from os.path import join as pjoin
+from dipy.io.streamline import load_trk
 
 
 def load_vars(volume_file, main_folder,s,n,img_name = r'' ):
@@ -76,7 +77,7 @@ class AdvanceInteractive:
         self.coronal = slices[2]
         self.folder_name = main_folder + s
         self.s_img = self.folder_name + r'\streamlines' + img_name
-        self.scale = [4, 6.5]
+        self.scale = [4, 7.0]
         self.hue = [0.25, -0.05]  # Hot
         self.saturation = [0.1, 1.0]
         self.slices = slices_file.get_data()
@@ -89,7 +90,8 @@ class AdvanceInteractive:
         for file in file_list:
             if self.bundle in file and '.trk' in file:
                 self.bundle_file = pjoin(self.folder_name + r'\streamlines', file)
-                self.s_list = load_ft(self.bundle_file,self.nii_file)
+                s_list = load_trk(self.bundle_file,"same", bbox_valid_check=False)
+                self.s_list = s_list.streamlines
                 break
 
     def load_vols(self):
@@ -239,15 +241,17 @@ class AdvanceInteractive:
 
 if __name__ == '__main__':
 
-    main_folder = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep'
-    s = all_subj_folders[1]
-    n = all_subj_names[1]
-    img_name = r'\fascicles_AxCaliber_weighted_3d_slf.png'
-    bundle = r'ILF_L'
+    main_folder = r'C:\Users\hila\data\subj'
+    s = all_subj_folders[4]
+    n = all_subj_names[4]
+    img_name = r'\fascicles_AxCaliber_weighted_3d_slf_pasivals.png'
+    bundle = r'SLF_L_mct001rt20_1d'
+    #bundle = r'wholebrain_1d_labmask'
     slices = [False, True, False] #slices[0]-axial, slices[1]-saggital, slices[2]-coronal
     file_list = os.listdir(main_folder + s)
 
     for file in file_list:
+        #if r'_highres.nii' in file and file.startswith('r') and 'Labels' in file:
         if r'_brain.nii' in file and file.startswith('r') and 'MPRAGE' in file:
         #if r'FA' in file and file.endswith('.nii'):
             slice_file = nib.load(pjoin(main_folder+s, file))

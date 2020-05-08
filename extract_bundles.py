@@ -3,7 +3,7 @@ import numpy as np
 from dipy.segment.bundles import RecoBundles
 from dipy.align.streamlinear import whole_brain_slr
 from fury import actor, window
-from dipy.io.streamline import load_trk,save_trk
+from dipy.io.streamline import load_trk
 from os.path import join as pjoin
 import os
 from FT.all_subj import all_subj_folders, all_subj_names
@@ -20,7 +20,7 @@ def find_home():
 
 
 def show_atlas_target_graph(atlas,target,out_path,interactive=True):
-    ren = window.Renderer()
+    ren = window.Scene()
     ren.SetBackground(1, 1, 1)
     ren.add(actor.line(atlas, colors=(1, 0, 1)))  # Magenta
     ren.add(actor.line(target, colors=(1, 1, 0)))  # Yellow
@@ -30,7 +30,7 @@ def show_atlas_target_graph(atlas,target,out_path,interactive=True):
 
 
 def find_bundle(dipy_home,moved,bundle_num, rt=50,mct=0.1):
-    bundle_folder = r'C:\Users\Admin\.dipy\bundle_atlas_hcp842\Atlas_80_Bundles\bundles'
+    bundle_folder = dipy_home+r'\bundle_atlas_hcp842\Atlas_80_Bundles\bundles'
     bundles = os.listdir(bundle_folder)
     model_file = pjoin(dipy_home, 'bundle_atlas_hcp842',
                        'Atlas_80_Bundles',
@@ -52,29 +52,28 @@ def find_bundle(dipy_home,moved,bundle_num, rt=50,mct=0.1):
     return recognized_bundle,bundle_labels, model
 
 
-def extract_one_bundle(file_bundle_name, bundle_num, subji, rt, mct):
+def extract_one_bundle(file_bundle_name, bundle_num, subji, rt, mct, main_folder):
     dipy_home = find_home()
     atlas_file, all_bundles_files = get_bundle_atlas_hcp842()
     sft_atlas = load_trk(atlas_file, "same", bbox_valid_check=False)
     atlas = sft_atlas.streamlines
-    main_folder = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep'
     folder_name = main_folder+all_subj_folders[subji]
     n = all_subj_names[subji]
-    sft_target = load_trk(folder_name + r'\streamlines'+n+r'_wholebrain_3d.trk', "same", bbox_valid_check=False)
+    #sft_target = load_trk(folder_name + r'\streamlines'+n+r'_slf_5d.trk', "same", bbox_valid_check=False)
+    sft_target = load_trk(folder_name + r'\streamlines'+n+r'_wholebrain_4d_labmask.trk', "same", bbox_valid_check=False)
+
     target = sft_target.streamlines
-    #show_atlas_target_graph(atlas, target,outpath=r'',interactive=True)
+    #show_atlas_target_graph(atlas, target,out_path=folder_name+r'\try_atlas_target',interactive=True)
 
     moved, transform, qb_centroids1, qb_centroids2 = whole_brain_slr(
     atlas, target, x0='affine', verbose=True, progressive=True,
     rng=np.random.RandomState(1984))
-    ref = r'C:\Users\Admin\my_scripts\aal\megaatlas\Schaefer_template_brain.nii'
-    #save_ft(folder_name, n, moved, ref, file_name='_'+file_bundle_name+'.trk')
-    #return n, folder_name, file_bundle_name
-    '''#np.save("slr_transform.npy", transform)
-    #show_atlas_target_graph(atlas, moved,outpath=r'',interactive=True)
-    '''
-    nii_file = load_dwi_files(folder_name)[5]
+    #np.save("slf_L_transform.npy", transform)
+    #show_atlas_target_graph(atlas, moved,out_path=r'',interactive=True)
+    #rt=50
+    #mct=0.1
     recognized_bundle,bundle_labels, model = find_bundle(dipy_home,moved,bundle_num, rt, mct)
+    nii_file = load_dwi_files(folder_name)[5]
     bundle = target[bundle_labels]
     keep_s,keep_i = remove_cci_outliers(bundle)
     new_s = []
@@ -86,7 +85,7 @@ def extract_one_bundle(file_bundle_name, bundle_num, subji, rt, mct):
 
 def show_model_reco_bundles(model,recognized_bundle,folder_name,file_bundle_name,interactive=True):
 
-    ren = window.Renderer()
+    ren = window.Scene()
     ren.SetBackground(1, 1, 1)
     ren.add(actor.line(model, colors=(.1, .7, .26))) #green
     ren.add(actor.line(recognized_bundle, colors=(.1, .1, 6))) #blue
@@ -99,13 +98,14 @@ def show_model_reco_bundles(model,recognized_bundle,folder_name,file_bundle_name
 
 
 if __name__ == '__main__':
-    file_bundle_name = r'SLF_L_mct1rt20'
+    file_bundle_name = r'SLF_L_rt20mct1'
+    #main_folder = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep'
+    main_folder = r'C:\Users\hila\data\subj'
     bundle_num = 68
     rt=20
     mct=1
-    #mct=0.01
-    for subji,subj in enumerate(all_subj_names[1:5]):
-        model, recognized_bundle, bundle_labels = extract_one_bundle(file_bundle_name, bundle_num, subji, rt, mct)
+    for subji,subj in enumerate(all_subj_names):
+        model, recognized_bundle, bundle_labels = extract_one_bundle(file_bundle_name, bundle_num, subji, rt, mct, main_folder)
         print(f'finished to extract {file_bundle_name} for subj {subj}')
 
 

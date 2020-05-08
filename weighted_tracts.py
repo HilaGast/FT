@@ -4,7 +4,7 @@ from dipy.tracking import utils
 from dipy.core.gradients import gradient_table
 from dipy.tracking.local_tracking import LocalTracking
 import numpy as np
-from FT.all_subj import all_subj_names, all_subj_folders
+from FT.all_subj import all_subj_names, all_subj_folders, subj_folder
 
 
 def load_dwi_files(folder_name, small_delta=15.5):
@@ -29,7 +29,7 @@ def load_dwi_files(folder_name, small_delta=15.5):
     gtab = gradient_table(bval_file, bvec_file, small_delta=small_delta)
     labels_img = nib.load(labels_file_name)
     labels = labels_img.get_fdata()
-    white_matter = (labels == 3) | (labels == 2)  # 3-WM, 2-GM
+    white_matter = (labels == 3) #| (labels == 2)  # 3-WM, 2-GM
 
     return gtab,data,affine,labels,white_matter,nii_file,bvec_file
 
@@ -44,19 +44,12 @@ def load_mask(folder_name, mask_type):
     return mask_mat
 
 
-def create_seeds(folder_name, mask4seeds, affine, use_mask = True, mask_type='cc',den = 1):
+def create_seeds(folder_name, lab_labels_index, affine, use_mask = True, mask_type='cc',den = 1):
     if use_mask:
         mask_mat = load_mask(folder_name,mask_type)
-        if mask_type=='cc':
-            seed_mask = mask_mat == 1
-        elif mask_type=='slf_masks_manual':
-            a= mask_mat>0
-            b=mask_mat!=5
-            c=mask_mat!=10
-            seed_mask = a & b & c
-
+        seed_mask = mask_mat == 1
     else:
-        seed_mask = mask4seeds>0 #either lab_label_index>0 or wm mask>0
+        seed_mask = lab_labels_index>0 #GM seeds
     seeds = utils.seeds_from_mask(seed_mask, density=den, affine=affine)
     return seeds
 
@@ -123,7 +116,7 @@ def create_streamlines(csd_fit, classifier, seeds, affine):
     return streamlines
 
 
-def weighting_streamlines(folder_name, streamlines, bvec_file, weight_by = '1.5_2_AxPasi5',hue = [0.0,1.0],saturation = [0.0,1.0], scale = [2,7],fig_type=''):
+def weighting_streamlines(folder_name, streamlines, bvec_file, show=False, weight_by = '1.5_2_AxPasi5',hue = [0.0,1.0],saturation = [0.0,1.0], scale = [2,7],fig_type=''):
     '''
     weight_by = '1.5_2_AxPasi5'
     hue = [0.0,1.0]
@@ -151,8 +144,11 @@ def weighting_streamlines(folder_name, streamlines, bvec_file, weight_by = '1.5_
         pfr = np.asanyarray(pfr)
         high_pfr = [pfr > 0.5]
         mean_vol_per_tract.append(np.nanmean(s[tuple(non_out and high_pfr)]))
+
+    if show:
+        show_tracts(hue,saturation,scale,streamlines,mean_vol_per_tract,folder_name,fig_type)
+
     return mean_vol_per_tract
-    #show_tracts(hue,saturation,scale,streamlines,mean_vol_per_tract,folder_name,fig_type)
 
 
 def show_tracts(hue,saturation,scale,streamlines,mean_vol_per_tract,folder_name,fig_type):
@@ -161,7 +157,7 @@ def show_tracts(hue,saturation,scale,streamlines,mean_vol_per_tract,folder_name,
                                            saturation_range=saturation, scale_range=scale)
     streamlines_actor = actor.line(streamlines, mean_vol_per_tract, linewidth=1, lookup_colormap=lut_cmap)
     bar = actor.scalar_bar(lut_cmap)
-    r = window.Renderer()
+    r = window.Scene()
     r.add(streamlines_actor)
     r.add(bar)
     mean_pasi_weighted_img = folder_name+'\streamlines\mean_pasi_weighted' + fig_type + '.png'
@@ -348,8 +344,8 @@ def draw_con_mat(data, h, fig_name, is_weighted=False):
 def weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type = 'whole brain', weight_by='1.5_2_AxPasi5'):
 
     lab_labels_index, affine = nodes_by_index_mega(folder_name)
-
-    index_to_text_file = r'C:\Users\Admin\my_scripts\aal\megaatlas\megaatlas2nii.txt'
+    index_to_text_file = r'C:\Users\hila\data\megaatlas\megaatlas2nii.txt'
+    #index_to_text_file = r'C:\Users\Admin\my_scripts\aal\megaatlas\megaatlas2nii.txt'
     labels_headers, idx = nodes_labels_mega(index_to_text_file)
 
     # non-weighted:
@@ -378,8 +374,8 @@ def load_weight_by_img(bvec_file, weight_by):
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    subj = all_subj_folders[:6]
-    names = all_subj_names[:5]
+    subj = all_subj_folders
+    names = all_subj_names
     #masks = ['cc_cortex_cleaned','genu_cortex_cleaned','body_cortex_cleaned','splenium_cortex_cleaned']
     #masks = ['cc','genu','body','splenium']
 
@@ -391,11 +387,9 @@ if __name__ == '__main__':
         csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
         fa, classifier = create_fa_classifier(gtab, data, white_matter)
         lab_labels_index = nodes_by_index_mega(folder_name)[0]
-        seeds = create_seeds(folder_name, white_matter, affine, use_mask=False, mask_type='slf_masks_manual', den=3)
+        seeds = create_seeds(folder_name, lab_labels_index, affine, use_mask=False, mask_type='cc', den=3)
         streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
-        save_ft(folder_name,n,streamlines,nii_file, file_name="_wholebrain_3d_wmask.trk")
-
-
+        save_ft(folder_name,n,streamlines,nii_file, file_name="_wholebrain_3d.trk")
         #tract_path = folder_name+r'\streamlines'+n+'_wholebrain_1d_plus.trk'
         #streamlines = load_ft(tract_path, nii_file)
         #weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_plus_new2',
