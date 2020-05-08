@@ -376,23 +376,21 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     subj = all_subj_folders
     names = all_subj_names
-    #masks = ['cc_cortex_cleaned','genu_cortex_cleaned','body_cortex_cleaned','splenium_cortex_cleaned']
-    #masks = ['cc','genu','body','splenium']
 
     for s,n in zip(subj,names):
-        folder_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep' + s
+        folder_name = subj_folder + s
         #folder_name = r'D:\after_file_prep' + s #in the server
         dir_name = folder_name + '\streamlines'
         gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name)
-        csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
-        fa, classifier = create_fa_classifier(gtab, data, white_matter)
-        lab_labels_index = nodes_by_index_mega(folder_name)[0]
-        seeds = create_seeds(folder_name, lab_labels_index, affine, use_mask=False, mask_type='cc', den=3)
-        streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
-        save_ft(folder_name,n,streamlines,nii_file, file_name="_wholebrain_3d.trk")
-        #tract_path = folder_name+r'\streamlines'+n+'_wholebrain_1d_plus.trk'
-        #streamlines = load_ft(tract_path, nii_file)
-        #weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_plus_new2',
-        #                                  weight_by='1.5_2_AxPasi5')
+        #csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
+        #fa, classifier = create_fa_classifier(gtab, data, white_matter)
+        #lab_labels_index = nodes_by_index_mega(folder_name)[0]
+        #seeds = create_seeds(folder_name, lab_labels_index, affine, use_mask=False, mask_type='cc', den=3)
+        #streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
+        #save_ft(folder_name,n,streamlines,nii_file, file_name="_wholebrain_3d.trk")
+        tract_path = f'{dir_name}{n}_wholebrain_4d_labmask.trk'
+        streamlines = load_ft(tract_path, nii_file)
+        weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask',
+                                          weight_by='1.5_2_AxPasi5')
 
 

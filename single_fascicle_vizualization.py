@@ -230,10 +230,11 @@ def streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, mask_type,
 
     lab_labels_index, affine = nodes_by_index_mega(folder_name)
     streamline_dict = create_streamline_dict(masked_streamlines, lab_labels_index, affine)
-
-    mat_medians = load_mat_of_median_vals(mat_type = 'w_plus')
+    bvec_file = load_dwi_files(folder_name)[6]
     index_to_text_file = r'C:\Users\Admin\my_scripts\aal\megaatlas\megaatlas2nii.txt'
     idx = nodes_labels_mega(index_to_text_file)[1]
+
+    mat_medians = weighted_con_mat_mega(bvec_file, '1.5_2_AxPasi5', streamline_dict, idx, folder_name, fig_type='')[1]
     id = np.argsort(idx)
     mat_medians = mat_medians[id]
     mat_medians = mat_medians[:, id]
@@ -253,13 +254,6 @@ def streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, mask_type,
             s_list = s_list+edge_s_list
             vec_vols = vec_vols+edge_vec_vols
 
-    #keep_s,keep_i = remove_cci_outliers(s_list)
-    #new_s = []
-    #new_s += [s_list[s1] for s1 in keep_i]
-    #vec_vols = [vec_vols[v] for v in keep_i]
-    #save_ft(folder_name, n, new_s, nii_file, file_name='_'+mask_type+'_cci_clean.trk')
-    #show_fascicles_wholebrain(new_s, vec_vols,folder_name, mask_type, downsamp=1)
-    #return new_s, vec_vols
     return s_list, vec_vols
 
 

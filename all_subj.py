@@ -1,5 +1,5 @@
 import os
-subj_folder = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep'
+subj_folder = r'C:\Users\hila\data\subj'
 #subj_folder = r'D:\after_file_prep'
 all_folders = os.listdir(subj_folder)
 all_subj_folders = list()
