@@ -98,7 +98,7 @@ def show_model_reco_bundles(model,recognized_bundle,folder_name,file_bundle_name
 
 
 if __name__ == '__main__':
-    file_bundle_name = r'SLF_L_mct001rt20_4d'
+    file_bundle_name = r'SLF_L_mct001rt20'
     main_folder = subj_folder
 
     bundle_num = 68
