@@ -2,9 +2,9 @@
 from sklearn.cluster import KMeans
 from sklearn.cluster import AgglomerativeClustering
 from dipy.tracking.streamline import set_number_of_points
-from FT.weighted_tracts import *
-from FT.single_fascicle_vizualization import streamline_mean_fascicle_value_weighted, show_fascicles_wholebrain
-from FT.clustering.poly_representaion_fibers import poly_xyz_vec_calc
+from weighted_tracts import *
+from single_fascicle_vizualization import streamline_mean_fascicle_value_weighted, show_fascicles_wholebrain
+from clustering.poly_representaion_fibers import poly_xyz_vec_calc
 from scipy.stats import f_oneway
 from dipy.segment.bundles import bundles_distances_mam
 from os.path import join as pjoin

@@ -6,9 +6,9 @@ from fury import actor, window
 from dipy.io.streamline import load_trk
 from os.path import join as pjoin
 import os
-from FT.all_subj import all_subj_folders, all_subj_names, subj_folder
-from FT.weighted_tracts import save_ft,load_dwi_files
-from FT.remove_cci_outliers import remove_cci_outliers
+from all_subj import all_subj_folders, all_subj_names, subj_folder
+from weighted_tracts import save_ft,load_dwi_files
+from remove_cci_outliers import remove_cci_outliers
 
 def find_home():
     if 'DIPY_HOME' in os.environ:
@@ -98,13 +98,22 @@ def show_model_reco_bundles(model,recognized_bundle,folder_name,file_bundle_name
 
 
 if __name__ == '__main__':
-    file_bundle_name = r'PPT_L_mct001rt20_4d'
+    file_bundle_name = r'SLF_L_mct001rt20_4d'
     main_folder = subj_folder
 
-    bundle_num = 63
+    bundle_num = 68
     rt=20
     mct=0.001
-    for subji,subj in enumerate(all_subj_names):
+
+    for (subji,subj),fol in zip(enumerate(all_subj_names),all_subj_folders):
+        tracts_folder = f'{main_folder}{fol}\streamlines'
+        full_bund_name = f'{subj}_{file_bundle_name}'
+        if os.path.isdir(tracts_folder) and f'{full_bund_name[1::]}.trk' in os.listdir(tracts_folder):
+            print('Moving on!')
+            continue
+        elif not os.path.exists(f'{tracts_folder}\{subj}_wholebrain_4d_labmask.trk'):
+            print('Moving on!')
+            continue
         model, recognized_bundle, bundle_labels = extract_one_bundle(file_bundle_name, bundle_num, subji, rt, mct, main_folder)
         print(f'finished to extract {file_bundle_name} for subj {subj}')
 

@@ -1,9 +1,9 @@
 
 from dipy.viz import window, actor
-from FT.all_subj import all_subj_folders, all_subj_names
+from all_subj import all_subj_folders, all_subj_names
 import numpy as np
-from FT.weighted_tracts import *
-from FT.remove_cci_outliers import remove_cci_outliers
+from weighted_tracts import *
+from remove_cci_outliers import remove_cci_outliers
 
 
 def show_cc_parts_weighted(streamlines_g,streamlines_b,streamlines_s, g_mean, b_mean, s_mean, folder_name, lut_cmap, bar):

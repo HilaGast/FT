@@ -4,8 +4,7 @@ from dipy.tracking import utils
 from dipy.core.gradients import gradient_table
 from dipy.tracking.local_tracking import LocalTracking
 import numpy as np
-import matplotlib.pyplot as plt
-from FT.all_subj import all_subj_names, all_subj_folders, subj_folder
+from all_subj import all_subj_names, all_subj_folders, subj_folder
 
 
 def load_dwi_files(folder_name, small_delta=15.5):
@@ -83,7 +82,7 @@ def create_act_classifier(fa,folder_name,labels):  # Does not working
     background = np.ones(labels.shape)
     background[(np.asarray(labels)>0) > 0] = 0
     include_map = np.zeros(fa.shape)
-    lab = folder_name + r'\rMegaAtlas_cortex_Labels.nii'
+    lab = f'{folder_name}{os.sep}rMegaAtlas_cortex_Labels.nii'
     lab_file = nib.load(lab)
     lab_labels = lab_file.get_data()
     include_map[background>0] = 1
@@ -101,7 +100,7 @@ def create_streamlines(csd_fit, classifier, seeds, affine):
     from dipy.data import default_sphere
     from dipy.direction import DeterministicMaximumDirectionGetter
     from dipy.tracking.streamline import Streamlines
-
+    print('Starting to compute streamlines')
     detmax_dg = DeterministicMaximumDirectionGetter.from_shcoeff(csd_fit.shm_coeff,
                                                                  max_angle=30.,
                                                                  sphere=default_sphere)
@@ -161,7 +160,7 @@ def show_tracts(hue,saturation,scale,streamlines,mean_vol_per_tract,folder_name,
     r = window.Scene()
     r.add(streamlines_actor)
     r.add(bar)
-    mean_pasi_weighted_img = folder_name+'\streamlines\mean_pasi_weighted' + fig_type + '.png'
+    mean_pasi_weighted_img = f'{folder_name}{os.sep}streamlines{os.sep}mean_pasi_weighted{fig_type}.png'
     window.show(r)
     r.set_camera(r.camera_info())
     window.record(r, out_path=mean_pasi_weighted_img, size=(800, 800))
@@ -180,7 +179,7 @@ def save_ft(folder_name, subj_name, streamlines, nii_file, file_name = "_wholebr
     from dipy.io.streamline import save_trk
     from dipy.io.stateful_tractogram import StatefulTractogram, Space
 
-    dir_name = folder_name + '\streamlines'
+    dir_name = f'{folder_name}{os.sep}streamlines'
     if not os.path.exists(dir_name):
         os.mkdir(dir_name)
 
@@ -191,7 +190,7 @@ def save_ft(folder_name, subj_name, streamlines, nii_file, file_name = "_wholebr
 def nodes_by_index(folder_name):
     import numpy as np
     import nibabel as nib
-    lab = folder_name + r'\rMegaAtlas_Labels_highres.nii'
+    lab = f'{folder_name}{os.sep}rMegaAtlas_Labels_highres.nii'
     lab_file = nib.load(lab)
     lab_labels = lab_file.get_data()
     affine = lab_file.affine
@@ -205,7 +204,7 @@ def nodes_by_index(folder_name):
 def nodes_by_index_mega(folder_name):
     import nibabel as nib
 #    lab = folder_name + r'\rMegaAtlas_Labels.nii'
-    lab = folder_name + r'\rMegaAtlas_Labels_highres.nii'
+    lab = f'{folder_name}{os.sep}rMegaAtlas_Labels_highres.nii'
 
     lab_file = nib.load(lab)
     lab_labels = lab_file.get_fdata()
