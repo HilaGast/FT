@@ -4,6 +4,7 @@ from dipy.tracking import utils
 from dipy.core.gradients import gradient_table
 from dipy.tracking.local_tracking import LocalTracking
 import numpy as np
+import matplotlib.pyplot as plt
 from FT.all_subj import all_subj_names, all_subj_folders, subj_folder
 
 
@@ -125,12 +126,12 @@ def weighting_streamlines(folder_name, streamlines, bvec_file, show=False, weigh
     '''
     from dipy.tracking.streamline import values_from_volume
 
-    weight_by_data, affine = load_weight_by_img(bvec_file,weight_by)
+    weight_by_data, affine = load_weight_by_img(folder_name,weight_by)
 
     stream = list(streamlines)
     vol_per_tract = values_from_volume(weight_by_data, stream, affine=affine)
 
-    pfr_data = load_weight_by_img(bvec_file,'1.5_2_AxFr5')[0]
+    pfr_data = load_weight_by_img(folder_name,'1.5_2_AxFr5')[0]
 
     pfr_per_tract = values_from_volume(pfr_data, stream, affine=affine)
 
@@ -264,9 +265,9 @@ def weighted_con_mat_mega(bvec_file, weight_by, grouping, idx, folder_name,fig_t
         fig_type = '_' + fig_type
 
 
-    weight_by_data, affine = load_weight_by_img(bvec_file,weight_by)
+    weight_by_data, affine = load_weight_by_img(folder_name,weight_by)
 
-    pfr_data = load_weight_by_img(bvec_file,'1.5_2_AxFr5')[0]
+    pfr_data = load_weight_by_img(folder_name,'1.5_2_AxFr5')[0]
 
     vol_vec = weight_by_data.flatten()
     q = np.quantile(vol_vec[vol_vec>0], 0.95)
@@ -291,11 +292,11 @@ def weighted_con_mat_mega(bvec_file, weight_by, grouping, idx, folder_name,fig_t
     mm_weighted = m_weighted[idx]
     mm_weighted = mm_weighted[:, idx]
     #mm_weighted[mm_weighted<0.01] = 0
-    #new_data = (10-mm_weighted)/10 # normalization between 0 and 1
     new_data = 1/(mm_weighted*8.75) #8.75 - axon diameter 2 ACV constant
     #new_data[new_data ==1] = 2
-    np.save(folder_name + r'\weighted_mega'+fig_type, new_data)
-    np.save(folder_name + r'\weighted_mega'+fig_type+'_nonnorm', mm_weighted)
+    if "AxPasi" in weight_by:
+        np.save(folder_name + r'\weighted_mega'+fig_type, new_data)
+        np.save(folder_name + r'\weighted_mega'+fig_type+'_nonnorm', mm_weighted)
 
 
     return new_data, mm_weighted
@@ -362,9 +363,12 @@ def weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_t
     draw_con_mat(new_data, h, fig_name, is_weighted=True)
 
 
-def load_weight_by_img(bvec_file, weight_by):
+def load_weight_by_img(folder_name, weight_by):
     import nibabel as nib
-    weight_by_file = bvec_file[:-5:] + '_' + weight_by + '.nii'
+    for file in os.listdir(folder_name):
+        if weight_by in file and file.endwith('.nii'):
+            weight_by_file = file
+            continue
     weight_by_img = nib.load(weight_by_file)
     weight_by_data = weight_by_img.get_data()
     affine = weight_by_img.affine
@@ -373,24 +377,22 @@ def load_weight_by_img(bvec_file, weight_by):
 
 
 if __name__ == '__main__':
-    import matplotlib.pyplot as plt
     subj = all_subj_folders
     names = all_subj_names
 
     for s,n in zip(subj,names):
         folder_name = subj_folder + s
-        #folder_name = r'D:\after_file_prep' + s #in the server
         dir_name = folder_name + '\streamlines'
         gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name)
-        #csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
-        #fa, classifier = create_fa_classifier(gtab, data, white_matter)
-        #lab_labels_index = nodes_by_index_mega(folder_name)[0]
-        #seeds = create_seeds(folder_name, lab_labels_index, affine, use_mask=False, mask_type='cc', den=3)
-        #streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
-        #save_ft(folder_name,n,streamlines,nii_file, file_name="_wholebrain_3d.trk")
-        tract_path = f'{dir_name}{n}_wholebrain_4d_labmask.trk'
-        streamlines = load_ft(tract_path, nii_file)
-        weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask',
-                                          weight_by='1.5_2_AxPasi5')
+        csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
+        fa, classifier = create_fa_classifier(gtab, data, white_matter)
+        lab_labels_index = nodes_by_index_mega(folder_name)[0]
+        seeds = create_seeds(folder_name, white_matter, affine, use_mask=False, mask_type='cc', den=4)
+        streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
+        save_ft(folder_name,n,streamlines,nii_file, file_name="_wholebrain_3d.trk")
+        #tract_path = f'{dir_name}{n}_wholebrain_4d_labmask.trk'
+        #streamlines = load_ft(tract_path, nii_file)
+        #weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask',
+        #                                  weight_by='1.5_2_AxPasi5')
 
 

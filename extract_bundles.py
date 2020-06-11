@@ -6,7 +6,7 @@ from fury import actor, window
 from dipy.io.streamline import load_trk
 from os.path import join as pjoin
 import os
-from FT.all_subj import all_subj_folders, all_subj_names
+from FT.all_subj import all_subj_folders, all_subj_names, subj_folder
 from FT.weighted_tracts import save_ft,load_dwi_files
 from FT.remove_cci_outliers import remove_cci_outliers
 
@@ -98,12 +98,12 @@ def show_model_reco_bundles(model,recognized_bundle,folder_name,file_bundle_name
 
 
 if __name__ == '__main__':
-    file_bundle_name = r'SLF_L_rt20mct1'
-    #main_folder = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep'
-    main_folder = r'C:\Users\hila\data\subj'
-    bundle_num = 68
+    file_bundle_name = r'PPT_L_mct001rt20_4d'
+    main_folder = subj_folder
+
+    bundle_num = 63
     rt=20
-    mct=1
+    mct=0.001
     for subji,subj in enumerate(all_subj_names):
         model, recognized_bundle, bundle_labels = extract_one_bundle(file_bundle_name, bundle_num, subji, rt, mct, main_folder)
         print(f'finished to extract {file_bundle_name} for subj {subj}')

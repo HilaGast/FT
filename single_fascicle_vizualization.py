@@ -226,7 +226,7 @@ def find_bundle(folder_name, n, nii_file, mask_type):
     return masked_streamlines
 
 
-def streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, mask_type,masked_streamlines):
+def streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, mask_type,masked_streamlines, weight_by='1.5_2_AxPasi5'):
 
     lab_labels_index, affine = nodes_by_index_mega(folder_name)
     streamline_dict = create_streamline_dict(masked_streamlines, lab_labels_index, affine)
@@ -234,7 +234,7 @@ def streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, mask_type,
     index_to_text_file = r'C:\Users\Admin\my_scripts\aal\megaatlas\megaatlas2nii.txt'
     idx = nodes_labels_mega(index_to_text_file)[1]
 
-    mat_medians = weighted_con_mat_mega(bvec_file, '1.5_2_AxPasi5', streamline_dict, idx, folder_name, fig_type='')[1]
+    mat_medians = weighted_con_mat_mega(bvec_file, weight_by, streamline_dict, idx, folder_name, fig_type='')[1]
     id = np.argsort(idx)
     mat_medians = mat_medians[id]
     mat_medians = mat_medians[:, id]
@@ -284,7 +284,9 @@ def show_fascicles_wholebrain(s_list, vec_vols, folder_name, mask_type, downsamp
     lut_cmap = actor.colormap_lookup_table(hue_range=hue,
                                            saturation_range=saturation, scale_range=scale)
     bar = actor.scalar_bar(lut_cmap)
-    w_actor = actor.line(s_list, vec_vols, linewidth=1.2, lookup_colormap=lut_cmap)
+    #w_actor = actor.line(s_list, vec_vols, linewidth=1.2, lookup_colormap=lut_cmap)
+    w_actor = actor.streamtube(s_list, vec_vols, linewidth=0.6, lookup_colormap=lut_cmap)
+
     #w_actor = actor.streamtube(s_list, vec_vols, linewidth=0.3, lookup_colormap=lut_cmap)
     #w_actor = actor.line(s_list, linewidth=1.0, lookup_colormap=lut_cmap)
 

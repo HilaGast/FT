@@ -244,8 +244,8 @@ if __name__ == '__main__':
     main_folder = r'C:\Users\hila\data\subj'
     s = all_subj_folders[4]
     n = all_subj_names[4]
-    img_name = r'\fascicles_AxCaliber_weighted_3d_slf_pasivals.png'
-    bundle = r'SLF_L_mct001rt20_1d'
+    img_name = r'\fascicles_AxCaliber_weighted_4d_slf_pasivals.png'
+    bundle = r'SLF_L_mct001rt20_4d'
     #bundle = r'wholebrain_1d_labmask'
     slices = [False, True, False] #slices[0]-axial, slices[1]-saggital, slices[2]-coronal
     file_list = os.listdir(main_folder + s)

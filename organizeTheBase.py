@@ -20,7 +20,7 @@ def dicom2nii(sub_dir):
     if not os.path.isdir(os.path.join(sub_dir, 'nifti')):
         os.makedirs(os.path.join(sub_dir, 'nifti'))
         for scan in scans:
-            cmd = fr'"C:\Program Files\mricron\dcm2nii" -g y -o {sub_dir}\nifti {scan}'
+            cmd = fr'"C:\Program Files\mricron\dcm2nii" -g n -o {sub_dir} {scan}'
             print(cmd)
             os.system(cmd)
 
@@ -60,8 +60,8 @@ def clean():
 
 
 if __name__ == '__main__':
-    copy_files()
-    for sub in glob(r'C:\Users\admin\Desktop\subj_for_v5\*'):
+    #copy_files()
+    for sub in glob(r'C:\Users\admin\Desktop\subj2analyze\*'):
         dicom2nii(sub)
         #rename(os.path.join(sub, 'nifti'))
     #clean()
