@@ -250,8 +250,8 @@ def non_weighted_con_mat_mega(streamlines, lab_labels_index, affine, idx, folder
     mm = mm[:, idx]
     new_data = 1 / mm  # values distribute between 0 and 1, 1 represents distant nodes (only 1 tract)
     #new_data[new_data > 1] = 2
-    np.save(folder_name + r'\non-weighted_mega'+fig_type, new_data)
-    np.save(folder_name + r'\non-weighted_mega'+fig_type+'_nonnorm', mm)
+    #np.save(folder_name + r'\non-weighted_mega'+fig_type, new_data)
+    #np.save(folder_name + r'\non-weighted_mega'+fig_type+'_nonnorm', mm)
 
     return new_data, m, grouping
 
@@ -344,8 +344,8 @@ def draw_con_mat(data, h, fig_name, is_weighted=False):
 def weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type = 'whole brain', weight_by='1.5_2_AxPasi5'):
 
     lab_labels_index, affine = nodes_by_index_mega(folder_name)
-    index_to_text_file = r'C:\Users\hila\data\megaatlas\megaatlas2nii.txt'
-    #index_to_text_file = r'C:\Users\Admin\my_scripts\aal\megaatlas\megaatlas2nii.txt'
+    #index_to_text_file = r'C:\Users\hila\data\megaatlas\megaatlas2nii.txt'
+    index_to_text_file = r'C:\Users\Admin\my_scripts\aal\megaatlas\megaatlas2nii.txt'
     labels_headers, idx = nodes_labels_mega(index_to_text_file)
 
     # non-weighted:
@@ -353,7 +353,7 @@ def weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_t
     new_data, m, grouping = non_weighted_con_mat_mega(streamlines, lab_labels_index, affine, idx, folder_name, fig_type)
     h = labels_headers
     fig_name = folder_name + r'\non-weighted('+fig_type+', MegaAtlas).png'
-    draw_con_mat(new_data, h, fig_name, is_weighted=False)
+    #draw_con_mat(new_data, h, fig_name, is_weighted=False)
 
     # weighted:
 
@@ -365,8 +365,8 @@ def weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_t
 def load_weight_by_img(folder_name, weight_by):
     import nibabel as nib
     for file in os.listdir(folder_name):
-        if weight_by in file and file.endwith('.nii'):
-            weight_by_file = file
+        if weight_by in file and file.endswith('.nii'):
+            weight_by_file = os.path.join(folder_name,file)
             continue
     weight_by_img = nib.load(weight_by_file)
     weight_by_data = weight_by_img.get_data()

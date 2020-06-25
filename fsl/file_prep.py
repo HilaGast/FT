@@ -1,5 +1,5 @@
 import os
-from FT.fsl.eddy_correct_diff import eddy_corr
+from fsl.eddy_correct_diff import eddy_corr
 
 
 def basic_files(cortex_only=True):

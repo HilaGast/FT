@@ -135,7 +135,7 @@ def weighted_clusters(model,streamlines,vec_vols, folder_name, file_name = ''):
             vec_mean_vol[i] = mean_vol
     #stats,p=f_oneway(v_list[0],v_list[1],v_list[2])
     #print(f'F={stats:.3f}, p={p:.5f}')
-    show_fascicles_wholebrain(streamlines, vec_mean_vol, folder_name, file_name, downsamp=1, scale=[4,7],hue = [0.25,-0.05],saturation = [0.1, 1])
+    #show_fascicles_wholebrain(streamlines, vec_mean_vol, folder_name, file_name, downsamp=1, scale=[4,7],hue = [0.25,-0.05],saturation = [0.1, 1])
 
 def load_model(i,folder_name,method, fascicle):
     import joblib
@@ -153,7 +153,7 @@ def save_model(model, i, folder_name, method, fascicle):
 if __name__ == '__main__':
     main_folder = subj_folder
     show_cluster = False
-    fascicle = 'AF_L_mct001rt20'
+    fascicle = 'SLF_L_mct001rt20'
     methods = ['agglomerative','kmeans']
     method = methods[1]
     for fol,n in zip(all_subj_folders,all_subj_names):
@@ -171,7 +171,7 @@ if __name__ == '__main__':
                 s_list = load_trk(fascicle_file_name, "same", bbox_valid_check=False)
                 masked_streamlines = s_list.streamlines
                 break
-        streamlines,vec_vols = streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, fascicle,masked_streamlines,weight_by = '_FA')
+        streamlines,vec_vols = streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, fascicle,masked_streamlines,weight_by = '_AxPasi')
         dist_method = 'mam'
         tracts_num = streamlines.__len__()
 

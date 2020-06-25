@@ -1,6 +1,6 @@
 import numpy as np
 from os.path import join as pjoin
-from FT.weighted_tracts import *
+from weighted_tracts import *
 
 
 def calc_avg_mat(subj,fig_type, calc_type='mean', draw = True, isw = True):
