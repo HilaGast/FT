@@ -250,8 +250,8 @@ def non_weighted_con_mat_mega(streamlines, lab_labels_index, affine, idx, folder
     mm = mm[:, idx]
     new_data = 1 / mm  # values distribute between 0 and 1, 1 represents distant nodes (only 1 tract)
     #new_data[new_data > 1] = 2
-    #np.save(folder_name + r'\non-weighted_mega'+fig_type, new_data)
-    #np.save(folder_name + r'\non-weighted_mega'+fig_type+'_nonnorm', mm)
+    np.save(folder_name + r'\non-weighted_mega'+fig_type, new_data)
+    np.save(folder_name + r'\non-weighted_mega'+fig_type+'_nonnorm', mm)
 
     return new_data, m, grouping
 
@@ -293,9 +293,9 @@ def weighted_con_mat_mega(bvec_file, weight_by, grouping, idx, folder_name,fig_t
     #mm_weighted[mm_weighted<0.01] = 0
     new_data = 1/(mm_weighted*8.75) #8.75 - axon diameter 2 ACV constant
     #new_data[new_data ==1] = 2
-    if "AxPasi" in weight_by:
-        np.save(folder_name + r'\weighted_mega'+fig_type, new_data)
-        np.save(folder_name + r'\weighted_mega'+fig_type+'_nonnorm', mm_weighted)
+    #if "AxPasi" in weight_by:
+    np.save(folder_name + r'\weighted_mega'+fig_type, new_data)
+    np.save(folder_name + r'\weighted_mega'+fig_type+'_nonnorm', mm_weighted)
 
 
     return new_data, mm_weighted
@@ -345,7 +345,8 @@ def weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_t
 
     lab_labels_index, affine = nodes_by_index_mega(folder_name)
     #index_to_text_file = r'C:\Users\hila\data\megaatlas\megaatlas2nii.txt'
-    index_to_text_file = r'C:\Users\Admin\my_scripts\aal\megaatlas\megaatlas2nii.txt'
+    index_to_text_file = r'F:\Hila\aal\megaatlas\megaatlas2nii.txt'
+    #index_to_text_file = r'C:\Users\Admin\my_scripts\aal\megaatlas\megaatlas2nii.txt'
     labels_headers, idx = nodes_labels_mega(index_to_text_file)
 
     # non-weighted:
@@ -353,7 +354,7 @@ def weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_t
     new_data, m, grouping = non_weighted_con_mat_mega(streamlines, lab_labels_index, affine, idx, folder_name, fig_type)
     h = labels_headers
     fig_name = folder_name + r'\non-weighted('+fig_type+', MegaAtlas).png'
-    #draw_con_mat(new_data, h, fig_name, is_weighted=False)
+    draw_con_mat(new_data, h, fig_name, is_weighted=False)
 
     # weighted:
 
