@@ -56,7 +56,6 @@ def load_vars(subj_folder,all_subj_folders, all_subj_names,i,bundle_name):
     #mat_weights = np.load(rf'{folder_name}\weighted_mega_wholebrain_4d_labmask_nonnorm.npy')
     mat_weights = np.load(rf'{folder_name}\AxCaliber_FA_r_0.05_th_50subj.npy')
 
-    index_to_text_file = r'C:\Users\hila\data\megaatlas\megaatlas2nii.txt'
     idx = nodes_labels_mega(index_to_text_file)[1]
     id = np.argsort(idx)
     mat_weights = mat_weights[id]

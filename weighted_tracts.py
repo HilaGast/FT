@@ -4,7 +4,7 @@ from dipy.tracking import utils
 from dipy.core.gradients import gradient_table
 from dipy.tracking.local_tracking import LocalTracking
 import numpy as np
-from all_subj import all_subj_names, all_subj_folders, subj_folder
+from all_subj import *
 
 
 def load_dwi_files(folder_name, small_delta=15.5):
@@ -344,9 +344,6 @@ def draw_con_mat(data, h, fig_name, is_weighted=False):
 def weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type = 'whole brain', weight_by='1.5_2_AxPasi5'):
 
     lab_labels_index, affine = nodes_by_index_mega(folder_name)
-    #index_to_text_file = r'C:\Users\hila\data\megaatlas\megaatlas2nii.txt'
-    index_to_text_file = r'F:\Hila\aal\megaatlas\megaatlas2nii.txt'
-    #index_to_text_file = r'C:\Users\Admin\my_scripts\aal\megaatlas\megaatlas2nii.txt'
     labels_headers, idx = nodes_labels_mega(index_to_text_file)
 
     # non-weighted:
