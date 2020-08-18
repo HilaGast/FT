@@ -2,6 +2,7 @@ import os
 current_computer = os.environ['COMP']
 if current_computer == 'HOME':
     subj_folder = r'C:\Users\hila\data\subj'
+    index_to_text_file = r'C:\Users\hila\data\megaatlas\megaatlas2nii.txt'
     start_with = 0
 elif current_computer == 'WORK':
     subj_folder = r'F:\Hila\Ax3D_Pack\V6\after_file_prep'
