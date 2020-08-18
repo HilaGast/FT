@@ -97,22 +97,42 @@ class AdvanceInteractive:
     def load_vols(self):
         self.vols = weighting_streamlines(self.folder_name,self.s_list,self.bvec_file)
 
-    def show_bundle_slices(self):
+    def show_bundle_slices(self, color_map = 'ax'):
 
         world_coords = True
         streamlines, image_actor_z = register_coords(world_coords, self.s_list, self.affine, self.slices)
 
-        lut_cmap = actor.colormap_lookup_table(hue_range=self.hue,
-                                               saturation_range=self.saturation, scale_range=self.scale)
-        bar = actor.scalar_bar(lut_cmap)
-        stream_actor = actor.line(self.s_list, self.vols, linewidth=1.2, lookup_colormap=lut_cmap)
-        ren = window.Renderer()
+        if color_map == 'ax':
+            lut_cmap = actor.colormap_lookup_table(hue_range=self.hue,
+                                                   saturation_range=self.saturation, scale_range=self.scale)
+            bar = actor.scalar_bar(lut_cmap)
+            stream_actor = actor.line(self.s_list, self.vols, linewidth=1.2, lookup_colormap=lut_cmap)
+            ren = window.Scene()
+            ren.add(bar)
+
+        elif color_map == 'fa':
+            self.vols = list(np.asarray(self.vols)/100)
+            lut_cmap = actor.colormap_lookup_table(hue_range=self.hue,
+                                                   saturation_range=self.saturation, scale_range=self.scale)
+            bar = actor.scalar_bar(lut_cmap)
+            stream_actor = actor.line(self.s_list, self.vols, linewidth=1.2, lookup_colormap=lut_cmap)
+            ren = window.Scene()
+            ren.add(bar)
+
+        elif color_map == 'r':
+            from fury.colormap import create_colormap
+            self.vols.append(1)
+            self.vols.append(-1)
+            cmap = create_colormap(np.asarray(self.vols), name='seismic')
+            self.vols = self.vols[:-2]
+            cmap = cmap[:-2]
+            stream_actor = actor.line(self.s_list, cmap, linewidth=1.2)
+            ren = window.Scene()
 
         slicer_opacity = 0.6
         image_actor_z, image_actor_x, image_actor_y = create_slicers(image_actor_z, self.shape, slicer_opacity)
 
         ren.add(stream_actor)
-        ren.add(bar)
 
         if self.axial:
             ren.add(image_actor_z)  # axial
