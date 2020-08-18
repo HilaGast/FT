@@ -1,6 +1,5 @@
 
 from dipy.viz import window, actor
-from all_subj import all_subj_folders, all_subj_names
 import numpy as np
 from weighted_tracts import *
 from remove_cci_outliers import remove_cci_outliers
@@ -231,7 +230,6 @@ def streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, mask_type,
     lab_labels_index, affine = nodes_by_index_mega(folder_name)
     streamline_dict = create_streamline_dict(masked_streamlines, lab_labels_index, affine)
     bvec_file = load_dwi_files(folder_name)[6]
-    index_to_text_file = r'C:\Users\Admin\my_scripts\aal\megaatlas\megaatlas2nii.txt'
     idx = nodes_labels_mega(index_to_text_file)[1]
 
     mat_medians = weighted_con_mat_mega(bvec_file, weight_by, streamline_dict, idx, folder_name, fig_type='')[1]
