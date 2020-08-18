@@ -2,7 +2,6 @@ from weighted_tracts import *
 from scipy.stats import pearsonr
 subj = all_subj_folders
 names = all_subj_names
-index_to_text_file = r'F:\Hila\aal\megaatlas\megaatlas2nii.txt'
 labels_headers, idx = nodes_labels_mega(index_to_text_file)
 fa_all = np.zeros((len(labels_headers), len(labels_headers), len(subj)))
 axcaliber_all = np.zeros((len(labels_headers), len(labels_headers), len(subj)))
