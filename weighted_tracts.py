@@ -192,7 +192,7 @@ def nodes_by_index(folder_name):
     import nibabel as nib
     lab = f'{folder_name}{os.sep}rMegaAtlas_Labels_highres.nii'
     lab_file = nib.load(lab)
-    lab_labels = lab_file.get_data()
+    lab_labels = lab_file.get_fdata()
     affine = lab_file.affine
     uni = np.unique(lab_labels)
     lab_labels_index = lab_labels
@@ -201,10 +201,12 @@ def nodes_by_index(folder_name):
     return lab_labels_index, affine
 
 
-def nodes_by_index_mega(folder_name):
+def nodes_by_index_general(folder_name,atlas='mega'):
     import nibabel as nib
-#    lab = folder_name + r'\rMegaAtlas_Labels.nii'
-    lab = f'{folder_name}{os.sep}rMegaAtlas_Labels_highres.nii'
+    if atlas == 'mega':
+        lab = f'{folder_name}{os.sep}rMegaAtlas_Labels_highres.nii'
+    elif atlas == 'aal3':
+        lab = folder_name + r'\rAAL3_highres_atlas.nii'
 
     lab_file = nib.load(lab)
     lab_labels = lab_file.get_fdata()
@@ -212,6 +214,33 @@ def nodes_by_index_mega(folder_name):
     lab_labels_index = [labels for labels in lab_labels]
     lab_labels_index = np.asarray(lab_labels_index, dtype='int')
     return lab_labels_index, affine
+
+
+def nodes_labels_aal3(index_to_text_file):
+    labels_file = open(index_to_text_file, 'r', errors='ignore')
+    labels_name = labels_file.readlines()
+    labels_file.close()
+    labels_table = []
+    labels_headers = []
+    idx = []
+    for line in labels_name:
+        if not line[0] == '#':
+            labels_table.append([col for col in line.split() if col])
+
+    for l in labels_table:
+        if len(l)==3:
+            head = l[1]
+            labels_headers.append(head)
+            idx.append(int(l[0])-1)
+    #pop over not assigned indices (in aal3):
+    idx = np.asarray(idx)
+    first=idx>35
+    second=idx>81
+    idx[first]-=2
+    idx[second]-=2
+    idx=list(idx)
+
+    return labels_headers, idx
 
 
 def nodes_labels_mega(index_to_text_file):
@@ -250,8 +279,8 @@ def non_weighted_con_mat_mega(streamlines, lab_labels_index, affine, idx, folder
     mm = mm[:, idx]
     new_data = 1 / mm  # values distribute between 0 and 1, 1 represents distant nodes (only 1 tract)
     #new_data[new_data > 1] = 2
-    np.save(folder_name + r'\non-weighted_mega'+fig_type, new_data)
-    np.save(folder_name + r'\non-weighted_mega'+fig_type+'_nonnorm', mm)
+    #np.save(folder_name + r'\non-weighted_mega'+fig_type, new_data)
+    #np.save(folder_name + r'\non-weighted_mega'+fig_type+'_nonnorm', mm)
 
     return new_data, m, grouping
 
@@ -285,8 +314,26 @@ def weighted_con_mat_mega(bvec_file, weight_by, grouping, idx, folder_name,fig_t
                 high_pfr = [pfr > 0.5]
                 mean_vol_per_tract.append(np.nanmean(s[tuple(non_out and high_pfr)]))
             mean_path_vol = np.nanmean(mean_vol_per_tract)
-            m_weighted[pair[0]-1, pair[1]-1] = mean_path_vol
-            m_weighted[pair[1]-1, pair[0]-1] = mean_path_vol
+            if 'aal3' in fig_type:
+                r= pair[0]-1
+                c=pair[1]-1
+
+                if r>81:
+                    r-=4
+                elif r>35:
+                    r-=2
+
+                if c>81:
+                    c-=4
+                elif c>35:
+                    c-=2
+
+                m_weighted[r,c] = mean_path_vol
+                m_weighted[c,r] = mean_path_vol
+
+            else:
+                m_weighted[pair[0]-1, pair[1]-1] = mean_path_vol
+                m_weighted[pair[1]-1, pair[0]-1] = mean_path_vol
 
     mm_weighted = m_weighted[idx]
     mm_weighted = mm_weighted[:, idx]
@@ -294,7 +341,7 @@ def weighted_con_mat_mega(bvec_file, weight_by, grouping, idx, folder_name,fig_t
     new_data = 1/(mm_weighted*8.75) #8.75 - axon diameter 2 ACV constant
     #new_data[new_data ==1] = 2
     #if "AxPasi" in weight_by:
-    np.save(folder_name + r'\weighted_mega'+fig_type, new_data)
+    #np.save(folder_name + r'\weighted_mega'+fig_type, new_data)
     np.save(folder_name + r'\weighted_mega'+fig_type+'_nonnorm', mm_weighted)
 
 
@@ -343,21 +390,23 @@ def draw_con_mat(data, h, fig_name, is_weighted=False):
 
 def weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type = 'whole brain', weight_by='1.5_2_AxPasi5'):
 
-    lab_labels_index, affine = nodes_by_index_mega(folder_name)
-    labels_headers, idx = nodes_labels_mega(index_to_text_file)
+    lab_labels_index, affine = nodes_by_index_general(folder_name,atlas='aal3')
+    labels_headers, idx = nodes_labels_aal3(index_to_text_file)
 
     # non-weighted:
 
     new_data, m, grouping = non_weighted_con_mat_mega(streamlines, lab_labels_index, affine, idx, folder_name, fig_type)
     h = labels_headers
-    fig_name = folder_name + r'\non-weighted('+fig_type+', MegaAtlas).png'
-    draw_con_mat(new_data, h, fig_name, is_weighted=False)
+    #fig_name = folder_name + r'\non-weighted('+fig_type+', MegaAtlas).png'
+    fig_name = folder_name + r'\non-weighted(' + fig_type + ', AAL3).png'
+    #draw_con_mat(new_data, h, fig_name, is_weighted=False)
 
     # weighted:
 
     new_data, mm_weighted = weighted_con_mat_mega(bvec_file, weight_by, grouping, idx, folder_name, fig_type)
-    fig_name = folder_name + r'\Weighted('+fig_type+', MegaAtlas).png'
-    draw_con_mat(new_data, h, fig_name, is_weighted=True)
+    #fig_name = folder_name + r'\Weighted('+fig_type+', MegaAtlas).png'
+    fig_name = folder_name + r'\Weighted('+fig_type+', AAL3).png'
+    #draw_con_mat(new_data, h, fig_name, is_weighted=True)
 
 
 def load_weight_by_img(folder_name, weight_by):
@@ -367,7 +416,7 @@ def load_weight_by_img(folder_name, weight_by):
             weight_by_file = os.path.join(folder_name,file)
             continue
     weight_by_img = nib.load(weight_by_file)
-    weight_by_data = weight_by_img.get_data()
+    weight_by_data = weight_by_img.get_fdata()
     affine = weight_by_img.affine
 
     return weight_by_data, affine
@@ -381,15 +430,15 @@ if __name__ == '__main__':
         folder_name = subj_folder + s
         dir_name = folder_name + '\streamlines'
         gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name)
-        csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
-        fa, classifier = create_fa_classifier(gtab, data, white_matter)
-        lab_labels_index = nodes_by_index_mega(folder_name)[0]
-        seeds = create_seeds(folder_name, white_matter, affine, use_mask=False, mask_type='cc', den=4)
-        streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
-        save_ft(folder_name,n,streamlines,nii_file, file_name="_wholebrain_3d.trk")
-        #tract_path = f'{dir_name}{n}_wholebrain_4d_labmask.trk'
-        #streamlines = load_ft(tract_path, nii_file)
-        #weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask',
-        #                                  weight_by='1.5_2_AxPasi5')
+        #csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
+        #fa, classifier = create_fa_classifier(gtab, data, white_matter)
+        #lab_labels_index = nodes_by_index_general(folder_name)[0]
+        #seeds = create_seeds(folder_name, white_matter, affine, use_mask=False, mask_type='cc', den=4)
+        #streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
+        #save_ft(folder_name,n,streamlines,nii_file, file_name="_wholebrain_3d.trk")
+        tract_path = f'{dir_name}{n}_wholebrain_4d_labmask.trk'
+        streamlines = load_ft(tract_path, nii_file)
+        weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask_aal3_FA',
+                                          weight_by='_FA')
 
 

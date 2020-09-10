@@ -1,9 +1,9 @@
 import numpy as np
 from dipy.viz import actor, window, ui
 import nibabel as nib
-from FT.single_fascicle_vizualization import *
-from FT.weighted_tracts import weighting_streamlines,load_dwi_files,load_weight_by_img
-from FT.clustering.cluster_fascicles import *
+from single_fascicle_vizualization import *
+from weighted_tracts import weighting_streamlines,load_dwi_files,load_weight_by_img
+from clustering.cluster_fascicles import *
 from os.path import join as pjoin
 from dipy.io.streamline import load_trk
 
@@ -94,8 +94,8 @@ class AdvanceInteractive:
                 self.s_list = s_list.streamlines
                 break
 
-    def load_vols(self):
-        self.vols = weighting_streamlines(self.folder_name,self.s_list,self.bvec_file)
+    def load_vols(self, weight_by='_1.5_2_AxPasi5'):
+        self.vols = weighting_streamlines(self.folder_name,self.s_list,self.bvec_file,weight_by=weight_by)
 
     def show_bundle_slices(self, color_map = 'ax'):
 
@@ -262,10 +262,10 @@ class AdvanceInteractive:
 if __name__ == '__main__':
 
     main_folder = r'C:\Users\hila\data\subj'
-    s = all_subj_folders[4]
-    n = all_subj_names[4]
+    s = all_subj_folders[7]
+    n = all_subj_names[7]
     img_name = r'\fascicles_AxCaliber_weighted_4d_slf_pasivals.png'
-    bundle = r'SLF_L_mct001rt20_4d'
+    bundle = r'SLF_L_mct001rt20'
     #bundle = r'wholebrain_1d_labmask'
     slices = [False, True, False] #slices[0]-axial, slices[1]-saggital, slices[2]-coronal
     file_list = os.listdir(main_folder + s)
@@ -279,7 +279,7 @@ if __name__ == '__main__':
 
     bundlei = AdvanceInteractive(main_folder,slice_file, s, n, img_name, bundle, slices)
     bundlei.load_bund()
-    bundlei.load_vols()
+    bundlei.load_vols(weight_by='_1.5_2_AxPasi7')
     bundlei.show_bundle_slices()
 
     method = 'mam'

@@ -2,25 +2,29 @@ import os
 from fsl.eddy_correct_diff import eddy_corr
 
 
-def basic_files(cortex_only=True):
-    if cortex_only:
-        atlas_label = r'C:\Users\Admin\my_scripts\aal\megaatlas\MegaAtlas_cortex_Labels.nii'
-    else:
-        atlas_label = r'C:\Users\Admin\my_scripts\aal\megaatlas\MegaAtlas_Labels_highres.nii'
+def basic_files(cortex_only=True,atlas_type='mega'):
+    if atlas_type == 'mega':
+        if cortex_only:
+            atlas_label = r'C:\Users\Admin\my_scripts\aal\megaatlas\MegaAtlas_cortex_Labels.nii'
+        else:
+            atlas_label = r'C:\Users\Admin\my_scripts\aal\megaatlas\MegaAtlas_Labels_highres.nii'
 
-    atlas_label = atlas_label.replace('C:', '/mnt/c')
+        atlas_template = r'C:\Users\Admin\my_scripts\aal\megaatlas\Schaefer_template.nii'
 
-    atlas_template = r'C:\Users\Admin\my_scripts\aal\megaatlas\Schaefer_template.nii'
-    atlas_template = atlas_template.replace('C:', '/mnt/c')
-    atlas_mask = r'C:\Users\Admin\my_scripts\aal\megaatlas\slf_masks.nii'
-    atlas_mask = atlas_mask.replace('C:', '/mnt/c')
+    elif atlas_type == 'aal3':
+        atlas_label = r'F:\Hila\aal\aal3\AAL3_highres_atlas.nii'
+        atlas_template = r'F:\Hila\aal\aal3\AAL3_highres_template.nii'
 
-    folder_name = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6'
+
+    atlas_label = os_path_2_fsl(atlas_label)
+    atlas_template = os_path_2_fsl(atlas_template)
+
+    folder_name = r'F:\Hila\Ax3D_Pack\V6\after_file_prep'
 
     all_subj_folders = os.listdir(folder_name)
     subj = all_subj_folders
 
-    return subj, folder_name, atlas_template, atlas_label,atlas_mask
+    return subj, folder_name, atlas_template, atlas_label
 
 
 def subj_files(subj_folder):
@@ -149,16 +153,27 @@ def fast_seg(out_registered):
     os.system(cmd)
 
 
-def all_func_to_run(s, folder_name, atlas_template, atlas_label,atlas_mask):
+def os_path_2_fsl(path):
+    if 'F:' in path:
+        path = path.replace('F:','/mnt/f')
+    elif 'C:' in path:
+        path = path.replace('C:', '/mnt/c')
+    elif 'D:' in path:
+        path = path.replace('D:', '/mnt/d')
+
+    return path
+
+
+def all_func_to_run(s, folder_name, atlas_template, atlas_label):
     subj_name = r'/' + s + r'/'
     subj_folder = folder_name + subj_name
     subj_folder = subj_folder.replace(os.sep, '/')
 
     mprage_file_name, diff_file_name, pa_file_name = subj_files(subj_folder)
 
-    subj_folder = subj_folder.replace('C:', '/mnt/c')
+    subj_folder = os_path_2_fsl(subj_folder)
 
-    eddy_corr(subj_folder,diff_file_name,pa_file_name)
+    #eddy_corr(subj_folder,diff_file_name,pa_file_name)
 
     subj_mprage, out_brain = bet_4_regis_mprage(subj_folder, mprage_file_name)
 
@@ -192,20 +207,17 @@ def all_func_to_run(s, folder_name, atlas_template, atlas_label,atlas_mask):
     '''apply fnirt warp on atlas labels:   '''
     atlas_labels_registered = apply_fnirt_warp_on_label(subj_folder, atlas_label, out_registered, warp_name)
 
-    '''apply fnirt warp on atlas labels:   '''
-    apply_fnirt_warp_on_masks(subj_folder, atlas_mask, out_registered, warp_name)
-
     '''FAST segmentation:   '''
-    fast_seg(out_registered)
+    #fast_seg(out_registered)
 
     print('Finished file prep for ' + subj_name[:-1])
 
 
 if __name__ == '__main__':
     from multiprocessing import Process
-    subj, folder_name, atlas_template, atlas_label,atlas_mask = basic_files(False)
-    for s in subj[2::]:
-        all_func_to_run(s, folder_name, atlas_template, atlas_label,atlas_mask)
+    subj, folder_name, atlas_template, atlas_label = basic_files(False, atlas_type='aal3')
+    for s in subj[::]:
+        all_func_to_run(s, folder_name, atlas_template, atlas_label)
 
 
     '''multi procesing:'''
