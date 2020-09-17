@@ -265,7 +265,6 @@ def nodes_labels_mega(index_to_text_file):
 
 def non_weighted_con_mat_mega(streamlines, lab_labels_index, affine, idx, folder_name, fig_type=''):
     from dipy.tracking import utils
-    import numpy as np
 
     if len(fig_type) >> 0:
         fig_type = '_'+fig_type
@@ -422,6 +421,24 @@ def load_weight_by_img(folder_name, weight_by):
     return weight_by_data, affine
 
 
+def streamlins_len_connectivity_mat(folder_name, streamlines, lab_labels_index, idx, fig_type='lengths'):
+    m, grouping = utils.connectivity_matrix(streamlines, affine, lab_labels_index, return_mapping = True, mapping_as_streamlines = True)
+    new_m = np.zeros(m.shape)
+    new_grouping = grouping.copy()
+    for k, v in new_grouping.items():
+        if k[0]==0 or k[1]==0:
+            continue
+        lengths = []
+        for stream in v:
+            lengths.append(stream.shape[0])
+        new_m[k[0] - 1, k[1] - 1] = np.mean(lengths)
+        new_m[k[1] - 1, k[0] - 1] = np.mean(lengths)
+
+    new_mm = new_m[idx]
+    new_mm = new_mm[:, idx]
+    np.save(folder_name + r'\weighted_mega_' + fig_type + '_nonnorm', new_mm)
+
+
 if __name__ == '__main__':
     subj = all_subj_folders
     names = all_subj_names
@@ -438,7 +455,15 @@ if __name__ == '__main__':
         #save_ft(folder_name,n,streamlines,nii_file, file_name="_wholebrain_3d.trk")
         tract_path = f'{dir_name}{n}_wholebrain_4d_labmask.trk'
         streamlines = load_ft(tract_path, nii_file)
-        weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask_aal3_FA',
-                                          weight_by='_FA')
+        #idx = nodes_labels_mega(index_to_text_file)[1]
+        #streamlins_len_connectivity_mat(folder_name, streamlines, lab_labels_index, idx, fig_type='lengths')
+        #weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask_aal3_FA',
+        #                                  weight_by='_FA')
+        from dipy.tracking.streamline import length
+        import matplotlib.pyplot as plt
+        a = length(streamlines)
+        mean_vol_per_tract = weighting_streamlines(folder_name, streamlines, bvec_file, show=False, weight_by = '1.5_2_AxPasi5')
+        plt.scatter(a,mean_vol_per_tract)
+        plt.show()
 
 
