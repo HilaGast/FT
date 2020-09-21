@@ -459,11 +459,12 @@ if __name__ == '__main__':
         #streamlins_len_connectivity_mat(folder_name, streamlines, lab_labels_index, idx, fig_type='lengths')
         #weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask_aal3_FA',
         #                                  weight_by='_FA')
-        from dipy.tracking.streamline import length
+        #from dipy.tracking.streamline import length
         import matplotlib.pyplot as plt
-        a = length(streamlines)
+        #a = length(streamlines)
         mean_vol_per_tract = weighting_streamlines(folder_name, streamlines, bvec_file, show=False, weight_by = '1.5_2_AxPasi5')
-        plt.scatter(a,mean_vol_per_tract)
+        mean_vol_per_tract = np.asarray(mean_vol_per_tract)
+        plt.hist(mean_vol_per_tract[mean_vol_per_tract>0], bins=30)
         plt.show()
 
 

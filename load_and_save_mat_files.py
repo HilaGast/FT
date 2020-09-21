@@ -38,11 +38,14 @@ for s, n in zip(subj, names):
 
     num_of_tracts_file = rf'{folder_name}\non-weighted_mega_wholebrain_4d_labmask_aal3_nonnorm.npy'
     num_of_tracts_mat = np.load(num_of_tracts_file)
+    num_of_tracts_mat = np.asarray(num_of_tracts_mat,dtype='float64')
     num_of_tracts_mat = num_of_tracts_mat[id]
     num_of_tracts_mat = num_of_tracts_mat[:, id]
 
+
     fa_file = rf'{folder_name}\weighted_mega_wholebrain_4d_labmask_aal3_FA_nonnorm.npy'
     fa_mat = np.load(fa_file)
+    fa_mat = fa_mat / 100
     fa_mat = fa_mat[id]
     fa_mat = fa_mat[:, id]
 

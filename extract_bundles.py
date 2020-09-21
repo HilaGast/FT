@@ -75,10 +75,17 @@ def extract_one_bundle(file_bundle_name, bundle_num, subji, rt, mct, main_folder
     recognized_bundle,bundle_labels, model = find_bundle(dipy_home,moved,bundle_num, rt, mct)
     nii_file = load_dwi_files(folder_name)[5]
     bundle = target[bundle_labels]
-    keep_s,keep_i = remove_cci_outliers(bundle)
-    new_s = []
-    new_s += [bundle[s1] for s1 in keep_i]
-    save_ft(folder_name, n, new_s, nii_file, file_name='_'+file_bundle_name+'.trk')
+
+    if len(bundle)<20:
+        model=[]
+        recognized_bundle=[]
+        bundle_labels=[]
+        print(f"Couldn't find {file_bundle_name} for {n}")
+    else:
+        keep_s,keep_i = remove_cci_outliers(bundle)
+        new_s = []
+        new_s += [bundle[s1] for s1 in keep_i]
+        save_ft(folder_name, n, new_s, nii_file, file_name='_'+file_bundle_name+'.trk')
 
     return model,recognized_bundle,bundle_labels
 
@@ -98,10 +105,10 @@ def show_model_reco_bundles(model,recognized_bundle,folder_name,file_bundle_name
 
 
 if __name__ == '__main__':
-    file_bundle_name = r'SLF_L_mct001rt20'
+    file_bundle_name = r'F_L_R_mct001rt20'
     main_folder = subj_folder
 
-    bundle_num = 68
+    bundle_num = 41
     rt=20
     mct=0.001
 
