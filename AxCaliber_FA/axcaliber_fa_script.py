@@ -2,12 +2,15 @@ from weighted_tracts import *
 from scipy.stats import pearsonr
 subj = all_subj_folders
 names = all_subj_names
-labels_headers, idx = nodes_labels_mega(index_to_text_file)
+labels_headers, idx = nodes_labels_aal3(index_to_text_file)
 fa_all = np.zeros((len(labels_headers), len(labels_headers), len(subj)))
 axcaliber_all = np.zeros((len(labels_headers), len(labels_headers), len(subj)))
-fa_mat_name = 'weighted_mega_wholebrain_4d_labmask_FA_nonnorm'
+#fa_mat_name = 'weighted_mega_wholebrain_4d_labmask_FA_nonnorm'
+fa_mat_name = r'weighted_mega_wholebrain_4d_labmask_aal3_FA_nonnorm'
 dti_fa_mat_name = 'weighted_mega_wholebrain_4d_labmask_FA_DTI_nonnorm'
-axcaliber_mat_name = 'weighted_mega_wholebrain_4d_labmask_nonnorm'
+#axcaliber_mat_name = 'weighted_mega_wholebrain_4d_labmask_nonnorm'
+axcaliber_mat_name = r'weighted_mega_wholebrain_4d_labmask_aal3_nonnorm'
+
 for i, (s, n) in enumerate(zip(subj, names)):
     folder_name = subj_folder + s
     if f'{fa_mat_name}.npy' not in os.listdir(folder_name):
@@ -55,7 +58,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
 
-mat_title = 'AxCaliber-FA Correlation (Pearson r)'
+mat_title = 'AxCaliber-FA Correlation - all fibers (Pearson r)'
 plt.figure(1, [40, 30])
 cmap = cm.seismic
 plt.imshow(r_mat, interpolation='nearest', cmap=cmap, origin='upper',vmax=1,vmin=-1)
@@ -66,6 +69,6 @@ plt.title(mat_title, fontsize=44)
 plt.tick_params(axis='x', pad=12.0, labelrotation=90, labelsize=12)
 plt.tick_params(axis='y', pad=12.0, labelsize=12)
     #plt.savefig(fig_name)
-np.save(r'C:\Users\HilaG\Desktop\AxCaliber_FA_r_no_th',r_mat)
-#plt.savefig(r'C:\Users\HilaG\Desktop\AxCaliber_FA correlation matrix (no th).png')
+np.save(r'C:\Users\HilaG\Desktop\AxCaliber_FA_r_no_th_all',r_mat)
+plt.savefig(r'C:\Users\HilaG\Desktop\AxCaliber_FA correlation matrix (all fibers - no th).png')
 plt.show()

@@ -239,6 +239,9 @@ def nodes_labels_aal3(index_to_text_file):
     idx[first]-=2
     idx[second]-=2
     idx=list(idx)
+    #removeidx = [82,81,36,35]
+    #for i in removeidx:
+    #    del labels_headers[i]
 
     return labels_headers, idx
 
@@ -274,12 +277,16 @@ def non_weighted_con_mat_mega(streamlines, lab_labels_index, affine, idx, folder
                                             mapping_as_streamlines=True)
     mm = m[1:]
     mm = mm[:,1:]
+    if 'aal3' in fig_type:
+        mm = np.delete(mm, [34, 35, 80, 81], 0)
+        mm = np.delete(mm, [34, 35, 80, 81], 1)
+
     mm = mm[idx]
     mm = mm[:, idx]
     new_data = 1 / mm  # values distribute between 0 and 1, 1 represents distant nodes (only 1 tract)
     #new_data[new_data > 1] = 2
     #np.save(folder_name + r'\non-weighted_mega'+fig_type, new_data)
-    #np.save(folder_name + r'\non-weighted_mega'+fig_type+'_nonnorm', mm)
+    np.save(folder_name + r'\non-weighted_mega'+fig_type+'_nonnorm', mm)
 
     return new_data, m, grouping
 
@@ -405,7 +412,7 @@ def weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_t
     new_data, mm_weighted = weighted_con_mat_mega(bvec_file, weight_by, grouping, idx, folder_name, fig_type)
     #fig_name = folder_name + r'\Weighted('+fig_type+', MegaAtlas).png'
     fig_name = folder_name + r'\Weighted('+fig_type+', AAL3).png'
-    #draw_con_mat(new_data, h, fig_name, is_weighted=True)
+    draw_con_mat(new_data, h, fig_name, is_weighted=True)
 
 
 def load_weight_by_img(folder_name, weight_by):
@@ -439,32 +446,42 @@ def streamlins_len_connectivity_mat(folder_name, streamlines, lab_labels_index, 
     np.save(folder_name + r'\weighted_mega_' + fig_type + '_nonnorm', new_mm)
 
 
+def streamlines2groups_by_size(folder_name, n, streamlines, bvec_file, nii_file, first_cut=5.2, second_cut=6):
+    import matplotlib.pyplot as plt
+    mean_vol_per_tract = weighting_streamlines(folder_name, streamlines, bvec_file, show=False,
+                                               weight_by='1.5_2_AxPasi5')
+    mean_vol_per_tract = np.asarray(mean_vol_per_tract)
+    sml_tracts_idx = mean_vol_per_tract <= first_cut
+    med_tracts_idx = [first_cut < mean_vol_per_tract] and [mean_vol_per_tract < second_cut]
+    lrg_tracts_idx = second_cut <= mean_vol_per_tract
+    save_ft(folder_name, n, streamlines[sml_tracts_idx], nii_file, file_name="_sml_4d_labmask.trk")
+    save_ft(folder_name, n, streamlines[med_tracts_idx], nii_file, file_name="_med_4d_labmask.trk")
+    save_ft(folder_name, n, streamlines[lrg_tracts_idx], nii_file, file_name="_lrg_4d_labmask.trk")
+
+
 if __name__ == '__main__':
     subj = all_subj_folders
     names = all_subj_names
 
-    for s,n in zip(subj,names):
+    for s,n in zip(subj[0:5],names[0:5]):
         folder_name = subj_folder + s
         dir_name = folder_name + '\streamlines'
         gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name)
-        #csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
-        #fa, classifier = create_fa_classifier(gtab, data, white_matter)
-        #lab_labels_index = nodes_by_index_general(folder_name)[0]
-        #seeds = create_seeds(folder_name, white_matter, affine, use_mask=False, mask_type='cc', den=4)
-        #streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
-        #save_ft(folder_name,n,streamlines,nii_file, file_name="_wholebrain_3d.trk")
-        tract_path = f'{dir_name}{n}_wholebrain_4d_labmask.trk'
-        streamlines = load_ft(tract_path, nii_file)
-        #idx = nodes_labels_mega(index_to_text_file)[1]
+        csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
+        fa, classifier = create_fa_classifier(gtab, data, white_matter)
+        lab_labels_index = nodes_by_index_general(folder_name,atlas='aal3')[0]
+        seeds = create_seeds(folder_name, lab_labels_index, affine, use_mask=False, mask_type='cc', den=4)
+        streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
+        save_ft(folder_name, n, streamlines, nii_file, file_name="_wholebrain_4d_labmask.trk")
+        #tract_path = f'{dir_name}{n}_wholebrain_4d_labmask.trk'
+        idx = nodes_labels_aal3(index_to_text_file)[1]
+        #streamlines = load_ft(tract_path, nii_file)
+        weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask_aal3_FA',
+                                          weight_by='_FA')
+        weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask_aal3',
+                                          weight_by='_AxPasi')
         #streamlins_len_connectivity_mat(folder_name, streamlines, lab_labels_index, idx, fig_type='lengths')
-        #weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask_aal3_FA',
-        #                                  weight_by='_FA')
-        #from dipy.tracking.streamline import length
-        import matplotlib.pyplot as plt
-        #a = length(streamlines)
-        mean_vol_per_tract = weighting_streamlines(folder_name, streamlines, bvec_file, show=False, weight_by = '1.5_2_AxPasi5')
-        mean_vol_per_tract = np.asarray(mean_vol_per_tract)
-        plt.hist(mean_vol_per_tract[mean_vol_per_tract>0], bins=30)
-        plt.show()
+        #streamlines2groups_by_size(folder_name, n, streamlines, bvec_file, nii_file, first_cut=5.2, second_cut=6)
+
 
 

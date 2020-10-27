@@ -16,14 +16,13 @@ def copy_files():
 
 
 def dicom2nii(sub_dir):
-    scans = glob(os.path.join(sub_dir, '*'))
-    if not os.path.isdir(os.path.join(sub_dir, 'dti')):
-        os.makedirs(os.path.join(sub_dir, 'dti'))
-        for scan in scans:
+    scans = glob(os.path.join(sub_dir, '*/'))
+    folders = ['ep2d_d15.5D60_MB3_AP', 'ep2d_d15.5D60_MB3_PA', 'T1w_MPRAGE_RL']
+    for scan in scans:
+        if folders[0] in scan or folders[1] in scan or folders[2] in scan:
             cmd = fr'"C:\Program Files\mricron\dcm2nii" -g n -o {sub_dir} {scan}'
             print(cmd)
             os.system(cmd)
-
 
 def rename(nifti_dir):
     scans = glob(os.path.join(nifti_dir, '*'))
@@ -44,24 +43,16 @@ def rename(nifti_dir):
             os.rename(scan, os.path.join(scan_parts[0], 'MPRAGE.nii'))
 
 
-def clean():
-    subs = glob(r'C:\Users\admin\Desktop\subj_for_v5\*\*')
-    for fold in subs:
-        try:
-            if 'nifti' in fold:
-                os.makedirs(os.path.join(fold, 'Diffusion'))
-                [os.rename(f, os.path.join(fold, 'Diffusion', os.path.split(f)[-1])) for f in glob(os.path.join(fold, '*'))
-                if 'MPRAGE' not in f and os.path.isfile(f)]
-                os.rename(fold, fold.replace('nifti', 'T1w'))
-            elif ('T1w' not in fold) or 'MPRAGE' in fold:
-                shutil.rmtree(fold)
-        except FileExistsError:
-            print(fold)
+def clean(sub_dir):
+    scans = glob(os.path.join(sub_dir, '*/'))
+    for fold in scans:
+        shutil.rmtree(fold)
+
 
 
 if __name__ == '__main__':
     #copy_files()
-    for sub in glob(r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep\post_covid19\post\*'):
+    for sub in glob(r'F:\Hila\balance\eo\before\*'):
         dicom2nii(sub)
+        clean(sub)
         #rename(os.path.join(sub, 'nifti'))
-    #clean()

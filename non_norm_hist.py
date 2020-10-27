@@ -67,3 +67,5 @@ for s in subj:
     ax1.hist(w[w>0], bins=30)
 
     plt.show()
+
+

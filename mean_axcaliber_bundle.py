@@ -10,7 +10,7 @@ main_folder = subj_folder
 names = all_subj_names
 folders = all_subj_folders
 
-bundle_name = 'C_L_mct001rt20'
+bundle_name = 'F_L_R_mct001rt20'
 
 for f,n in zip(folders,names):
     folder_name = f'{main_folder}{f}'
