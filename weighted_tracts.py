@@ -207,6 +207,9 @@ def nodes_by_index_general(folder_name,atlas='mega'):
         lab = f'{folder_name}{os.sep}rMegaAtlas_Labels_highres.nii'
     elif atlas == 'aal3':
         lab = folder_name + r'\rAAL3_highres_atlas.nii'
+        #lab = folder_name + r'\rAAL3_highres_atlas_corrected.nii'
+    elif atlas == 'yeo7_200':
+        lab = folder_name + r'\ryeo7_200_atlas.nii'
 
     lab_file = nib.load(lab)
     lab_labels = lab_file.get_fdata()
@@ -242,6 +245,28 @@ def nodes_labels_aal3(index_to_text_file):
     #removeidx = [82,81,36,35]
     #for i in removeidx:
     #    del labels_headers[i]
+
+    return labels_headers, idx
+
+
+def nodes_labels_yeo7(index_to_text_file):
+    labels_file = open(index_to_text_file, 'r', errors='ignore')
+    labels_name = labels_file.readlines()
+    labels_file.close()
+    labels_table = []
+    labels_headers = []
+    idx = []
+    for line in labels_name:
+        if not line[0] == '#':
+            labels_table.append([col for col in line.split() if col])
+
+    for l in labels_table:
+        if len(l)>= 3:
+            head = l[1]
+            labels_headers.append(head)
+            idx.append(int(l[0])-1)
+
+    idx=list(idx)
 
     return labels_headers, idx
 
@@ -286,7 +311,7 @@ def non_weighted_con_mat_mega(streamlines, lab_labels_index, affine, idx, folder
     new_data = 1 / mm  # values distribute between 0 and 1, 1 represents distant nodes (only 1 tract)
     #new_data[new_data > 1] = 2
     #np.save(folder_name + r'\non-weighted_mega'+fig_type, new_data)
-    np.save(folder_name + r'\non-weighted_mega'+fig_type+'_nonnorm', mm)
+    np.save(folder_name + r'\non-weighted'+fig_type+'_nonnorm', mm)
 
     return new_data, m, grouping
 
@@ -348,7 +373,7 @@ def weighted_con_mat_mega(bvec_file, weight_by, grouping, idx, folder_name,fig_t
     #new_data[new_data ==1] = 2
     #if "AxPasi" in weight_by:
     #np.save(folder_name + r'\weighted_mega'+fig_type, new_data)
-    np.save(folder_name + r'\weighted_mega'+fig_type+'_nonnorm', mm_weighted)
+    np.save(folder_name + r'\weighted'+fig_type+'_nonnorm', mm_weighted)
 
 
     return new_data, mm_weighted
@@ -396,22 +421,24 @@ def draw_con_mat(data, h, fig_name, is_weighted=False):
 
 def weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type = 'whole brain', weight_by='1.5_2_AxPasi5'):
 
-    lab_labels_index, affine = nodes_by_index_general(folder_name,atlas='aal3')
-    labels_headers, idx = nodes_labels_aal3(index_to_text_file)
+    lab_labels_index, affine = nodes_by_index_general(folder_name,atlas='yeo7_200')
+    labels_headers, idx = nodes_labels_yeo7(index_to_text_file)
 
     # non-weighted:
 
     new_data, m, grouping = non_weighted_con_mat_mega(streamlines, lab_labels_index, affine, idx, folder_name, fig_type)
     h = labels_headers
     #fig_name = folder_name + r'\non-weighted('+fig_type+', MegaAtlas).png'
-    fig_name = folder_name + r'\non-weighted(' + fig_type + ', AAL3).png'
+    #fig_name = folder_name + r'\non-weighted(' + fig_type + ', AAL3).png'
+    fig_name = folder_name + r'\non-weighted(' + fig_type + ', yeo7,200).png'
     #draw_con_mat(new_data, h, fig_name, is_weighted=False)
 
     # weighted:
 
     new_data, mm_weighted = weighted_con_mat_mega(bvec_file, weight_by, grouping, idx, folder_name, fig_type)
     #fig_name = folder_name + r'\Weighted('+fig_type+', MegaAtlas).png'
-    fig_name = folder_name + r'\Weighted('+fig_type+', AAL3).png'
+    #fig_name = folder_name + r'\Weighted('+fig_type+', AAL3).png'
+    fig_name = folder_name + r'\Weighted(' + fig_type + ', yeo7,200).png'
     draw_con_mat(new_data, h, fig_name, is_weighted=True)
 
 
@@ -463,22 +490,22 @@ if __name__ == '__main__':
     subj = all_subj_folders
     names = all_subj_names
 
-    for s,n in zip(subj[0:5],names[0:5]):
+    for s,n in zip(subj[::],names[::]):
         folder_name = subj_folder + s
         dir_name = folder_name + '\streamlines'
         gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name)
-        csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
-        fa, classifier = create_fa_classifier(gtab, data, white_matter)
-        lab_labels_index = nodes_by_index_general(folder_name,atlas='aal3')[0]
-        seeds = create_seeds(folder_name, lab_labels_index, affine, use_mask=False, mask_type='cc', den=4)
-        streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
-        save_ft(folder_name, n, streamlines, nii_file, file_name="_wholebrain_4d_labmask.trk")
-        #tract_path = f'{dir_name}{n}_wholebrain_4d_labmask.trk'
-        idx = nodes_labels_aal3(index_to_text_file)[1]
-        #streamlines = load_ft(tract_path, nii_file)
-        weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask_aal3_FA',
+        #csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
+        #fa, classifier = create_fa_classifier(gtab, data, white_matter)
+        lab_labels_index = nodes_by_index_general(folder_name,atlas='yeo7_200')[0]
+        #seeds = create_seeds(folder_name, lab_labels_index, affine, use_mask=False, mask_type='cc', den=4)
+        #streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
+        #save_ft(folder_name, n, streamlines, nii_file, file_name="_wholebrain_4d_labmask.trk")
+        tract_path = f'{dir_name}{n}_wholebrain_4d_labmask.trk'
+        idx = nodes_labels_yeo7(index_to_text_file)[1]
+        streamlines = load_ft(tract_path, nii_file)
+        weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask_yeo7_200_FA',
                                           weight_by='_FA')
-        weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask_aal3',
+        weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask_yeo7_200',
                                           weight_by='_AxPasi')
         #streamlins_len_connectivity_mat(folder_name, streamlines, lab_labels_index, idx, fig_type='lengths')
         #streamlines2groups_by_size(folder_name, n, streamlines, bvec_file, nii_file, first_cut=5.2, second_cut=6)

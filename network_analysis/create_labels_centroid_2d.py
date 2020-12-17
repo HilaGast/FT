@@ -6,7 +6,10 @@ from scipy.ndimage import zoom
 from networkx.drawing.layout import rescale_layout_dict
 
 def create_nodes_position(atlas, slice='horizontal'):
-    img_file = r'F:\Hila\aal\aal3\AAL3_highres_atlas.nii'
+    if atlas == 'aal3':
+        img_file = r'F:\Hila\aal\aal3\AAL3_highres_atlas.nii'
+    elif atlas == 'yeo7_200':
+        img_file = r'F:\Hila\aal\yeo7_200\yeo7_200_atlas.nii'
     img_mat = nib.load(img_file)
     img = img_mat.get_fdata()
     img = np.asarray(img, int)
@@ -27,7 +30,7 @@ def create_nodes_position(atlas, slice='horizontal'):
     if slice == 'horizontal':
         #img2d = np.sum(imgcent, 2)  # horizontal
         img2d = horizontal_sum(imgcent,labels)
-        img2d = np.flipud(img2d)
+        #img2d = np.flipud(img2d)
 
     if atlas == 'aal3':
         img2d[img2d>81]-=2

@@ -49,7 +49,7 @@ def load_vars(subj_folder,all_subj_folders, all_subj_names,i,bundle_name):
     tract_path = rf'{folder_name}\streamlines{n}_{bundle_name}.trk'
 
     streamlines = load_ft(tract_path, nii_file)
-    lab_labels_index, affine = nodes_by_index_mega(folder_name)
+    lab_labels_index, affine = nodes_by_index_general(folder_name)
 
     #mat_weights = np.load(rf'{folder_name}\weighted_mega_wholebrain_4d_labmask_FA_nonnorm.npy')
     #mat_weights = np.load(rf'{folder_name}\AxCaliber_FA_r_no_th_50subj.npy')
@@ -118,7 +118,7 @@ if __name__ == '__main__':
             break
 
     bundlei = AdvanceInteractive(subj_folder, slice_file, s, n, img_name, bundle_name, slices)
-    #bundlei.scale = [0.2,0.7]
+    bundlei.scale = [-5,5]
     bundlei.load_bund()
     bundlei.s_list = s_list
     bundlei.load_vols()

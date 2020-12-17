@@ -37,20 +37,20 @@ def weight_labels(labels_img, c):
 
 def save_weighted_nii_nodes(new_nii, folder_name):
 
-    nib.save(new_nii,folder_name+r'\communities_num.nii')
+    nib.save(new_nii,folder_name+r'\communities_fa.nii')
 
 
 if __name__ == '__main__':
     labels_file_name = r'F:\Hila\Ax3D_Pack\Surface_visualization\AAL3_highres_atlas_corrected.nii'
     labels_img = load_labels_nii_file(labels_file_name)
-    #folder_name = r'C:\Users\HilaG\Desktop\4OlafSporns\surfaces\mean_over_50subj'
-    folder_name = r'C:\Users\HilaG\Desktop\4OlafSporns\surfaces\single_subj'
+    folder_name = r'C:\Users\HilaG\Desktop\4OlafSporns\surfaces\mean_over_50subj'
+    #folder_name = r'C:\Users\HilaG\Desktop\4OlafSporns\surfaces\single_subj'
 
     #new_nii = weight_labels(labels_img, w_mat)
     #save_weighted_nii_nodes(new_nii, folder_name)
-    weight_by='num'
-    #communities_file = r'C:\Users\HilaG\Desktop\4OlafSporns\allsubjmatsbased\group_division_allsubj.mat'
-    communities_file = r'C:\Users\HilaG\Desktop\4OlafSporns\surfaces\single_subj\subj_communities1.mat'
+    weight_by='fa'
+    communities_file = r'C:\Users\HilaG\Desktop\4OlafSporns\allsubjmatsbased\group_division_allsubj.mat'
+    #communities_file = r'C:\Users\HilaG\Desktop\4OlafSporns\surfaces\single_subj\subj_communities1.mat'
     mat = sio.loadmat(communities_file)
     communities = np.asarray(mat['ciuv'])
     if weight_by == 'num':

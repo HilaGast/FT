@@ -28,8 +28,9 @@ def load_communities(g,communities_file,weight_by):
 
 def load_mat_2_graph(mat_file):
     mat = np.load(mat_file)
-    labels,idx = nodes_labels_aal3(index_to_text_file)
+    labels,idx = nodes_labels_yeo7(index_to_text_file)
     id = np.argsort(idx)
+    labels = [labels[idi] for idi in id]
     mat_weights = mat[id]
     mat_weights = mat_weights[:, id]
     mat = np.zeros((mat_weights.shape[0]+1,mat_weights.shape[1]+1))
@@ -48,7 +49,7 @@ def set_node_label(g,labels):
     return label_dict
 
 
-def show_topology(mat_file,communities_file,weight_by, dup=200, is_deg_norm=True, is_edge_norm = True):
+def show_topology(mat_file,communities_file,weight_by, dup=200, nodes_norm_by='bc', is_edge_norm = True):
     g, labels = load_mat_2_graph(mat_file)
     print(f'*** \n Graph has {len(g.nodes)} nodes and {len(g.edges)} edges \n***')
     g = find_largest_connected_component(g, show=False)
@@ -56,16 +57,24 @@ def show_topology(mat_file,communities_file,weight_by, dup=200, is_deg_norm=True
     label_dict = set_node_label(g, labels)
 
     c=load_communities(g,communities_file, weight_by)
-    deg = [np.sum(nx.to_numpy_array(g), 0)]
     set_edge_community(g)
     selected_nodes = list(g)
     pos = create_nodes_position(atlas='aal3')
     pos = {k: v for k, v in pos.items() if k in selected_nodes}
     cmap = cm.get_cmap('gist_rainbow', max(c) + 1)
     plt.figure(1, [50, 50])
-    if is_deg_norm:
+
+
+    if nodes_norm_by == 'deg':
+        '''Normalize nodes size by degree'''
+        deg = [np.sum(nx.to_numpy_array(g), 0)]
         degnorm = norm_deg(deg,dup=dup)
         nx.draw_networkx_nodes(g, pos, list(g.nodes), node_size=degnorm, cmap=cmap, node_color=c)
+
+    elif nodes_norm_by == 'bc':
+        '''Normalize nodes size by betweeness centrality'''
+        bc = nx.betweenness_centrality(g,weight='weight')
+        nx.draw_networkx_nodes(g, pos, list(g.nodes), node_size=np.asarray(list(bc.values()))*1e6, cmap=cmap, node_color=c)
 
     else:
         nx.draw_networkx_nodes(g, pos, list(g.nodes), cmap=cmap, node_size=5000, node_color=c)
@@ -86,7 +95,13 @@ def show_topology(mat_file,communities_file,weight_by, dup=200, is_deg_norm=True
 
     nx.draw_networkx_labels(g, pos,label_dict, font_size=15, font_weight='bold')
     plt.show()
-
+    '''
+    bcv = np.asarray(list(bc.values()))
+    plt.hist(bcv[bcv>0],bins=30)
+    plt.title(rf'Nodes distribution by betweeness centarality - {weight_by}', fontsize=12)
+    plt.xlabel('Betweeness Centrality', fontsize=12)
+    plt.show()
+    '''
 
 def norm_deg(deg, dup=200):
     degmin = np.min(deg)
@@ -102,17 +117,13 @@ def norm_edge(edgewidth):
     return normwidth
 
 
-if __name__== '__main__':
+def run_community_top_by_subj(weight_by,nodes_norm = 'bc'):
     subj = all_subj_folders
     names = all_subj_names
-
     for s,n in zip(subj,names):
         print(n)
         folder_name = subj_folder + s
 
-        #weight_by = 'fa'
-        #weight_by = 'num'
-        weight_by = 'ax'
 
         num_file = 'non-weighted_mega_wholebrain_4d_labmask_aal3_nonnorm.npy'
         ax_file = 'weighted_mega_wholebrain_4d_labmask_aal3_nonnorm.npy'
@@ -133,7 +144,48 @@ if __name__== '__main__':
             if 'subj_communities' in file:
                 communities_file = rf'{folder_name}\{file}'
 
-        show_topology(mat_file, communities_file, weight_by, dup=200, is_deg_norm=True, is_edge_norm=True)
+        show_topology(mat_file, communities_file, weight_by, dup=200, nodes_norm_by=nodes_norm, is_edge_norm=True)
+
+
+def run_community_top_by_group(weight_by, nodes_norm='bc'):
+    subj_folder = r'F:\Hila\Ax3D_Pack\mean_vals'
+    subj = [r'\aal3_atlas']
+    names = [r'\aal3_atlas']
+
+    for s,n in zip(subj,names):
+        print(n)
+        folder_name = subj_folder + s
+
+
+        num_file = 'mean_non-weighted_mega_wholebrain_4d_labmask_aal3_nonnorm.npy'
+        ax_file = 'mean_weighted_mega_wholebrain_4d_labmask_aal3_nonnorm.npy'
+        fa_file = 'mean_weighted_mega_wholebrain_4d_labmask_aal3_FA_nonnorm.npy'
+
+
+        if weight_by == 'fa':
+            mat_file = rf'{folder_name}\{fa_file}'
+        elif weight_by == 'num':
+            mat_file = rf'{folder_name}\{num_file}'
+        elif weight_by == 'ax':
+            mat_file = rf'{folder_name}\{ax_file}'
+        else:
+            msg = 'No weight found'
+            print(msg)
+
+        for file in os.listdir(folder_name):
+            if 'group_division' in file:
+                communities_file = rf'{folder_name}\{file}'
+
+        show_topology(mat_file, communities_file, weight_by, dup=200, nodes_norm_by=nodes_norm, is_edge_norm=True)
+
+if __name__== '__main__':
+
+
+    weight_by = 'fa'
+    #weight_by = 'num'
+    #weight_by = 'ax'
+    #run_community_top_by_subj(weight_by, nodes_norm='bc')
+    run_community_top_by_group(weight_by)
 
 
 
