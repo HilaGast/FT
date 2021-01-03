@@ -5,18 +5,29 @@ import numpy as np
 from all_subj import index_to_text_file
 from weighted_tracts import nodes_labels_yeo7,nodes_labels_aal3
 
-labels_headers, idx = nodes_labels_yeo7(index_to_text_file)
-n = len(idx)
-start = int(n/2-1)
-cont = start+1
-id = idx[start::-1]+idx[cont::]
+atlas = 'yeo7'
+if atlas == 'yeo7':
+    labels_headers, idx = nodes_labels_yeo7(index_to_text_file)
+    n = len(idx)
+    start = int(n/2-1)
+    cont = start+1
+    id = idx[start::-1]+idx[cont::]
+elif atlas == 'aal3':
+    labels_headers, idx = nodes_labels_aal3(index_to_text_file)
+    n = len(idx)
+    id = list(range(n))
+    start = 77 #end of left sided areas
+    cont = start+1
+    id = id[start::-1]+id[cont::]
+
 nodes_labels={}
 for l,i in zip(labels_headers,id):
     lparts = l.split('_')
+    #nodes_labels[i] = '_'.join(lparts[1:])
     nodes_labels[i]=f'{lparts[1]}_{lparts[2]}_{lparts[-1]}'
-    #nodes_labels[i]=f'{lparts[-1]}_{lparts[0]}'
-pmat_name = r'C:\Users\Admin\Desktop\balance_plasticity\yeo\eo_pval_axcaliber.npy'
-tmat_name = r'C:\Users\Admin\Desktop\balance_plasticity\yeo\eo_ttest_axcaliber.npy'
+    #nodes_labels[i]=l
+pmat_name = r'C:\Users\Admin\Desktop\balance_plasticity\yeo\ec_pval_axcaliber.npy'
+tmat_name = r'C:\Users\Admin\Desktop\balance_plasticity\yeo\ec_ttest_axcaliber.npy'
 pmat = np.load(pmat_name)
 mat = np.load(tmat_name)
 pmat = pmat[id]
@@ -48,14 +59,6 @@ c = CircosPlot(G,node_labels=True, edge_width='weight',
                fig_size = (15,15),node_label_layout='rotation',group_label_offset=4,
                fontsize=7, node_size='size')
 c.draw()
-
-
-#posa = [(v,w) for v,w in G.edges if G.edges[v,w]['weight']>0]
-#nega = [(v,w) for v,w in G.edges if G.edges[v,w]['weight']<0]
-
-
-#nx.drawing.draw_circular(G, with_labels = True, edge_list=posa, edge_color='red', node_color= 'gray', node_size=100)
-#nx.drawing.draw_circular(G, with_labels = True, edge_list=nega, edge_color='blue', node_color= 'gray', node_size=100)
 
 plt.show()
 
