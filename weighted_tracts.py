@@ -470,7 +470,7 @@ def streamlins_len_connectivity_mat(folder_name, streamlines, lab_labels_index, 
 
     new_mm = new_m[idx]
     new_mm = new_mm[:, idx]
-    np.save(folder_name + r'\weighted_mega_' + fig_type + '_nonnorm', new_mm)
+    np.save(folder_name + r'\weighted_' + fig_type + '_nonnorm', new_mm)
 
 
 def streamlines2groups_by_size(folder_name, n, streamlines, bvec_file, nii_file, first_cut=5.2, second_cut=6):
@@ -489,6 +489,9 @@ def streamlines2groups_by_size(folder_name, n, streamlines, bvec_file, nii_file,
 if __name__ == '__main__':
     subj = all_subj_folders
     names = all_subj_names
+    #idd = [38,39,40,41,42,43,44,45,46,47,48,49]
+    #subj = [s for i, s in enumerate(all_subj_folders) if i in idd]
+    #names = [n for i, n in enumerate(all_subj_names) if i in idd]
 
     for s,n in zip(subj[::],names[::]):
         folder_name = subj_folder + s
@@ -503,11 +506,11 @@ if __name__ == '__main__':
         tract_path = f'{dir_name}{n}_wholebrain_4d_labmask.trk'
         idx = nodes_labels_yeo7(index_to_text_file)[1]
         streamlines = load_ft(tract_path, nii_file)
-        weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask_yeo7_200_FA',
-                                          weight_by='_FA')
-        weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask_yeo7_200',
-                                          weight_by='_AxPasi')
-        #streamlins_len_connectivity_mat(folder_name, streamlines, lab_labels_index, idx, fig_type='lengths')
+        #weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask_yeo7_200_FA',
+        #                                  weight_by='_FA')
+        #weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask_yeo7_200',
+        #                                  weight_by='_AxPasi')
+        streamlins_len_connectivity_mat(folder_name, streamlines, lab_labels_index, idx, fig_type='yeo7_lengths')
         #streamlines2groups_by_size(folder_name, n, streamlines, bvec_file, nii_file, first_cut=5.2, second_cut=6)
 
 

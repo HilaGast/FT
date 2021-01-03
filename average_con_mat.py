@@ -51,6 +51,6 @@ def calc_avg_mat(subj,fig_type, calc_type='mean', draw = True, isw = True):
 
 if __name__ == '__main__':
     subj = all_subj_folders
-    fig_type = 'non-weighted_wholebrain_4d_labmask_yeo7_200_nonnorm'
+    fig_type = 'weighted_wholebrain_4d_labmask_yeo7_200_nonnorm'
     mean_mat = calc_avg_mat(subj,fig_type,calc_type='mean', draw = True, isw = True)
     #median_mat = calc_avg_mat(subj,fig_type,calc_type='median', draw = True)
