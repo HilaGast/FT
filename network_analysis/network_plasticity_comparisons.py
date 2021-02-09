@@ -23,11 +23,11 @@ def calc_ttest_mat(mat1,mat2,axis=2):
     return tmat,pmat
 
 
-def draw_stat_mat(mat):
+def draw_stat_mat(mat,type):
     import matplotlib.pyplot as plt
     import matplotlib.cm as cm
     import numpy as np
-    from weighted_tracts import nodes_labels_aal3
+    from weighted_tracts import nodes_labels_yeo7, nodes_labels_aal3
     from all_subj import index_to_text_file
 
     labels_headers, idx = nodes_labels_aal3(index_to_text_file)
@@ -43,8 +43,8 @@ def draw_stat_mat(mat):
     plt.tick_params(axis='x', pad=12.0, labelrotation=90, labelsize=12)
     plt.tick_params(axis='y', pad=12.0, labelsize=12)
     # plt.savefig(fig_name)
-    np.save(r'F:\Hila\balance\ec_ttest_axcaliber_noth', mat)
-    #plt.savefig(r'F:\Hila\balance\ec\ttest_number_pvalth.png')
+    np.save(rf'F:\Hila\balance\ec_{type}_axcaliber', mat)
+    #plt.savefig(r'F:\Hila\balance\ec\pval.png')
     plt.show()
 
 
@@ -57,4 +57,6 @@ if __name__ == "__main__":
     mat_after = load_and_stack_matrices(folder_after,mat_name)
     tmat,pmat = calc_ttest_mat(mat_before,mat_after)
     #tmat[abs(pmat)>0.05]=0
-    draw_stat_mat(tmat)
+    draw_stat_mat(pmat,type='pval_aal')
+    draw_stat_mat(tmat,type='ttest_aal')
+

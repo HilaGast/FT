@@ -27,13 +27,16 @@ if __name__== '__main__':
     for s, n in zip(all_subj_folders[::], all_subj_names[::]):
         mat_file_ax = subj_folder+ s+ r'\weighted_wholebrain_4d_labmask_yeo7_200_nonnorm.npy'
         mat_ax = np.load(mat_file_ax)
-        mat_norm_ax = 1 / mat_ax * 8.75
+        mat_dist_ax = mat_ax/np.nanmax(mat_ax[:])
+        mat_norm_ax = 1 / mat_dist_ax
         mat_norm_ax[np.isinf(mat_norm_ax)] = 0
         mat_norm_ax[np.isnan(mat_norm_ax)] = 0
 
         mat_file_num = subj_folder+ s+ r'\non-weighted_wholebrain_4d_labmask_yeo7_200_nonnorm.npy'
         mat_num = np.load(mat_file_num)
-        mat_norm_num = 1 / mat_num
+        mat_dist_num = mat_num/np.nanmax(mat_num[:])
+        #mat_norm_num = 1 / mat_dist_num
+        mat_norm_num = -1*np.log(mat_dist_num)
         mat_norm_num[np.isinf(mat_norm_num)] = 0
         mat_norm_num[np.isnan(mat_norm_num)] = 0
 
