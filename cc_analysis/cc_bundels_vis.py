@@ -1,6 +1,6 @@
 
-from FT.weighted_tracts import *
-from FT.single_fascicle_vizualization import create_streamline_dict, load_mat_of_median_vals,show_fascicles_wholebrain
+from weighted_tracts import *
+from single_fascicle_vizualization import create_streamline_dict, load_mat_of_median_vals,show_fascicles_wholebrain
 
 
 def choose_cc_bundle(streamlines,affine,folder_name,part):
@@ -27,9 +27,9 @@ def clean_non_cc(grouping):
         if pair[0] == 0 or pair[1] == 0:
             continue
         else:
-            if pair[0] in list(np.arange(1,51)) and pair[1] in list(np.arange(51,101)):
+            if pair[0] in list(np.arange(1,101)) and pair[1] in list(np.arange(101,201)):
                 clean_grouping[pair] = tracts
-            if pair[1] in list(np.arange(1,51)) and pair[0] in list(np.arange(51,101)):
+            if pair[1] in list(np.arange(1,101)) and pair[0] in list(np.arange(101,201)):
                 clean_grouping[pair] = tracts
     return clean_grouping
 
