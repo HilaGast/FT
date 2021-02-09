@@ -12,7 +12,7 @@ def load_vars(volume_file, main_folder,s,n,img_name = r'' ):
     folder_name = main_folder + s
     s_img = folder_name + r'\streamlines' + img_name
     mask_type='cc'
-    scale = [3.5, 6.2]
+    scale = [3, 11]
     hue = [0.25, -0.05]  # Hot
     saturation = [0.1, 1.0]
     axial = False
@@ -77,7 +77,7 @@ class AdvanceInteractive:
         self.coronal = slices[2]
         self.folder_name = main_folder + s
         self.s_img = self.folder_name + r'\streamlines' + img_name
-        self.scale = [4, 7.0]
+        self.scale = [3, 10]
         self.hue = [0.25, -0.05]  # Hot
         self.saturation = [0.1, 1.0]
         self.slices = slices_file.get_data()
@@ -261,11 +261,11 @@ class AdvanceInteractive:
 
 if __name__ == '__main__':
 
-    main_folder = r'C:\Users\hila\data\subj'
-    s = all_subj_folders[7]
-    n = all_subj_names[7]
-    img_name = r'\fascicles_AxCaliber_weighted_4d_slf_pasivals.png'
-    bundle = r'SLF_L_mct001rt20'
+    main_folder = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep\questionnaire'
+    s = all_subj_folders[0]
+    n = all_subj_names[0]
+    img_name = r'\fascicles_AxCaliber7_weighted_4d_cr_pasivals.png'
+    bundle = r'cr'
     #bundle = r'wholebrain_1d_labmask'
     slices = [False, True, False] #slices[0]-axial, slices[1]-saggital, slices[2]-coronal
     file_list = os.listdir(main_folder + s)
@@ -279,7 +279,7 @@ if __name__ == '__main__':
 
     bundlei = AdvanceInteractive(main_folder,slice_file, s, n, img_name, bundle, slices)
     bundlei.load_bund()
-    bundlei.load_vols(weight_by='_1.5_2_AxPasi7')
+    bundlei.load_vols(weight_by='_2_2_AxPasi7')
     bundlei.show_bundle_slices()
 
     method = 'mam'

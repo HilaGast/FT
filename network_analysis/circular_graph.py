@@ -4,8 +4,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from all_subj import index_to_text_file
 from weighted_tracts import nodes_labels_yeo7,nodes_labels_aal3
+from network_analysis.specific_functional_yeo7networks import network_id_list
 
 atlas = 'yeo7'
+network = 'sommot'
+side = 'both'
 if atlas == 'yeo7':
     labels_headers, idx = nodes_labels_yeo7(index_to_text_file)
     n = len(idx)
@@ -26,17 +29,28 @@ for l,i in zip(labels_headers,id):
     #nodes_labels[i] = '_'.join(lparts[1:])
     nodes_labels[i]=f'{lparts[1]}_{lparts[2]}_{lparts[-1]}'
     #nodes_labels[i]=l
-pmat_name = r'C:\Users\Admin\Desktop\balance_plasticity\yeo\ec_pval_axcaliber.npy'
-tmat_name = r'C:\Users\Admin\Desktop\balance_plasticity\yeo\ec_ttest_axcaliber.npy'
+pmat_name = r'C:\Users\Admin\Desktop\balance_plasticity\yeo\eo_pval_axcaliber.npy'
+tmat_name = r'C:\Users\Admin\Desktop\balance_plasticity\yeo\eo_ttest_axcaliber.npy'
 pmat = np.load(pmat_name)
 mat = np.load(tmat_name)
 pmat = pmat[id]
 pmat= pmat[:,id]
 mat=mat[id]
 mat=mat[:,id]
+#nodes_labels = [nodes_labels[node] for node in id]
+
+ii = network_id_list(network,side)
+#pmat = pmat[ii]
+#pmat = pmat[:,ii]
+
+#mat=mat[ii]
+#mat=mat[:,ii]
+
+#nodes_labels = {node:nodes_labels[node] for node in nodes_labels.keys() &  ii}
+
 #mat[(np.abs(mat)<3)]=0
 pmat[np.isnan(pmat)] = 0
-mat[pmat>0.005] = 0
+mat[pmat>0.05] = 0
 mat[np.isnan(mat)]=0
 G = nx.from_numpy_array(mat)
 for v, w in G.edges:
@@ -53,8 +67,11 @@ for n in G.nodes():
         G.node[n]['side'] = "right"
 
 G = nx.relabel_nodes(G,nodes_labels)
+G1=G.subgraph(ii)
 
-c = CircosPlot(G,node_labels=True, edge_width='weight',
+nodes_list = [nodes_labels[id[idx[node]]] for node in ii]
+
+c = CircosPlot(G.subgraph(nodes_list), node_labels=True, edge_width='weight',
                edge_color='weight',edgeprops = {"facecolor": "none", "alpha": 1},
                fig_size = (15,15),node_label_layout='rotation',group_label_offset=4,
                fontsize=7, node_size='size')
