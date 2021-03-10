@@ -28,8 +28,8 @@ def basic_files(cortex_only=True,atlas_type='mega'):
     atlas_label = os_path_2_fsl(atlas_label)
     atlas_template = os_path_2_fsl(atlas_template)
 
-    #folder_name = r'F:\Hila\Ax3D_Pack\V6\after_file_prep'
-    folder_name = r'F:\Hila\balance\ec\after'
+    folder_name = r'F:\Hila\Ax3D_Pack\V6\after_file_prep'
+    #folder_name = r'F:\Hila\balance\ec\after'
     all_subj_folders = os.listdir(folder_name)
     subj = all_subj_folders
 
@@ -225,7 +225,7 @@ def all_func_to_run(s, folder_name, atlas_template, atlas_label):
 if __name__ == '__main__':
     from multiprocessing import Process
     subj, folder_name, atlas_template, atlas_label = basic_files(False, atlas_type='yeo7_200')
-    for s in subj[::]:
+    for s in subj[8:9]:
         all_func_to_run(s, folder_name, atlas_template, atlas_label)
 
 

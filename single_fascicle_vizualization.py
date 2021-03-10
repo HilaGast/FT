@@ -126,7 +126,7 @@ def choose_specific_bundle(streamlines, affine, folder_name,mask_type, n, nii_fi
         if 'CR_mask' in file and file.endswith('.nii'):
             mask_file = os.path.join(folder_name, file)
             mask_img = nib.load(mask_file)
-            cr_mask_mat = mask_img.get_data()
+            cr_mask_mat = mask_img.get_fdata()
 
         if 'IFOF_mask' in file and file.endswith('.nii'):
             mask_file = os.path.join(folder_name, file)

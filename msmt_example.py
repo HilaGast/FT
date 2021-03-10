@@ -1,4 +1,3 @@
-from dipy.denoise.localpca import mppca
 from dipy.core.gradients import gradient_table, unique_bvals_tolerance
 from dipy.io.gradients import read_bvals_bvecs
 from dipy.io.image import load_nifti
@@ -7,17 +6,14 @@ from dipy.data import default_sphere
 from dipy.reconst.mcsd import (auto_response_msmt,
                                mask_for_response_msmt,
                                response_from_mask_msmt)
-from dipy.reconst.mcsd import MultiShellDeconvModel, multi_shell_fiber_response
-
+from dipy.reconst.mcsd import MultiShellDeconvModel, multi_shell_fiber_response, MSDeconvFit
 from dipy.viz import window, actor
 import numpy as np
-import dipy.reconst.dti as dti
-from dipy.data import get_fnames
 from weighted_tracts import *
 subj = all_subj_folders
 names = all_subj_names
 
-for s, n in zip(subj[0:1], names[0:1]):
+for s, n in zip(subj[8:9], names[8:9]):
     folder_name = subj_folder + s
     dir_name = folder_name + '\streamlines'
     gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name)
@@ -27,45 +23,40 @@ sphere = default_sphere
 
 
 bvals, bvecs = read_bvals_bvecs(bval_file, bvec_file)
+bvals = np.around(bvals, decimals=-2)
 gtab = gradient_table(bvals, bvecs)
 
 bvals = gtab.bvals
 bvecs = gtab.bvecs
 
 #Generate the mask for the data:
-b0_mask, mask = median_otsu(data, median_radius=2, numpass=1, vol_idx=[0, 1])
+#b0_mask, mask = median_otsu(data, median_radius=4, numpass=4, vol_idx=[0, 1])
 
 # denoising:
-denoised_arr = mppca(data, mask=mask, patch_radius=2)
+#denoised_arr = mppca(data, mask=mask, patch_radius=5)
+#np.save(folder_name+r'\denoised_dwi.npy',denoised_arr)
+#denoised_arr = np.load(folder_name+r'\denoised_dwi.npy')
+denoised_arr = data
+#mask,m_affine = load_nifti(r'F:\Hila\Ax3D_Pack\V6\after_file_prep\YA_lab_Yaniv_002044_20201025_0845\hifi_nodif_brain_mask.nii')
+#mask3d = np.reshape(mask,[mask.shape[0],mask.shape[1],mask.shape[2],1])
+#mask4d = np.repeat(mask3d,data.shape[3],axis=3)
+#denoised_arr[~mask4d]=0
 
-wm =r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep\questionnaire\YA_lab_Andrew_AhLi_20181129_0919\r20181129_091926T1wMPRAGERLs002a1001_brain_pve_2.nii'
-wm = load_nifti(wm)[0]
-gm =r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep\questionnaire\YA_lab_Andrew_AhLi_20181129_0919\r20181129_091926T1wMPRAGERLs002a1001_brain_pve_1.nii'
-gm=load_nifti(gm)[0]
-csf =r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep\questionnaire\YA_lab_Andrew_AhLi_20181129_0919\r20181129_091926T1wMPRAGERLs002a1001_brain_pve_0.nii'
-csf=load_nifti(csf)[0]
+tissue_mask =r'F:\Hila\Ax3D_Pack\V6\after_file_prep\YA_lab_Yaniv_002044_20201025_0845\r20201025_084555T1wMPRAGERLs004a1001_brain_seg.nii'
+t_mask_img = load_nifti(tissue_mask)[0]
+wm = t_mask_img==3
+gm = t_mask_img==2
+csf = t_mask_img==1
 
-mask_wm, mask_gm, mask_csf = mask_for_response_msmt(gtab, data, roi_radii=10,
-                                                    wm_fa_thr=0.7,
-                                                    gm_fa_thr=0.3,
-                                                    csf_fa_thr=0.15,
-                                                    gm_md_thr=0.001,
-                                                    csf_md_thr=0.0032)
-mask_wm=mask_wm.astype(float)
-mask_gm=mask_gm.astype(float)
-mask_csf=mask_csf.astype(float)
-
-mask_wm *= wm
-mask_gm *= gm
-mask_csf *= csf
-
+mask_wm=wm.astype(float)
+mask_gm=gm.astype(float)
+mask_csf= csf.astype(float)
 
 response_wm, response_gm, response_csf = response_from_mask_msmt(gtab, data,
                                                                  mask_wm,
                                                                  mask_gm,
                                                                  mask_csf)
 
-#auto_response_wm, auto_response_gm, auto_response_csf = auto_response_msmt(gtab, data, roi_radii=10)
 ubvals = unique_bvals_tolerance(bvals)
 response_mcsd = multi_shell_fiber_response(sh_order=8, bvals=ubvals,
                                            wm_rf=response_wm,
@@ -75,9 +66,22 @@ response_mcsd = multi_shell_fiber_response(sh_order=8, bvals=ubvals,
 
 mcsd_model = MultiShellDeconvModel(gtab, response_mcsd)
 mcsd_fit = mcsd_model.fit(denoised_arr)
-
-#mcsd_odf = mcsd_fit.odf(sphere)
-coeff = mcsd_model.fitter(denoised_arr)
+sh_coeff = mcsd_fit.all_shm_coeff
+nan_count = len(np.argwhere(np.isnan(sh_coeff[..., 0])))
+coeff = mcsd_fit.all_shm_coeff
+n_vox = coeff.shape[0]*coeff.shape[1]*coeff.shape[2]
+print(f'{nan_count/n_vox} of the voxels did not complete fodf calculation, NaN values replaced with 0')
+coeff = np.where(np.isnan(coeff), 0, coeff)
+mcsd_fit = MSDeconvFit(mcsd_model,coeff,None)
+np.save(folder_name+r'\coeff.npy',coeff)
+gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name)
+fa, classifier = create_fa_classifier(gtab, data, white_matter)
+lab_labels_index = nodes_by_index_general(folder_name,atlas='yeo7_200')[0]
+seeds = create_seeds(folder_name, lab_labels_index, affine, use_mask=False, mask_type='cc', den=5)
+del(coeff,data,response_wm,response_gm,response_csf,response_mcsd,denoised_arr,wm,gm,csf,t_mask_img,sh_coeff,mask_csf,mask_wm,mask_gm)
+streamlines = create_streamlines(mcsd_fit, classifier, seeds, affine)
+save_ft(folder_name, n, streamlines, nii_file, file_name="_wholebrain_5d_labmask_msmt.trk")
+#weighting_streamlines(folder_name,streamlines,bvec_file,show=True,scale=[3,12],hue=[0.25, -0.05],saturation=[0.1,1],fig_type='_cr_reco_msmt_4d',weight_by='3_2_AxPasi7')
 
 def show_odf_slicer(mcsd_model,data,slice):
     mcsd_fit = mcsd_model.fit(data[:, :, slice])

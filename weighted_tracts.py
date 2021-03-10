@@ -130,7 +130,7 @@ def weighting_streamlines(folder_name, streamlines, bvec_file, show=False, weigh
     stream = list(streamlines)
     vol_per_tract = values_from_volume(weight_by_data, stream, affine=affine)
 
-    pfr_data = load_weight_by_img(folder_name,'1.5_2_AxFr5')[0]
+    pfr_data = load_weight_by_img(folder_name,'1.5_2.5_AxFr7')[0]
 
     pfr_per_tract = values_from_volume(pfr_data, stream, affine=affine)
 
@@ -146,7 +146,9 @@ def weighting_streamlines(folder_name, streamlines, bvec_file, show=False, weigh
         mean_vol_per_tract.append(np.nanmean(s[tuple(non_out and high_pfr)]))
 
     if show:
-        show_tracts(hue,saturation,scale,streamlines,mean_vol_per_tract,folder_name,fig_type)
+        show_tracts(hue,saturation,scale,streamlines,mean_vol_per_tract,folder_name,fig_type +'_'+weight_by+'_a')
+        show_tracts(hue,saturation,scale,streamlines,mean_vol_per_tract,folder_name,fig_type +'_'+weight_by+'_b')
+
 
     return mean_vol_per_tract
 
