@@ -60,7 +60,7 @@ def extract_one_bundle(file_bundle_name, bundle_num, subji, rt, mct, main_folder
     folder_name = main_folder+all_subj_folders[subji]
     n = all_subj_names[subji]
     #sft_target = load_trk(folder_name + r'\streamlines'+n+r'_slf_5d.trk', "same", bbox_valid_check=False)
-    sft_target = load_trk(folder_name + r'\streamlines'+n+r'_wholebrain_4d_labmask.trk', "same", bbox_valid_check=False)
+    sft_target = load_trk(folder_name + r'\streamlines'+n+r'_wholebrain_5d_labmask_msmt.trk', "same", bbox_valid_check=False)
 
     target = sft_target.streamlines
     #show_atlas_target_graph(atlas, target,out_path=folder_name+r'\try_atlas_target',interactive=True)

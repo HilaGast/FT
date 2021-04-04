@@ -301,8 +301,8 @@ def show_fascicles_wholebrain(s_list, vec_vols, folder_name, mask_type, downsamp
 if __name__ == '__main__':
 
     main_folder = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep'
-    folder_name = main_folder+all_subj_folders[0]
-    n = all_subj_names[0]
+    folder_name = main_folder+all_subj_folders[8]
+    n = all_subj_names[8]
     nii_file = load_dwi_files(folder_name)[5]
 
     #s_list, vec_vols = streamline_mean_fascicle_value_weighted(folder_name, n, nii_file,'cc')

@@ -1,11 +1,8 @@
 from dipy.core.gradients import gradient_table, unique_bvals_tolerance
 from dipy.io.gradients import read_bvals_bvecs
 from dipy.io.image import load_nifti
-from dipy.segment.mask import median_otsu
 from dipy.data import default_sphere
-from dipy.reconst.mcsd import (auto_response_msmt,
-                               mask_for_response_msmt,
-                               response_from_mask_msmt)
+from dipy.reconst.mcsd import (response_from_mask_msmt)
 from dipy.reconst.mcsd import MultiShellDeconvModel, multi_shell_fiber_response, MSDeconvFit
 from dipy.viz import window, actor
 import numpy as np
@@ -13,7 +10,7 @@ from weighted_tracts import *
 subj = all_subj_folders
 names = all_subj_names
 
-for s, n in zip(subj[8:9], names[8:9]):
+for s, n in zip(subj[9:10], names[9:10]):
     folder_name = subj_folder + s
     dir_name = folder_name + '\streamlines'
     gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name)
@@ -29,20 +26,9 @@ gtab = gradient_table(bvals, bvecs)
 bvals = gtab.bvals
 bvecs = gtab.bvecs
 
-#Generate the mask for the data:
-#b0_mask, mask = median_otsu(data, median_radius=4, numpass=4, vol_idx=[0, 1])
-
-# denoising:
-#denoised_arr = mppca(data, mask=mask, patch_radius=5)
-#np.save(folder_name+r'\denoised_dwi.npy',denoised_arr)
-#denoised_arr = np.load(folder_name+r'\denoised_dwi.npy')
 denoised_arr = data
-#mask,m_affine = load_nifti(r'F:\Hila\Ax3D_Pack\V6\after_file_prep\YA_lab_Yaniv_002044_20201025_0845\hifi_nodif_brain_mask.nii')
-#mask3d = np.reshape(mask,[mask.shape[0],mask.shape[1],mask.shape[2],1])
-#mask4d = np.repeat(mask3d,data.shape[3],axis=3)
-#denoised_arr[~mask4d]=0
 
-tissue_mask =r'F:\Hila\Ax3D_Pack\V6\after_file_prep\YA_lab_Yaniv_002044_20201025_0845\r20201025_084555T1wMPRAGERLs004a1001_brain_seg.nii'
+tissue_mask =r'F:\Hila\Ax3D_Pack\V6\after_file_prep\YA_lab_Yaniv_002334_20210107_1820\r20210107_182004T1wMPRAGERLs008a1001_brain_seg.nii'
 t_mask_img = load_nifti(tissue_mask)[0]
 wm = t_mask_img==3
 gm = t_mask_img==2

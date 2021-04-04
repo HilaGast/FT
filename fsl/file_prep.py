@@ -225,7 +225,7 @@ def all_func_to_run(s, folder_name, atlas_template, atlas_label):
 if __name__ == '__main__':
     from multiprocessing import Process
     subj, folder_name, atlas_template, atlas_label = basic_files(False, atlas_type='yeo7_200')
-    for s in subj[8:9]:
+    for s in subj[9:10]:
         all_func_to_run(s, folder_name, atlas_template, atlas_label)
 
 

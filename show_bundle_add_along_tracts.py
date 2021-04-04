@@ -6,7 +6,7 @@ weight_by = '1.5_2.5_AxPasi7'
 hue=[0.25, -0.05] #hot
 #hue = [0.4, 0.7] # blues
 saturation = [0.0, 1.0]
-scale = [2, 10]
+scale = [2, 12]
 subj = all_subj_folders
 names = all_subj_names
 
@@ -20,7 +20,6 @@ weight_by_data, affine1 = load_weight_by_img(folder_name, weight_by)
 #tract_path = folder_name+r'\streamlines'+n+'_'+fig_type+'_4d_labmask_msmt.trk'
 tract_path = folder_name+r'\streamlines'+n+'_'+'CC_mct001rt20_msmt.trk'
 streamlines = load_ft(tract_path,nii_file)
-stream = list(streamlines)
 
 streamlines = transform_streamlines(streamlines, np.linalg.inv(affine1))
 

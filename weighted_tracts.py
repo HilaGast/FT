@@ -129,8 +129,8 @@ def weighting_streamlines(folder_name, streamlines, bvec_file, show=False, weigh
 
     stream = list(streamlines)
     vol_per_tract = values_from_volume(weight_by_data, stream, affine=affine)
-
-    pfr_data = load_weight_by_img(folder_name,'1.5_2.5_AxFr7')[0]
+    ab = weight_by[:-5]
+    pfr_data = load_weight_by_img(folder_name,ab+'Fr7')[0]
 
     pfr_per_tract = values_from_volume(pfr_data, stream, affine=affine)
 
@@ -143,7 +143,7 @@ def weighting_streamlines(folder_name, streamlines, bvec_file, show=False, weigh
         non_out = [s < q]
         pfr = np.asanyarray(pfr)
         high_pfr = [pfr > 0.5]
-        mean_vol_per_tract.append(np.nanmean(s[tuple(non_out and high_pfr)]))
+        mean_vol_per_tract.append(np.nanmedian(s[tuple(non_out and high_pfr)]))
 
     if show:
         show_tracts(hue,saturation,scale,streamlines,mean_vol_per_tract,folder_name,fig_type +'_'+weight_by+'_a')
@@ -505,7 +505,7 @@ if __name__ == '__main__':
         #seeds = create_seeds(folder_name, lab_labels_index, affine, use_mask=False, mask_type='cc', den=4)
         #streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
         #save_ft(folder_name, n, streamlines, nii_file, file_name="_wholebrain_4d_labmask.trk")
-        tract_path = f'{dir_name}{n}_wholebrain_4d_labmask.trk'
+        tract_path = f'{dir_name}{n}_wholebrain_5d_labmask_msmt.trk'
         idx = nodes_labels_yeo7(index_to_text_file)[1]
         streamlines = load_ft(tract_path, nii_file)
         #weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask_yeo7_200_FA',
