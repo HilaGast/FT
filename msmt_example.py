@@ -60,11 +60,13 @@ print(f'{nan_count/n_vox} of the voxels did not complete fodf calculation, NaN v
 coeff = np.where(np.isnan(coeff), 0, coeff)
 mcsd_fit = MSDeconvFit(mcsd_model,coeff,None)
 np.save(folder_name+r'\coeff.npy',coeff)
+
 gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name)
 fa, classifier = create_fa_classifier(gtab, data, white_matter)
 lab_labels_index = nodes_by_index_general(folder_name,atlas='yeo7_200')[0]
 seeds = create_seeds(folder_name, lab_labels_index, affine, use_mask=False, mask_type='cc', den=5)
 del(coeff,data,response_wm,response_gm,response_csf,response_mcsd,denoised_arr,wm,gm,csf,t_mask_img,sh_coeff,mask_csf,mask_wm,mask_gm)
+
 streamlines = create_streamlines(mcsd_fit, classifier, seeds, affine)
 save_ft(folder_name, n, streamlines, nii_file, file_name="_wholebrain_5d_labmask_msmt.trk")
 #weighting_streamlines(folder_name,streamlines,bvec_file,show=True,scale=[3,12],hue=[0.25, -0.05],saturation=[0.1,1],fig_type='_cr_reco_msmt_4d',weight_by='3_2_AxPasi7')

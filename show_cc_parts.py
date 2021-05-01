@@ -49,7 +49,7 @@ def show_cc_parts(folder_name,weight_by,n,nii_file,hue,saturation,scale):
     show_tracts(hue ,saturation ,scale ,cc ,cc_vols ,folder_name ,'_cc_'+weight_by+'_mean_parts')
 
 if __name__ == '__main__':
-    weight_by = '1_3_AxPasi7'
+    weight_by = '1.5_2.5_AxPasi7'
     hue=[0.25, -0.05] #hot
     saturation = [0.0, 1.0]
     scale = [5,10]
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     names = all_subj_names
 
 
-    for s, n in zip(subj[9:10], names[9:10]):
+    for s, n in zip(subj[8:9], names[8:9]):
         folder_name = subj_folder + s
         dir_name = folder_name + '\streamlines'
         gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name)

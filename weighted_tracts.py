@@ -8,10 +8,11 @@ from all_subj import *
 
 
 def load_dwi_files(folder_name, small_delta=15.5):
+    from dipy.io.gradients import read_bvals_bvecs
     '''
     param:
         folder_name -
-        small_delta -
+        small_delta - 15 for thebase4ever, 15.5 for thebase
     return:
         white_matter - the entire brain mask to track fibers
     '''
@@ -21,12 +22,15 @@ def load_dwi_files(folder_name, small_delta=15.5):
             bvec_file = os.path.join(folder_name, file)
         if file.endswith("brain_seg.nii"):
             labels_file_name = os.path.join(folder_name, file)
+
     bval_file = bvec_file[:-4:]+'bval'
     nii_file = os.path.join(folder_name,'diff_corrected.nii')
     hardi_img = nib.load(nii_file)
     data = hardi_img.get_fdata()
     affine = hardi_img.affine
-    gtab = gradient_table(bval_file, bvec_file, small_delta=small_delta)
+    bvals, bvecs = read_bvals_bvecs(bval_file, bvec_file)
+    bvals = np.around(bvals, decimals=-2)
+    gtab = gradient_table(bvals, bvecs, small_delta=small_delta)
     labels_img = nib.load(labels_file_name)
     labels = labels_img.get_fdata()
     white_matter = (labels == 3) #| (labels == 2)  # 3-WM, 2-GM
@@ -62,6 +66,45 @@ def create_csd_model(data, gtab, white_matter, sh_order=6):
     csd_fit = csd_model.fit(data, mask=white_matter)
 
     return csd_fit
+
+
+def create_mcsd_model(folder_name, data, gtab, labels, sh_order=8):
+    from dipy.io.image import load_nifti
+    from dipy.reconst.mcsd import response_from_mask_msmt
+    from dipy.reconst.mcsd import MultiShellDeconvModel, multi_shell_fiber_response, MSDeconvFit
+    from dipy.core.gradients import unique_bvals_tolerance
+
+    bvals = gtab.bvals
+    wm = labels == 3
+    gm = labels == 2
+    csf = labels == 1
+
+    mask_wm = wm.astype(float)
+    mask_gm = gm.astype(float)
+    mask_csf = csf.astype(float)
+
+    response_wm, response_gm, response_csf = response_from_mask_msmt(gtab, data,
+                                                                     mask_wm,
+                                                                     mask_gm,
+                                                                     mask_csf)
+
+    ubvals = unique_bvals_tolerance(bvals)
+    response_mcsd = multi_shell_fiber_response(sh_order, bvals=ubvals,
+                                               wm_rf=response_wm,
+                                               csf_rf=response_csf,
+                                               gm_rf=response_gm)
+    mcsd_model = MultiShellDeconvModel(gtab, response_mcsd)
+    mcsd_fit = mcsd_model.fit(data)
+    sh_coeff = mcsd_fit.all_shm_coeff
+    nan_count = len(np.argwhere(np.isnan(sh_coeff[..., 0])))
+    coeff = mcsd_fit.all_shm_coeff
+    n_vox = coeff.shape[0] * coeff.shape[1] * coeff.shape[2]
+    print(f'{nan_count / n_vox} of the voxels did not complete fodf calculation, NaN values replaced with 0')
+    coeff = np.where(np.isnan(coeff), 0, coeff)
+    mcsd_fit = MSDeconvFit(mcsd_model, coeff, None)
+    np.save(folder_name + r'\coeff.npy', coeff)
+
+    return mcsd_fit
 
 
 def create_fa_classifier(gtab,data,white_matter):
@@ -157,7 +200,7 @@ def show_tracts(hue,saturation,scale,streamlines,mean_vol_per_tract,folder_name,
     from dipy.viz import window, actor
     lut_cmap = actor.colormap_lookup_table(hue_range=hue,
                                            saturation_range=saturation, scale_range=scale)
-    streamlines_actor = actor.line(streamlines, mean_vol_per_tract, linewidth=1, lookup_colormap=lut_cmap)
+    streamlines_actor = actor.streamtube(streamlines, mean_vol_per_tract, linewidth=0.5, lookup_colormap=lut_cmap)
     bar = actor.scalar_bar(lut_cmap)
     r = window.Scene()
     r.add(streamlines_actor)
@@ -494,23 +537,32 @@ if __name__ == '__main__':
     #idd = [38,39,40,41,42,43,44,45,46,47,48,49]
     #subj = [s for i, s in enumerate(all_subj_folders) if i in idd]
     #names = [n for i, n in enumerate(all_subj_names) if i in idd]
+    tractography_method = "msmt"
 
     for s,n in zip(subj[::],names[::]):
         folder_name = subj_folder + s
         dir_name = folder_name + '\streamlines'
-        gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name)
-        #csd_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
-        #fa, classifier = create_fa_classifier(gtab, data, white_matter)
+        gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name,small_delta=15)
+        if tractography_method == "msmt":
+            model_fit = create_mcsd_model(folder_name, data, gtab, labels, sh_order=8)
+            den = 5
+            tract_file_name = "_wholebrain_5d_labmask_msmt.trk"
+        elif tractography_method == "csd":
+            model_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
+            den = 4
+            tract_file_name = "_wholebrain_4d_labmask.trk"
+
+        fa, classifier = create_fa_classifier(gtab, data, white_matter)
         lab_labels_index = nodes_by_index_general(folder_name,atlas='yeo7_200')[0]
-        #seeds = create_seeds(folder_name, lab_labels_index, affine, use_mask=False, mask_type='cc', den=4)
-        #streamlines = create_streamlines(csd_fit, classifier, seeds, affine)
-        #save_ft(folder_name, n, streamlines, nii_file, file_name="_wholebrain_4d_labmask.trk")
-        tract_path = f'{dir_name}{n}_wholebrain_5d_labmask_msmt.trk'
-        idx = nodes_labels_yeo7(index_to_text_file)[1]
-        streamlines = load_ft(tract_path, nii_file)
+        seeds = create_seeds(folder_name, lab_labels_index, affine, use_mask=False, mask_type='cc', den=den)
+        streamlines = create_streamlines(model_fit, classifier, seeds, affine)
+        save_ft(folder_name, n, streamlines, nii_file, file_name=tract_file_name)
+
+        #tract_path = f'{dir_name}{n}_wholebrain_5d_labmask_msmt.trk'
+        #idx = nodes_labels_yeo7(index_to_text_file)[1]
+        #streamlines = load_ft(tract_path, nii_file)
+
         #weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask_yeo7_200_FA',
         #                                  weight_by='_FA')
         #weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask_yeo7_200',
         #                                  weight_by='_AxPasi')
-        streamlins_len_connectivity_mat(folder_name, streamlines, lab_labels_index, idx, fig_type='yeo7_lengths')
-        #streamlines2groups_by_size(folder_name, n, streamlines, bvec_file, nii_file, first_cut=5.2, second_cut=6)
