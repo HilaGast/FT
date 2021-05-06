@@ -27,6 +27,7 @@ def load_dwi_files(folder_name, small_delta=15.5):
     nii_file = os.path.join(folder_name,'diff_corrected.nii')
     hardi_img = nib.load(nii_file)
     data = hardi_img.get_fdata()
+    data[data<0]=0
     affine = hardi_img.affine
     bvals, bvecs = read_bvals_bvecs(bval_file, bvec_file)
     bvals = np.around(bvals, decimals=-2)
@@ -73,6 +74,7 @@ def create_mcsd_model(folder_name, data, gtab, labels, sh_order=8):
     from dipy.reconst.mcsd import response_from_mask_msmt
     from dipy.reconst.mcsd import MultiShellDeconvModel, multi_shell_fiber_response, MSDeconvFit
     from dipy.core.gradients import unique_bvals_tolerance
+    from pathos.multiprocessing import ProcessPool
 
     bvals = gtab.bvals
     wm = labels == 3
@@ -94,14 +96,29 @@ def create_mcsd_model(folder_name, data, gtab, labels, sh_order=8):
                                                csf_rf=response_csf,
                                                gm_rf=response_gm)
     mcsd_model = MultiShellDeconvModel(gtab, response_mcsd)
-    mcsd_fit = mcsd_model.fit(data)
-    sh_coeff = mcsd_fit.all_shm_coeff
+
+    vol_shape = data.shape[:-1]
+    n_vox = np.prod(vol_shape)
+    voxel_by_dir = data.reshape(n_vox, data.shape[-1])
+    pool = ProcessPool(nodes=6)  # number of cpus. 60 min on 1 cpu will be 10 min on 6 cpu!
+    results = pool.map(mcsd_model.fit, voxel_by_dir)
+
+    sh_coeff = [results[i].shm_coeff for i in range(0, (np.array(results)).shape[0])]
+    wm_shm_2d = np.array(sh_coeff)
+    coeff = wm_shm_2d.reshape(data.shape[0], data.shape[1], data.shape[2])
     nan_count = len(np.argwhere(np.isnan(sh_coeff[..., 0])))
-    coeff = mcsd_fit.all_shm_coeff
-    n_vox = coeff.shape[0] * coeff.shape[1] * coeff.shape[2]
     print(f'{nan_count / n_vox} of the voxels did not complete fodf calculation, NaN values replaced with 0')
     coeff = np.where(np.isnan(coeff), 0, coeff)
     mcsd_fit = MSDeconvFit(mcsd_model, coeff, None)
+
+    #mcsd_fit = mcsd_model.fit(data)
+    #sh_coeff = mcsd_fit.all_shm_coeff
+    #nan_count = len(np.argwhere(np.isnan(sh_coeff[..., 0])))
+    #coeff = mcsd_fit.all_shm_coeff
+    #n_vox = coeff.shape[0] * coeff.shape[1] * coeff.shape[2]
+    #print(f'{nan_count / n_vox} of the voxels did not complete fodf calculation, NaN values replaced with 0')
+    #coeff = np.where(np.isnan(coeff), 0, coeff)
+    #mcsd_fit = MSDeconvFit(mcsd_model, coeff, None)
     np.save(folder_name + r'\coeff.npy', coeff)
 
     return mcsd_fit
@@ -539,7 +556,7 @@ if __name__ == '__main__':
     #names = [n for i, n in enumerate(all_subj_names) if i in idd]
     tractography_method = "msmt"
 
-    for s,n in zip(subj[::],names[::]):
+    for s,n in zip(subj[6::],names[6::]):
         folder_name = subj_folder + s
         dir_name = folder_name + '\streamlines'
         gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name,small_delta=15)
@@ -549,8 +566,8 @@ if __name__ == '__main__':
             tract_file_name = "_wholebrain_5d_labmask_msmt.trk"
         elif tractography_method == "csd":
             model_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
-            den = 4
-            tract_file_name = "_wholebrain_4d_labmask.trk"
+            den = 5
+            tract_file_name = "_wholebrain_5d_labmask.trk"
 
         fa, classifier = create_fa_classifier(gtab, data, white_matter)
         lab_labels_index = nodes_by_index_general(folder_name,atlas='yeo7_200')[0]

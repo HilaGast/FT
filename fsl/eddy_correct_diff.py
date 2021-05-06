@@ -16,5 +16,12 @@ def eddy_corr(subj_folder, diff_file_name, pa_file_name,
     os.system(cmd)
     cmd = fr'bash -lc "bet {subj_folder}/hifi_nodif {subj_folder}/hifi_nodif_brain -m -f 0.3 -g 0.2"'
     os.system(cmd)
-    cmd = fr'bash -lc "eddy_openmp --imain={subj_folder}/{diff_file_name} --mask={subj_folder}/hifi_nodif_brain_mask --index={index_file} --acqp={acqr_file} --bvecs={subj_folder}/{diff_file_name[:-4]}.bvec --bvals={subj_folder}/{diff_file_name[:-4]}.bval --fwhm=0 --topup={subj_folder}/topup_AP_PA_b0 --flm=quadratic --out={subj_folder}/diff_corrected.nii --data_is_shelled"'
+    cmd = fr'bash -lc "eddy_openmp --imain={subj_folder}/{diff_file_name} --mask={subj_folder}/hifi_nodif_brain_mask --index={index_file} --acqp={acqr_file} --bvecs={subj_folder}/{diff_file_name[:-4]}.bvec --bvals={subj_folder}/{diff_file_name[:-4]}.bval --fwhm=0 --topup={subj_folder}/topup_AP_PA_b0 --flm=quadratic --repol --out={subj_folder}/diff_corrected.nii --data_is_shelled"'
     os.system(cmd)
+
+
+def creating_index_file(nb_volumes,folder_name):
+    file1 = open(rf"{folder_name}\index.txt",'a')
+    for i in range(nb_volumes):
+        file1.write("1\n")
+    file1.close()
