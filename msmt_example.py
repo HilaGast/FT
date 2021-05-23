@@ -10,7 +10,7 @@ from weighted_tracts import *
 subj = all_subj_folders
 names = all_subj_names
 
-for s, n in zip(subj[1:2], names[1:2]):
+for s, n in zip(subj[14:15], names[14:15]):
     folder_name = subj_folder + s
     dir_name = folder_name + '\streamlines'
     gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name)

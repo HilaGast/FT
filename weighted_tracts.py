@@ -2,9 +2,9 @@ import os
 import nibabel as nib
 from dipy.tracking import utils
 from dipy.core.gradients import gradient_table
-from dipy.tracking.local_tracking import LocalTracking
 import numpy as np
 from all_subj import *
+from dipy.io.image import load_nifti, load_nifti_data
 
 
 def load_dwi_files(folder_name, small_delta=15.5):
@@ -37,6 +37,19 @@ def load_dwi_files(folder_name, small_delta=15.5):
     white_matter = (labels == 3) #| (labels == 2)  # 3-WM, 2-GM
 
     return gtab,data,affine,labels,white_matter,nii_file,bvec_file
+
+
+def load_pve_files(folder_name):
+
+    for file in os.listdir(folder_name):
+        if file.endswith("brain_pve_0.nii"):
+            f_pve_csf = os.path.join(folder_name, file)
+        if file.endswith("brain_pve_1.nii"):
+            f_pve_gm = os.path.join(folder_name, file)
+        if file.endswith("brain_pve_2.nii"):
+            f_pve_wm = os.path.join(folder_name, file)
+
+    return f_pve_csf, f_pve_gm, f_pve_wm
 
 
 def load_mask(folder_name, mask_type):
@@ -74,7 +87,7 @@ def create_mcsd_model(folder_name, data, gtab, labels, sh_order=8):
     from dipy.reconst.mcsd import response_from_mask_msmt
     from dipy.reconst.mcsd import MultiShellDeconvModel, multi_shell_fiber_response, MSDeconvFit
     from dipy.core.gradients import unique_bvals_tolerance
-    from pathos.multiprocessing import ProcessPool
+    #from pathos.multiprocessing import ProcessPool
 
     bvals = gtab.bvals
     wm = labels == 3
@@ -97,28 +110,29 @@ def create_mcsd_model(folder_name, data, gtab, labels, sh_order=8):
                                                gm_rf=response_gm)
     mcsd_model = MultiShellDeconvModel(gtab, response_mcsd)
 
-    vol_shape = data.shape[:-1]
-    n_vox = np.prod(vol_shape)
-    voxel_by_dir = data.reshape(n_vox, data.shape[-1])
-    pool = ProcessPool(nodes=6)  # number of cpus. 60 min on 1 cpu will be 10 min on 6 cpu!
-    results = pool.map(mcsd_model.fit, voxel_by_dir)
+    #vol_shape = data.shape[:-1]
+    #n_vox = np.prod(vol_shape)
+    #voxel_by_dir = data.reshape(n_vox, data.shape[-1])
+    #pool = ProcessPool(nodes=6)  # number of cpus. 60 min on 1 cpu will be 10 min on 6 cpu!
+    #results = pool.map(mcsd_model.fit, voxel_by_dir)
 
-    sh_coeff = [results[i].shm_coeff for i in range(0, (np.array(results)).shape[0])]
-    wm_shm_2d = np.array(sh_coeff)
-    coeff = wm_shm_2d.reshape(data.shape[0], data.shape[1], data.shape[2])
-    nan_count = len(np.argwhere(np.isnan(sh_coeff[..., 0])))
-    print(f'{nan_count / n_vox} of the voxels did not complete fodf calculation, NaN values replaced with 0')
-    coeff = np.where(np.isnan(coeff), 0, coeff)
-    mcsd_fit = MSDeconvFit(mcsd_model, coeff, None)
-
-    #mcsd_fit = mcsd_model.fit(data)
-    #sh_coeff = mcsd_fit.all_shm_coeff
+    #sh_coeff = [results[i].shm_coeff for i in range(0, (np.array(results)).shape[0])]
+    #wm_shm_2d = np.array(sh_coeff)
+    #coeff = wm_shm_2d.reshape(data.shape[0], data.shape[1], data.shape[2])
     #nan_count = len(np.argwhere(np.isnan(sh_coeff[..., 0])))
-    #coeff = mcsd_fit.all_shm_coeff
-    #n_vox = coeff.shape[0] * coeff.shape[1] * coeff.shape[2]
     #print(f'{nan_count / n_vox} of the voxels did not complete fodf calculation, NaN values replaced with 0')
     #coeff = np.where(np.isnan(coeff), 0, coeff)
     #mcsd_fit = MSDeconvFit(mcsd_model, coeff, None)
+
+    mcsd_fit = mcsd_model.fit(data)
+    sh_coeff = mcsd_fit.all_shm_coeff
+    nan_count = len(np.argwhere(np.isnan(sh_coeff[..., 0])))
+    coeff = mcsd_fit.all_shm_coeff
+    n_vox = coeff.shape[0] * coeff.shape[1] * coeff.shape[2]
+    if nan_count > 0:
+        print(f'{nan_count / n_vox} of the voxels did not complete fodf calculation, NaN values replaced with 0')
+    coeff = np.where(np.isnan(coeff), 0, coeff)
+    mcsd_fit = MSDeconvFit(mcsd_model, coeff, None)
     np.save(folder_name + r'\coeff.npy', coeff)
 
     return mcsd_fit
@@ -137,35 +151,53 @@ def create_fa_classifier(gtab,data,white_matter):
     return fa, classifier
 
 
-def create_act_classifier(fa,folder_name,labels):  # Does not working
-    from dipy.tracking.stopping_criterion import ActStoppingCriterion
-    background = np.ones(labels.shape)
-    background[(np.asarray(labels)>0) > 0] = 0
-    include_map = np.zeros(fa.shape)
-    lab = f'{folder_name}{os.sep}rMegaAtlas_cortex_Labels.nii'
-    lab_file = nib.load(lab)
-    lab_labels = lab_file.get_data()
-    include_map[background>0] = 1
-    include_map[lab_labels > 0] = 1
-    include_map[fa>0.18] = 1
-    include_map = include_map==1
-    exclude_map = labels==1
 
-    act_classifier = ActStoppingCriterion(include_map, exclude_map)
+def create_cmc_classifier(folder_name):
+    from dipy.tracking.stopping_criterion import CmcStoppingCriterion
 
-    return act_classifier
+    f_pve_csf, f_pve_gm, f_pve_wm = load_pve_files(folder_name)
+    pve_csf_data = load_nifti_data(f_pve_csf)
+    pve_gm_data = load_nifti_data(f_pve_gm)
+    pve_wm_data, _, voxel_size = load_nifti(f_pve_wm, return_voxsize=True)
+    voxel_size = np.average(voxel_size[1:4])
+    step_size = 0.2
+    cmc_criterion = CmcStoppingCriterion.from_pve(pve_wm_data,
+                                                  pve_gm_data,
+                                                  pve_csf_data,
+                                                  step_size=step_size,
+                                                  average_voxel_size=voxel_size)
+
+    return cmc_criterion, step_size
 
 
-def create_streamlines(csd_fit, classifier, seeds, affine):
+def create_streamlines(model_fit, seeds, affine, gtab=None, data=None, white_matter=None, folder_name = None, classifier_type="fa"):
     from dipy.data import default_sphere
     from dipy.direction import DeterministicMaximumDirectionGetter
     from dipy.tracking.streamline import Streamlines
-    print('Starting to compute streamlines')
-    detmax_dg = DeterministicMaximumDirectionGetter.from_shcoeff(csd_fit.shm_coeff,
+    from dipy.tracking.local_tracking import (LocalTracking,
+                                              ParticleFilteringTracking)
+
+    detmax_dg = DeterministicMaximumDirectionGetter.from_shcoeff(model_fit.shm_coeff,
                                                                  max_angle=30.,
                                                                  sphere=default_sphere)
+    if classifier_type == "fa":
+        print("Tractography using local tracking and FA clasifier")
+        classifier = create_fa_classifier(gtab, data, white_matter)
+        print('Starting to compute streamlines')
+        streamlines = Streamlines(LocalTracking(detmax_dg, classifier, seeds, affine, step_size=1,return_all=False))
 
-    streamlines = Streamlines(LocalTracking(detmax_dg, classifier, seeds, affine, step_size=1,return_all=False))
+    elif classifier_type == "cmc":
+        print("Tractography using PFT and CMC clasifier")
+        classifier, step_size = create_cmc_classifier(folder_name)
+        print('Starting to compute streamlines')
+        streamlines = Streamlines(ParticleFilteringTracking(detmax_dg, classifier, seeds, affine, step_size=step_size,
+                                                     maxlen=1500,
+                                                     pft_back_tracking_dist=2,
+                                                     pft_front_tracking_dist=1,
+                                                     particle_count=15,
+                                                     return_all=False))
+
+
 
     long_streamlines = np.ones((len(streamlines)), bool)
     for i in range(0, len(streamlines)):
@@ -556,7 +588,7 @@ if __name__ == '__main__':
     #names = [n for i, n in enumerate(all_subj_names) if i in idd]
     tractography_method = "msmt"
 
-    for s,n in zip(subj[6::],names[6::]):
+    for s,n in zip(subj[15::],names[15::]):
         folder_name = subj_folder + s
         dir_name = folder_name + '\streamlines'
         gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name,small_delta=15)
@@ -572,7 +604,7 @@ if __name__ == '__main__':
         fa, classifier = create_fa_classifier(gtab, data, white_matter)
         lab_labels_index = nodes_by_index_general(folder_name,atlas='yeo7_200')[0]
         seeds = create_seeds(folder_name, lab_labels_index, affine, use_mask=False, mask_type='cc', den=den)
-        streamlines = create_streamlines(model_fit, classifier, seeds, affine)
+        streamlines = create_streamlines(model_fit, seeds, affine, gtab, data, white_matter, classifier_type="fa")
         save_ft(folder_name, n, streamlines, nii_file, file_name=tract_file_name)
 
         #tract_path = f'{dir_name}{n}_wholebrain_5d_labmask_msmt.trk'

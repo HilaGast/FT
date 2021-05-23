@@ -1,5 +1,5 @@
-from FT.weighted_tracts import weighting_streamlines,load_ft, load_dwi_files
-from FT.all_subj import all_subj_names,all_subj_folders
+from weighted_tracts import weighting_streamlines,load_ft, load_dwi_files
+from all_subj import all_subj_names,all_subj_folders
 
 subj = all_subj_folders
 names = all_subj_names

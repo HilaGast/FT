@@ -56,18 +56,18 @@ def show_cr_parts(folder_name,side,weight_by,n,nii_file,hue,saturation,scale):
 
 if __name__ == '__main__':
     side = 'L'
-    weight_by = '1.5_2.5_AxPasi7'
+    weight_by = '3_2_AxPasi7'
     hue=[0.25, -0.05] #hot
     saturation = [0.0, 1.0]
-    scale = [4,9]
+    scale = [7,11]
     subj = all_subj_folders
     names = all_subj_names
 
 
-    for s, n in zip(subj[8:9], names[8:9]):
+    for s, n in zip(subj[0:13], names[0:13]):
         folder_name = subj_folder + s
         dir_name = folder_name + '\streamlines'
         gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name)
-    bval_file = bvec_file[:-4:] + 'bval'
+        bval_file = bvec_file[:-4:] + 'bval'
 
-    show_cr_parts(folder_name,side,weight_by,n,nii_file,hue,saturation,scale)
+        show_cr_parts(folder_name,side,weight_by,n,nii_file,hue,saturation,scale)

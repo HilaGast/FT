@@ -77,10 +77,10 @@ class AdvanceInteractive:
         self.coronal = slices[2]
         self.folder_name = main_folder + s
         self.s_img = self.folder_name + r'\streamlines' + img_name
-        self.scale = [3, 10]
+        self.scale = [5, 12]
         self.hue = [0.25, -0.05]  # Hot
         self.saturation = [0.1, 1.0]
-        self.slices = slices_file.get_data()
+        self.slices = slices_file.get_fdata()
         self.shape = self.slices.shape
         #self.affine = slices_file.affine
         _, _, self.affine, _, _, self.nii_file, self.bvec_file = load_dwi_files(self.folder_name)
@@ -107,8 +107,8 @@ class AdvanceInteractive:
                                                    saturation_range=self.saturation, scale_range=self.scale)
             bar = actor.scalar_bar(lut_cmap)
             stream_actor = actor.line(self.s_list, self.vols, linewidth=1.2, lookup_colormap=lut_cmap)
-            ren = window.Scene()
-            ren.add(bar)
+            scene = window.Scene()
+            scene.add(bar)
 
         elif color_map == 'fa':
             self.vols = list(np.asarray(self.vols)/100)
@@ -132,16 +132,16 @@ class AdvanceInteractive:
         slicer_opacity = 0.6
         image_actor_z, image_actor_x, image_actor_y = create_slicers(image_actor_z, self.shape, slicer_opacity)
 
-        ren.add(stream_actor)
+        scene.add(stream_actor)
 
         if self.axial:
-            ren.add(image_actor_z)  # axial
+            scene.add(image_actor_z)  # axial
         if self.saggital:
-            ren.add(image_actor_x)  # saggital
+            scene.add(image_actor_x)  # saggital
         if self.coronal:
-            ren.add(image_actor_y)  # coronal
+            scene.add(image_actor_y)  # coronal
 
-        show_m = window.ShowManager(ren, size=(1200, 900))
+        show_m = window.ShowManager(scene, size=(1200, 900))
         show_m.initialize()
 
         def sliders(shape, slicer_opacity):
@@ -169,20 +169,6 @@ class AdvanceInteractive:
                                              length=140)
             return line_slider_x, line_slider_y, line_slider_z, opacity_slider
 
-        def build_label(text):
-            label = ui.TextBlock2D()
-            label.message = text
-            label.font_size = 13
-            label.font_family = 'Arial'
-            label.justification = 'left'
-            label.bold = False
-            label.italic = False
-            label.shadow = False
-            label.background = (0, 0, 0)
-            label.color = (1, 1, 1)
-
-            return label
-
         line_slider_x, line_slider_y, line_slider_z, opacity_slider = sliders(self.shape, slicer_opacity)
 
         def change_slice_z(slider):
@@ -208,6 +194,20 @@ class AdvanceInteractive:
         line_slider_y.on_change = change_slice_y
         opacity_slider.on_change = change_opacity
 
+        def build_label(text):
+            label = ui.TextBlock2D()
+            label.message = text
+            label.font_size = 18
+            label.font_family = 'Arial'
+            label.justification = 'left'
+            label.bold = False
+            label.italic = False
+            label.shadow = False
+            label.background_color = (0, 0, 0)
+            label.color = (1, 1, 1)
+
+            return label
+
         line_slider_label_z = build_label(text="Z Slice")
         line_slider_label_x = build_label(text="X Slice")
         line_slider_label_y = build_label(text="Y Slice")
@@ -228,17 +228,10 @@ class AdvanceInteractive:
         panel.add_element(opacity_slider_label, (0.1, 0.15))
         panel.add_element(opacity_slider, (0.38, 0.15))
 
-        ren.add(panel)
+        scene.add(panel)
 
         global size
-        size = ren.GetSize()
-
-        show_m.initialize()
-
-        interactive = True
-
-        ren.zoom(1.1)
-        ren.reset_clipping_range()
+        size = scene.GetSize()
 
         def win_callback(obj, event):
             global size
@@ -248,24 +241,37 @@ class AdvanceInteractive:
                 size_change = [size[0] - size_old[0], 0]
                 panel.re_align(size_change)
 
+        show_m.initialize()
+
+        interactive = True
+
+        scene.zoom(1.1)
+        scene.reset_clipping_range()
+
+
+
         if interactive:
             show_m.add_window_callback(win_callback)
             show_m.render()
             show_m.start()
 
-            ren.set_camera(ren.camera_info())
-            window.record(ren, out_path=self.s_img, size=(1000, 1000))
+            scene.set_camera(scene.camera_info())
+            window.record(scene, out_path=self.s_img, size=(1000, 1000))
 
         del show_m
 
-
 if __name__ == '__main__':
 
-    main_folder = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep\questionnaire'
-    s = all_subj_folders[0]
-    n = all_subj_names[0]
-    img_name = r'\fascicles_AxCaliber7_weighted_4d_cr_pasivals.png'
-    bundle = r'cr'
+    main_folder = r'F:\Hila\Ax3D_Pack\V6\v7calibration'
+    s = all_subj_folders[10]
+    n = all_subj_names[10]
+    img_name = r'\fascicles_Axpasi7_wholebrain_2d_cmc_PFT.png'
+    #img_name = r'\fascicles_Axpasi7_a3b2_5d_cc.png'
+
+    bundle = r'002398_wholebrain_2d_labmask_sh6_cmc_pft'
+
+    #img_name = r'\fascicles_AxCaliber7_weighted_4d_cr_pasivals.png'
+    #bundle = r'cr'
     #bundle = r'wholebrain_1d_labmask'
     slices = [False, True, False] #slices[0]-axial, slices[1]-saggital, slices[2]-coronal
     file_list = os.listdir(main_folder + s)
@@ -279,16 +285,14 @@ if __name__ == '__main__':
 
     bundlei = AdvanceInteractive(main_folder,slice_file, s, n, img_name, bundle, slices)
     bundlei.load_bund()
-    bundlei.load_vols(weight_by='_2_2_AxPasi7')
-    bundlei.show_bundle_slices()
+    bundlei.load_vols(weight_by='_3_2_AxPasi7')
+    #bundlei.show_bundle_slices()
 
-    method = 'mam'
-    tracts_num = bundlei.s_list.__len__()
-    X = clustering_input(method,tracts_num,bundlei.s_list,bundlei.vols)
-    methods = ['agglomerative','kmeans']
-    method = methods[1]
-    g=[2,3,4,5,6]
-    for i in g:
-        model = compute_clustering_model(method,X,i)
-        weighted_clusters(model, bundlei.s_list, bundlei.vols,bundlei.folder_name, file_name = 'clustered_'+bundle+'_'+str(i))
+
+    downsamp=2
+    if downsamp != 1:
+        bundlei.vols = bundlei.vols[::downsamp]
+        bundlei.s_list = bundlei.s_list[::downsamp]
+
+    bundlei.show_bundle_slices()
 

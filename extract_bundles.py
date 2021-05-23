@@ -26,7 +26,7 @@ def show_atlas_target_graph(atlas,target,out_path,interactive=True):
     ren.SetBackground(1, 1, 1)
     ren.add(actor.line(atlas, colors=(1, 0, 1)))  # Magenta
     ren.add(actor.line(target, colors=(1, 1, 0)))  # Yellow
-    window.record(ren, out_path=out_path, size=(600, 600))
+    #window.record(ren, out_path=out_path, size=(600, 600))
     if interactive:
         window.show(ren)
 
@@ -54,15 +54,13 @@ def find_bundle(dipy_home,moved,bundle_num, rt=50,mct=0.1):
     return recognized_bundle,bundle_labels, model
 
 
-def extract_one_bundle(file_bundle_name, bundle_num, subji, rt, mct, main_folder):
+def extract_one_bundle(file_bundle_name, bundle_num, n, folder_name, rt, mct, main_folder):
     dipy_home = find_home()
     atlas_file, all_bundles_files = get_bundle_atlas_hcp842()
     sft_atlas = load_trk(atlas_file, "same", bbox_valid_check=False)
     atlas = sft_atlas.streamlines
-    folder_name = main_folder+all_subj_folders[subji]
-    n = all_subj_names[subji]
-    #sft_target = load_trk(folder_name + r'\streamlines'+n+r'_slf_5d.trk', "same", bbox_valid_check=False)
-    sft_target = load_trk(folder_name + r'\streamlines'+n+r'_wholebrain_5d_labmask_msmt.trk', "same", bbox_valid_check=False)
+    #sft_target = load_trk(folder_name + r'\streamlines'+n+r'_wholebrain_5d_labmask_msmt.trk', "same", bbox_valid_check=False)
+    sft_target = load_trk(folder_name + r'\streamlines'+n+r'_wholebrain_5d_labmask.trk', "same", bbox_valid_check=False)
 
     target = sft_target.streamlines
     #show_atlas_target_graph(atlas, target,out_path=folder_name+r'\try_atlas_target',interactive=True)
