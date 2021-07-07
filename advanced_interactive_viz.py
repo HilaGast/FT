@@ -262,13 +262,13 @@ class AdvanceInteractive:
 
 if __name__ == '__main__':
 
-    main_folder = r'F:\Hila\Ax3D_Pack\V6\v7calibration'
+    main_folder = r'C:\Users\Admin\Desktop\v7_calibration\TheBase4ever'
     s = all_subj_folders[10]
     n = all_subj_names[10]
-    img_name = r'\fascicles_Axpasi7_wholebrain_2d_cmc_PFT.png'
+    img_name = r'\fascicles_Axpasi7_wholebrain_8d_cmc_PFT_CC.png'
     #img_name = r'\fascicles_Axpasi7_a3b2_5d_cc.png'
 
-    bundle = r'002398_wholebrain_2d_labmask_sh6_cmc_pft'
+    bundle = r'002398_wholebrain_8d_labmask_sh8_cmc_pft_CC'
 
     #img_name = r'\fascicles_AxCaliber7_weighted_4d_cr_pasivals.png'
     #bundle = r'cr'

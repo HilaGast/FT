@@ -29,7 +29,7 @@ def basic_files(cortex_only=True,atlas_type='mega'):
     atlas_template = os_path_2_fsl(atlas_template)
 
     #folder_name = r'F:\Hila\Ax3D_Pack\V6\after_file_prep'
-    folder_name = r'F:\Hila\Ax3D_Pack\V6\v7calibration'
+    folder_name = r'C:\Users\Admin\Desktop\v7_calibration\Old_AxCaliber\C1156_03'
     #folder_name = r'F:\Hila\balance\ec\after'
     all_subj_folders = os.listdir(folder_name)
     subj = all_subj_folders
