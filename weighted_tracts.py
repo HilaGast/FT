@@ -420,7 +420,7 @@ def weighted_con_mat_mega(bvec_file, weight_by, grouping, idx, folder_name,fig_t
 
     weight_by_data, affine = load_weight_by_img(folder_name,weight_by)
 
-    pfr_data = load_weight_by_img(folder_name,'1.5_2_AxFr5')[0]
+    pfr_data = load_weight_by_img(folder_name,'3_2_AxFr7')[0]
 
     vol_vec = weight_by_data.flatten()
     q = np.quantile(vol_vec[vol_vec>0], 0.95)
@@ -539,7 +539,7 @@ def weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_t
 def load_weight_by_img(folder_name, weight_by):
     import nibabel as nib
     for file in os.listdir(folder_name):
-        if weight_by in file and file.endswith('.nii'):
+        if weight_by in file and file.endswith(weight_by+'.nii') and not file.startswith("r"):
             weight_by_file = os.path.join(folder_name,file)
             continue
     weight_by_img = nib.load(weight_by_file)

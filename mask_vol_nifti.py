@@ -2,6 +2,7 @@ from all_subj import *
 from weighted_tracts import load_ft, load_weight_by_img, weighting_streamlines, load_dwi_files
 import numpy as np
 import nibabel as nib
+from dipy.tracking.streamline import set_number_of_points
 
 
 def vol_map(streamlines, affine, vol_vec, vol_dims):
@@ -34,7 +35,7 @@ def vol_map(streamlines, affine, vol_vec, vol_dims):
     [0,0,2] passes through [0,0,1]. Consider subsegmenting the streamlines when
     the edges of the voxels are smaller than the steps of the streamlines.
     """
-
+    #streamlines = set_number_of_points(streamlines,300)
     lin_T, offset = _mapping_to_voxel(affine)
     counts = np.zeros(vol_dims, 'int')
     vols_sum = np.zeros(vol_dims, 'float64')
@@ -52,8 +53,8 @@ def vol_map(streamlines, affine, vol_vec, vol_dims):
 
 
 if __name__ == '__main__':
-    s = all_subj_folders[2]
-    n = all_subj_names[2]
+    s = all_subj_folders[8]
+    n = all_subj_names[8]
     folder_name = subj_folder + s
     dir_name = folder_name + '\streamlines'
     gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name, small_delta=15)
@@ -68,8 +69,8 @@ if __name__ == '__main__':
     vol_file_name = folder_name+f'{n}_ADD_along_streamlines.nii'
     nib.save(vol_img,vol_file_name)
 
-    #vox_vol_masked = vox_vol*white_matter
-    #masked_vol_img = nib.Nifti1Image(vox_vol_masked,affine,empty_header)
-    #masked_vol_file_name = folder_name+f'{n}_ADD_along_streamlines_WMmasked.nii'
-    #nib.save(masked_vol_img,masked_vol_file_name)
+    vox_vol_masked = vox_vol*white_matter
+    masked_vol_img = nib.Nifti1Image(vox_vol_masked,affine,empty_header)
+    masked_vol_file_name = folder_name+f'{n}_ADD_along_streamlines_WMmasked.nii'
+    nib.save(masked_vol_img,masked_vol_file_name)
 

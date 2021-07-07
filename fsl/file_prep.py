@@ -174,6 +174,9 @@ def os_path_2_fsl(path):
     return path
 
 
+
+
+
 def all_func_to_run(s, folder_name, atlas_template, atlas_label):
     subj_name = r'/' + s + r'/'
     subj_folder = folder_name + subj_name
@@ -226,8 +229,10 @@ def all_func_to_run(s, folder_name, atlas_template, atlas_label):
 if __name__ == '__main__':
     from multiprocessing import Process
     subj, folder_name, atlas_template, atlas_label = basic_files(False, atlas_type='yeo7_200')
-    for s in subj[9:10]:
+    for s in subj[::]:
         all_func_to_run(s, folder_name, atlas_template, atlas_label)
+
+
 
 
     '''multi procesing:'''

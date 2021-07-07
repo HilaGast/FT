@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from FT.all_subj import all_subj_names,all_subj_folders
+from all_subj import all_subj_names,all_subj_folders
 import numpy as np
 
 def all_g_prop():

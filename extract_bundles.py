@@ -41,9 +41,9 @@ def find_bundle(dipy_home,moved,bundle_num, rt=50,mct=0.1):
 
     sft_model = load_trk(model_file, "same", bbox_valid_check=False)
     model = sft_model.streamlines
-
+    moved = set_number_of_points(moved, 20)
     rb = RecoBundles(moved, verbose=True, rng=np.random.RandomState(2001),nb_pts=20)
-    model = set_number_of_points(model,20)
+    #model = set_number_of_points(model,20)
     recognized_bundle, bundle_labels = rb.recognize(model_bundle=model,
                                                   model_clust_thr=mct,
                                                   reduction_thr=rt,
@@ -54,17 +54,16 @@ def find_bundle(dipy_home,moved,bundle_num, rt=50,mct=0.1):
     return recognized_bundle,bundle_labels, model
 
 
-def extract_one_bundle(file_bundle_name, bundle_num, n, folder_name, rt, mct, main_folder):
-    dipy_home = find_home()
+def transform_bundles(folder_name, n, wb_tracts_type = '_wholebrain_5d_labmask_msmt'):
     atlas_file, all_bundles_files = get_bundle_atlas_hcp842()
     sft_atlas = load_trk(atlas_file, "same", bbox_valid_check=False)
     atlas = sft_atlas.streamlines
-    #sft_target = load_trk(folder_name + r'\streamlines'+n+r'_wholebrain_5d_labmask_msmt.trk', "same", bbox_valid_check=False)
-    sft_target = load_trk(folder_name + r'\streamlines'+n+r'_wholebrain_5d_labmask.trk', "same", bbox_valid_check=False)
+    sft_target = load_trk(folder_name + r'\streamlines'+n+wb_tracts_type+r'.trk', "same", bbox_valid_check=False)
 
     target = sft_target.streamlines
     #show_atlas_target_graph(atlas, target,out_path=folder_name+r'\try_atlas_target',interactive=True)
-
+    #atlas = set_number_of_points(atlas,20)
+    #target = set_number_of_points(target,20)
     moved, transform, qb_centroids1, qb_centroids2 = whole_brain_slr(
     atlas, target, x0='affine', verbose=True, progressive=True,
     rng=np.random.RandomState(1984))
@@ -72,7 +71,12 @@ def extract_one_bundle(file_bundle_name, bundle_num, n, folder_name, rt, mct, ma
     #show_atlas_target_graph(atlas, moved,out_path=r'',interactive=True)
     #rt=50
     #mct=0.1
-    moved = set_number_of_points(moved, 20)
+    return moved, target
+
+
+def extract_one_bundle(moved, target, file_bundle_name, bundle_num, n, folder_name, rt, mct):
+    dipy_home = find_home()
+    #moved = set_number_of_points(moved, 20)
     recognized_bundle,bundle_labels, model = find_bundle(dipy_home,moved,bundle_num, rt, mct)
     nii_file = load_dwi_files(folder_name)[5]
     bundle = target[bundle_labels]

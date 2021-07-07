@@ -1,8 +1,7 @@
 
 import dipy.reconst.dti as dti
 from dipy.reconst.dti import fractional_anisotropy
-from dipy.tracking.stopping_criterion import ThresholdStoppingCriterion
-from organizeTheBase import *
+from folder_organization.organizeTheBase import *
 from dipy.core.gradients import gradient_table
 import nibabel as nib
 all_subj_folders = glob(r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep\post_covid19\post\*')
