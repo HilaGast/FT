@@ -59,6 +59,7 @@ def bet_4_file(file_name):
 
 
 if __name__ == '__main__':
+    '''
     main_path = r'C:\Users\Admin\Desktop\v7_calibration\Old_AxCaliber'
     #rename_folder_files(main_path)
     for sub in glob(f'{main_path}\*'):
@@ -69,9 +70,16 @@ if __name__ == '__main__':
                     file_name = os_path_2_fsl(file_name)
                     file_name = file_name.replace(os.sep,'/')
                     bet_4_file(file_name)
+    '''
 
-
-
+    main_path = r'C:\Users\Admin\Desktop\v7_calibration\hcp'
+    for sub in glob(f'{main_path}\*'):
+        for file in glob(os.path.join(sub, '*')):
+            if file.endswith('.nii'):
+                file_name = file[:-4]
+                file_name = os_path_2_fsl(file_name)
+                file_name = file_name.replace(os.sep,'/')
+                bet_4_file(file_name)
 
 
 

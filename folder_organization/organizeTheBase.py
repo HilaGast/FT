@@ -17,9 +17,9 @@ def copy_files():
 
 def dicom2nii(sub_dir):
     scans = glob(os.path.join(sub_dir, '*/'))
-    folders = ['ep2d_d15.5D60_MB3_AP', 'ep2d_d15.5D60_MB3_PA', 'T1w_MPRAGE_RL']
+    folders = ['ep2d_d15.5D60_MB3_AP', 'ep2d_d15.5D60_MB3_PA', 'MPRAGE', 'd15D45']
     for scan in scans:
-        if folders[0] in scan or folders[1] in scan or folders[2] in scan:
+        if folders[0] in scan or folders[1] in scan or folders[2] in scan or folders[3] in scan:
             cmd = fr'"C:\Program Files\mricron\dcm2nii" -g n -o {sub_dir} {scan}'
             print(cmd)
             os.system(cmd)
@@ -52,7 +52,7 @@ def clean(sub_dir):
 
 if __name__ == '__main__':
     #copy_files()
-    for sub in glob(r'F:\Hila\balance\eo\before\*'):
+    for sub in glob(r'C:\Users\Admin\Desktop\Language\*'):
         dicom2nii(sub)
         clean(sub)
         #rename(os.path.join(sub, 'nifti'))
