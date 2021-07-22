@@ -12,14 +12,37 @@ def choose_group(group):
         for n in names:
             s = os.path.join(subj_folder,n)
             subj.append(s)
-    elif group == 'thebase':
+    elif group == 'thebase4ever':
         subj_folder = r'F:\Hila\Ax3D_Pack\V6\v7calibration\TheBase4Ever'
         names = [ name for name in os.listdir(subj_folder) if os.path.isdir(os.path.join(subj_folder, name)) ]
         for n in names:
             s = os.path.join(subj_folder,n)
             subj.append(s)
 
+    elif group == 'thebase':
+        subj_folder = r'F:\Hila\Ax3D_Pack\V6\v7calibration\TheBase'
+        names = [ name for name in os.listdir(subj_folder) if os.path.isdir(os.path.join(subj_folder, name)) ]
+        for n in names:
+            s = os.path.join(subj_folder,n)
+            subj.append(s)
+
     return subj_folder, subj
+
+
+def choose_condition(main_path):
+    subjD31 = list()
+    subjD45 = list()
+    subjD60 = list()
+
+    names = [name for name in os.listdir(main_path) if os.path.isdir(os.path.join(main_path, name))]
+    for n in names:
+        s = os.path.join(main_path, n)
+        subjD31.append(os.path.join(s,'d18D31g7.19'))
+        subjD45.append(os.path.join(s,'d13.2D45g7.69'))
+        subjD60.append(os.path.join(s,'d11.3D60g7.64'))
+
+    return subjD31, subjD45, subjD60
+
 
 
 def load_mat_cc_file(folder_name):
@@ -71,6 +94,12 @@ def create_cc_vioplot(cc_parts_table):
     ax = sb.violinplot(data = cc_parts_table, palette="Set1")
     plt.show()
 
+def create_cc_boxplot(cc_parts_table):
+    import seaborn as sb
+    import matplotlib.pyplot as plt
+    ax = sb.boxplot(data = cc_parts_table, palette="Set1")
+    plt.show()
+
 
 def create_comperative_cc_vioplot(cc_parts_table, vio_type):
     import seaborn as sb
@@ -84,6 +113,13 @@ def create_comperative_cc_vioplot(cc_parts_table, vio_type):
         plt.show()
 
 
+def create_comperative_cc_boxplot(cc_parts_table):
+    import seaborn as sb
+    import matplotlib.pyplot as plt
+    ax = sb.boxplot(x = 'CC part', y= 'ADD', hue = 'Protocol', data = cc_parts_table, palette="Set2")
+    plt.show()
+
+
 def show_vioplot_single_protocol(protocol):
     subj_folder, subj = choose_group(protocol)
     val_mat = np.zeros((len(subj),5))
@@ -92,27 +128,31 @@ def show_vioplot_single_protocol(protocol):
         slice_num, mask_genu, mask_abody, mask_mbody, mask_pbody, mask_splenium = load_mat_cc_file(folder_name)
         slice_vol = find_slice(folder_name, '3_2_AxPasi7', slice_num, protocol)
         for mask in [mask_genu,mask_abody,mask_mbody,mask_pbody,mask_splenium]:
-            parameter_val = calc_parameter_by_mask('mean',slice_vol,mask)
+            parameter_val = calc_parameter_by_mask('median',slice_vol,mask)
             val_vec.append(parameter_val)
         val_mat[i,:] = val_vec
 
     cc_parts_table = pd.DataFrame(val_mat, columns = ['Genu','Anterior Body','Mid Body','Posterior Body','Splenium'])
+    cc_parts_table,num_lo = detect_and_remove_outliers(cc_parts_table)
     print(cc_parts_table)
+    print(f'Removed {num_lo} outliers')
     create_cc_vioplot(cc_parts_table)
+    #create_cc_boxplot(cc_parts_table)
 
 
 def show_vioplot_compare_protocols(vio_type):
     subj_hcp = choose_group('hcp')[1]
     subj_thebase = choose_group('thebase')[1]
+    subj_thebase4ever = choose_group('thebase4ever')[1]
 
-    protocol_list = ['HCP']*len(subj_hcp)*5+['The Base']*len(subj_thebase)*5
-    parts_list = ['Genu','Anterior Body', 'Mid Body', 'Posterior Body', 'Splenium']*(len(subj_hcp)+len(subj_thebase))
+    protocol_list = ['HCP']*len(subj_hcp)*5+['The Base']*len(subj_thebase)*5+['The Base 4 Ever']*len(subj_thebase4ever)*5
+    parts_list = ['Genu','Anterior Body', 'Mid Body', 'Posterior Body', 'Splenium']*(len(subj_hcp)+len(subj_thebase)+len(subj_thebase4ever))
     val_list = []
     for i,folder_name in enumerate(subj_hcp):
         slice_num, mask_genu, mask_abody, mask_mbody, mask_pbody, mask_splenium = load_mat_cc_file(folder_name)
         slice_vol = find_slice(folder_name, '3_2_AxPasi7', slice_num,'hcp')
         for mask in [mask_genu,mask_abody,mask_mbody,mask_pbody,mask_splenium]:
-            parameter_val = calc_parameter_by_mask('mean',slice_vol,mask)
+            parameter_val = calc_parameter_by_mask('median',slice_vol,mask)
             val_list.append(parameter_val)
 
 
@@ -120,17 +160,81 @@ def show_vioplot_compare_protocols(vio_type):
         slice_num, mask_genu, mask_abody, mask_mbody, mask_pbody, mask_splenium = load_mat_cc_file(folder_name)
         slice_vol = find_slice(folder_name, '3_2_AxPasi7', slice_num,'thebase')
         for mask in [mask_genu,mask_abody,mask_mbody,mask_pbody,mask_splenium]:
-            parameter_val = calc_parameter_by_mask('mean',slice_vol,mask)
+            parameter_val = calc_parameter_by_mask('median',slice_vol,mask)
+            val_list.append(parameter_val)
+
+    for i,folder_name in enumerate(subj_thebase4ever):
+        slice_num, mask_genu, mask_abody, mask_mbody, mask_pbody, mask_splenium = load_mat_cc_file(folder_name)
+        slice_vol = find_slice(folder_name, '3_2_AxPasi7', slice_num,'thebase4ever')
+        for mask in [mask_genu,mask_abody,mask_mbody,mask_pbody,mask_splenium]:
+            parameter_val = calc_parameter_by_mask('median',slice_vol,mask)
             val_list.append(parameter_val)
 
     d_vals = {'Protocol':protocol_list, 'CC part': parts_list,'ADD':val_list}
     cc_parts_table = pd.DataFrame(d_vals)
+
     create_comperative_cc_vioplot(cc_parts_table, vio_type)
 
 
+def detect_and_remove_outliers(table):
+    from sklearn.neighbors import LocalOutlierFactor
+    lof = LocalOutlierFactor()
+    numeric_table = table.select_dtypes(include='float64')
+    detect_outlier = lof.fit_predict(numeric_table.values)
+    mask = detect_outlier != -1
+    new_table = table[mask]
+
+    return new_table, sum(~mask)
+
+
+def anova_for_cc_parts(table):
+    from scipy.stats import f_oneway
+    f_oneway(table['Genu'], table['Anterior Body'], table['Mid Body'],
+             table['Posterior Body'], table['Splenium'])
+
+    #from scipy.stats import kruskal
+    #kruskal(table['Genu'], table['Anterior Body'], table['Mid Body'],
+    #         table['Posterior Body'], table['Splenium'])
+
+def compare_deltas_old_axcaliber(main_path):
+    subjD31, subjD45, subjD60 = choose_condition(main_path)
+
+    deltas_list = ['D31 d18']*len(subjD31)*5+['D45 d13.2']*len(subjD45)*5+['D60 d11.3']*len(subjD60)*5
+    parts_list = ['Genu','Anterior Body', 'Mid Body', 'Posterior Body', 'Splenium']*(len(subjD31)+len(subjD45)+len(subjD60))
+    val_list = []
+    for i,folder_name in enumerate(subjD31):
+        slice_num, mask_genu, mask_abody, mask_mbody, mask_pbody, mask_splenium = load_mat_cc_file(folder_name)
+        slice_vol = find_slice(folder_name, '3_2_AxPasi7', slice_num,'thebase')
+        for mask in [mask_genu,mask_abody,mask_mbody,mask_pbody,mask_splenium]:
+            parameter_val = calc_parameter_by_mask('median',slice_vol,mask)
+            val_list.append(parameter_val)
+
+    for i,folder_name in enumerate(subjD45):
+        slice_num, mask_genu, mask_abody, mask_mbody, mask_pbody, mask_splenium = load_mat_cc_file(folder_name)
+        slice_vol = find_slice(folder_name, '3_2_AxPasi7', slice_num,'thebase')
+        for mask in [mask_genu,mask_abody,mask_mbody,mask_pbody,mask_splenium]:
+            parameter_val = calc_parameter_by_mask('median',slice_vol,mask)
+            val_list.append(parameter_val)
+
+    for i,folder_name in enumerate(subjD60):
+        slice_num, mask_genu, mask_abody, mask_mbody, mask_pbody, mask_splenium = load_mat_cc_file(folder_name)
+        slice_vol = find_slice(folder_name, '3_2_AxPasi7', slice_num,'thebase')
+        for mask in [mask_genu,mask_abody,mask_mbody,mask_pbody,mask_splenium]:
+            parameter_val = calc_parameter_by_mask('median',slice_vol,mask)
+            val_list.append(parameter_val)
+
+    d_vals = {'Protocol':deltas_list, 'CC part': parts_list,'ADD':val_list}
+    cc_parts_table = pd.DataFrame(d_vals)
+    #create_comperative_cc_vioplot(cc_parts_table[cc_parts_table['Protocol']=='D31 d18'],'sidebyside')
+    create_comperative_cc_vioplot(cc_parts_table,'sidebyside')
+
+
 if __name__ == '__main__':
-    #show_vioplot_single_protocol('hcp')
-    show_vioplot_compare_protocols(vio_type = 'sidebyside')
+    #show_vioplot_single_protocol('thebase4ever')
+    #show_vioplot_compare_protocols(vio_type = 'sidebyside')
     #show_vioplot_compare_protocols(vio_type='split')
+
+    main_path = r'F:\Hila\Ax3D_Pack\V6\v7calibration\Old_AxCaliber'
+    compare_deltas_old_axcaliber(main_path)
 
 

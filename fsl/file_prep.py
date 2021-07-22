@@ -19,18 +19,18 @@ def basic_files(cortex_only=True,atlas_type='mega'):
 
 
     elif atlas_type == 'yeo7_200':
-        atlas_label = r'F:\Hila\aal\yeo7_200\yeo7_200_atlas.nii'
-        atlas_template = r'F:\Hila\aal\yeo7_200\Schaefer_template.nii'
-        #atlas_label = r'F:\Hila\aal\aal3\registered\AAL3_highres_atlas_corrected.nii'
-        #atlas_template = r'F:\Hila\aal\aal3\registered\MNI152_T1_1mm.nii'
+        #atlas_label = r'F:\Hila\aal\yeo7_200\yeo7_200_atlas.nii'
+        #atlas_template = r'F:\Hila\aal\yeo7_200\Schaefer_template.nii'
+        atlas_label = r'C:\Users\Admin\my_scripts\aal\yeo7_200\yeo7_200_atlas.nii'
+        atlas_template = r'C:\Users\Admin\my_scripts\aal\yeo7_200\Schaefer_template.nii'
 
 
     atlas_label = os_path_2_fsl(atlas_label)
     atlas_template = os_path_2_fsl(atlas_template)
 
     #folder_name = r'F:\Hila\Ax3D_Pack\V6\after_file_prep'
-    folder_name = r'C:\Users\Admin\Desktop\v7_calibration\Old_AxCaliber\C1156_03'
-    #folder_name = r'F:\Hila\balance\ec\after'
+    #folder_name = r'C:\Users\Admin\Desktop\v7_calibration\TheBase4Ever'
+    folder_name = r'C:\Users\Admin\Desktop\Language'
     all_subj_folders = os.listdir(folder_name)
     subj = all_subj_folders
 
@@ -40,7 +40,7 @@ def basic_files(cortex_only=True,atlas_type='mega'):
 def subj_files(subj_folder):
 
     for file in os.listdir(subj_folder):
-        if 'wMPRAGERL' in file and not (file.startswith('r') or 'brain' in file):
+        if 'MPRAGE' in file and not (file.startswith('r') or 'brain' in file):
             mprage_file_name = file
         if file.endswith('001.nii') and 'AP' in file:
             diff_file_name = file
@@ -186,7 +186,7 @@ def all_func_to_run(s, folder_name, atlas_template, atlas_label):
 
     subj_folder = os_path_2_fsl(subj_folder)
 
-    #eddy_corr(subj_folder,diff_file_name,pa_file_name)
+    eddy_corr(subj_folder,diff_file_name,pa_file_name,acqr_file='/mnt/c/Users/Admin/Desktop/language_eddy/datain.txt',index_file='/mnt/c/Users/Admin/Desktop/language_eddy/index.txt')
 
     subj_mprage, out_brain = bet_4_regis_mprage(subj_folder, mprage_file_name)
 
@@ -221,7 +221,7 @@ def all_func_to_run(s, folder_name, atlas_template, atlas_label):
     atlas_labels_registered = apply_fnirt_warp_on_label(subj_folder, atlas_label, out_registered, warp_name)
 
     '''FAST segmentation:   '''
-    #fast_seg(out_registered)
+    fast_seg(out_registered)
 
     print('Finished file prep for ' + subj_name[:-1])
 
@@ -229,7 +229,7 @@ def all_func_to_run(s, folder_name, atlas_template, atlas_label):
 if __name__ == '__main__':
     from multiprocessing import Process
     subj, folder_name, atlas_template, atlas_label = basic_files(False, atlas_type='yeo7_200')
-    for s in subj[::]:
+    for s in subj[16:]:
         all_func_to_run(s, folder_name, atlas_template, atlas_label)
 
 

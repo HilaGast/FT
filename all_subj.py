@@ -16,8 +16,8 @@ elif current_computer == 'WORK':
 
 
 elif current_computer == 'SERVER':
-    #subj_folder = r'F:\Hila\balance\ec\before'
-    subj_folder = r'F:\Hila\Ax3D_Pack\V6\v7calibration'
+    subj_folder = r'F:\Hila\balance\eo\before'
+    #subj_folder = r'F:\Hila\Ax3D_Pack\V6\v7calibration'
     #index_to_text_file = r'F:\Hila\aal\megaatlas\megaatlas2nii.txt'
     #index_to_text_file = r'F:\Hila\aal\aal3\aal2nii.txt'
     index_to_text_file = r'F:\Hila\aal\yeo7_200\index2label.txt'
@@ -29,7 +29,7 @@ all_subj_folders = list()
 all_subj_names = list()
 for subj in all_folders[start_with::]:
     name = subj.split('_')
-    name = '/'+name[3]
+    name = '/'+name[1]
     name = name.replace('/',os.sep)
     all_subj_names.append(name)
     subj = '/' + subj

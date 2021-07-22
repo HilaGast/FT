@@ -73,8 +73,8 @@ def create_seeds(folder_name, lab_labels_index, affine, use_mask = True, mask_ty
 
 
 def create_csd_model(data, gtab, white_matter, sh_order=6):
-    from dipy.reconst.csdeconv import ConstrainedSphericalDeconvModel,auto_response
-    response, ratio = auto_response(gtab, data, roi_radius=10, fa_thr=0.7)
+    from dipy.reconst.csdeconv import ConstrainedSphericalDeconvModel,auto_response_ssst
+    response, ratio = auto_response_ssst(gtab, data, roi_radius=10, fa_thr=0.7)
 
     csd_model = ConstrainedSphericalDeconvModel(gtab, response, sh_order=sh_order)
     csd_fit = csd_model.fit(data, mask=white_matter)
@@ -586,9 +586,9 @@ if __name__ == '__main__':
     #idd = [38,39,40,41,42,43,44,45,46,47,48,49]
     #subj = [s for i, s in enumerate(all_subj_folders) if i in idd]
     #names = [n for i, n in enumerate(all_subj_names) if i in idd]
-    tractography_method = "msmt"
+    tractography_method = "csd"
 
-    for s,n in zip(subj[15::],names[15::]):
+    for s,n in zip(subj[13:14],names[13:14]):
         folder_name = subj_folder + s
         dir_name = folder_name + '\streamlines'
         gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name,small_delta=15)
@@ -607,11 +607,11 @@ if __name__ == '__main__':
         streamlines = create_streamlines(model_fit, seeds, affine, gtab, data, white_matter, classifier_type="fa")
         save_ft(folder_name, n, streamlines, nii_file, file_name=tract_file_name)
 
-        #tract_path = f'{dir_name}{n}_wholebrain_5d_labmask_msmt.trk'
-        #idx = nodes_labels_yeo7(index_to_text_file)[1]
-        #streamlines = load_ft(tract_path, nii_file)
+        tract_path = f'{dir_name}{n}_wholebrain_5d_labmask_msmt.trk'
+        idx = nodes_labels_yeo7(index_to_text_file)[1]
+        streamlines = load_ft(tract_path, nii_file)
 
-        #weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask_yeo7_200_FA',
-        #                                  weight_by='_FA')
-        #weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_4d_labmask_yeo7_200',
-        #                                  weight_by='_AxPasi')
+        weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_5d_labmask_yeo7_200_FA',
+                                          weight_by='_FA')
+        weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_5d_labmask_yeo7_200',
+                                          weight_by='_AxPasi7')
