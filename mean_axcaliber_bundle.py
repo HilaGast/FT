@@ -1,20 +1,20 @@
 
 from dipy.io.streamline import load_trk
-from all_subj import *
 from single_fascicle_vizualization import streamline_mean_fascicle_value_weighted
-from weighted_tracts import load_dwi_files
+from weighted_tracts import load_dwi_files,weighting_streamlines
 import numpy as np
 import os
 
-main_folder = subj_folder
-names = all_subj_names
-folders = all_subj_folders
 
-bundle_name = 'F_L_R_mct001rt20'
+main_folder = r'F:\Hila\balance\eo\after'
 
-for f,n in zip(folders,names):
-    folder_name = f'{main_folder}{f}'
-    bundle_file_name = rf'{folder_name}\streamlines{n}_{bundle_name}.trk'
+bundle_name = 'SCP'
+file_bundle_name = bundle_name + r'_mct01rt20_4d'
+
+for subj in os.listdir(main_folder):
+    folder_name = os.path.join(main_folder, subj)
+    full_bund_name = f'{subj}_{file_bundle_name}'
+    bundle_file_name = rf'{folder_name}\streamlines\{full_bund_name}.trk'
 
     if not os.path.exists(bundle_file_name):
         print('Moving on!')
@@ -22,9 +22,10 @@ for f,n in zip(folders,names):
 
     bundle = load_trk(bundle_file_name, "same", bbox_valid_check=False)
     bundle = bundle.streamlines
-    nii_file = load_dwi_files(folder_name)[5]
-    streamlines, vec_vols = streamline_mean_fascicle_value_weighted(folder_name, n, nii_file,bundle_name,
-                                                                    bundle, weight_by='_AxPasi')
-    mean_bundle = np.mean(vec_vols)
+    bvec_file = load_dwi_files(folder_name)[6]
+    mean_vols = weighting_streamlines(folder_name,bundle,bvec_file,weight_by='AxPasi7')
 
-    print(f'{n} mean value for {bundle_name} : {mean_bundle:.2f}')
+    mean_bundle = np.nanmean(mean_vols)
+    median_bundle = np.nanmedian(mean_vols)
+
+    print(f'{subj} mean value for {bundle_name} : {mean_bundle:.2f}\n {subj} median value for {bundle_name} : {median_bundle:.2f} \n')

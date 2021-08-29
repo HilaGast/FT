@@ -1,7 +1,7 @@
 from os.path import join as pjoin
-from FT.weighted_tracts import *
-from FT.clustering.cluster_fascicles import compute_clustering_model, clustering_input
-from FT.single_fascicle_vizualization import show_fascicles_wholebrain
+from weighted_tracts import *
+from clustering.cluster_fascicles import compute_clustering_model, clustering_input
+from single_fascicle_vizualization import show_fascicles_wholebrain
 
 class ClusterBundle:
 

@@ -227,7 +227,7 @@ def find_bundle(folder_name, n, nii_file, mask_type):
 
 def streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, mask_type,masked_streamlines, weight_by='1.5_2_AxPasi5'):
 
-    lab_labels_index, affine = nodes_by_index_general(folder_name)
+    lab_labels_index, affine = nodes_by_index_general(folder_name,atlas='yeo7_200')
     streamline_dict = create_streamline_dict(masked_streamlines, lab_labels_index, affine)
     bvec_file = load_dwi_files(folder_name)[6]
     idx = nodes_labels_mega(index_to_text_file)[1]

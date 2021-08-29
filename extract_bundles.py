@@ -10,7 +10,7 @@ from all_subj import all_subj_folders, all_subj_names, subj_folder
 from weighted_tracts import save_ft,load_dwi_files
 from remove_cci_outliers import remove_cci_outliers
 from dipy.tracking.streamline import set_number_of_points
-
+import glob
 
 def find_home():
     if 'DIPY_HOME' in os.environ:
@@ -54,11 +54,11 @@ def find_bundle(dipy_home,moved,bundle_num, rt=50,mct=0.1):
     return recognized_bundle,bundle_labels, model
 
 
-def transform_bundles(folder_name, n, wb_tracts_type = '_wholebrain_5d_labmask_msmt'):
+def transform_bundles(wb_tracts_name):
     atlas_file, all_bundles_files = get_bundle_atlas_hcp842()
     sft_atlas = load_trk(atlas_file, "same", bbox_valid_check=False)
     atlas = sft_atlas.streamlines
-    sft_target = load_trk(folder_name + r'\streamlines'+n+wb_tracts_type+r'.trk', "same", bbox_valid_check=False)
+    sft_target = load_trk(wb_tracts_name, "same", bbox_valid_check=False)
 
     target = sft_target.streamlines
     #show_atlas_target_graph(atlas, target,out_path=folder_name+r'\try_atlas_target',interactive=True)
@@ -74,7 +74,7 @@ def transform_bundles(folder_name, n, wb_tracts_type = '_wholebrain_5d_labmask_m
     return moved, target
 
 
-def extract_one_bundle(moved, target, file_bundle_name, bundle_num, n, folder_name, rt, mct):
+def extract_one_bundle(moved, target, full_bund_name, bundle_num, subj, folder_name, rt, mct):
     dipy_home = find_home()
     #moved = set_number_of_points(moved, 20)
     recognized_bundle,bundle_labels, model = find_bundle(dipy_home,moved,bundle_num, rt, mct)
@@ -85,14 +85,15 @@ def extract_one_bundle(moved, target, file_bundle_name, bundle_num, n, folder_na
         model=[]
         recognized_bundle=[]
         bundle_labels=[]
-        print(f"Couldn't find {file_bundle_name} for {n}")
+        print(f"Couldn't find {full_bund_name} for {subj}")
     else:
         keep_s,keep_i = remove_cci_outliers(bundle)
         new_s = []
         new_s += [bundle[s1] for s1 in keep_i]
-        save_ft(folder_name, n, new_s, nii_file, file_name='_'+file_bundle_name+'.trk')
+        save_ft(folder_name, '', new_s, nii_file, file_name=rf'\{full_bund_name}.trk')
 
     return model,recognized_bundle,bundle_labels
+
 
 
 def show_model_reco_bundles(model,recognized_bundle,folder_name,file_bundle_name,interactive=True):
@@ -110,27 +111,38 @@ def show_model_reco_bundles(model,recognized_bundle,folder_name,file_bundle_name
 
 
 if __name__ == '__main__':
-    file_bundle_name = r'F_L_R_mct001rt20'
-    main_folder = subj_folder
-
-    bundle_num = 41
+    bundle_dict = {51:'MCP',67:'SCP',42:'ICP_L',43:'ICP_R',60:'OR_L',61:'OR_R',25:'CST_L',26:'CST_R'}
+    #file_bundle_name = r'F_L_R_mct001rt20'
+    main_folder = r'F:\Hila\balance\ec'
+    #bundle_num = 41
     rt=20
-    mct=0.001
+    mct=0.01
+    for group in glob.glob(main_folder+r'*/*/'):
+        for subj in os.listdir(group):
+            fol = os.path.join(group,subj)
+            tracts_folder = f'{fol}\streamlines'
+            wb_bundle_name = glob.glob(tracts_folder+'*/*_wholebrain_4d_labmask.trk')
 
-    for (subji,subj),fol in zip(enumerate(all_subj_names),all_subj_folders):
-        tracts_folder = f'{main_folder}{fol}\streamlines'
-        full_bund_name = f'{subj}_{file_bundle_name}'
-        if os.path.isdir(tracts_folder) and f'{full_bund_name[1::]}.trk' in os.listdir(tracts_folder):
-            print('Moving on!')
-            continue
-        elif not os.path.exists(f'{tracts_folder}\{subj}_wholebrain_4d_labmask.trk'):
-            print('Moving on!')
-            continue
-        model, recognized_bundle, bundle_labels = extract_one_bundle(file_bundle_name, bundle_num, subji, rt, mct, main_folder)
-        print(f'finished to extract {file_bundle_name} for subj {subj}')
+            if not wb_bundle_name:
+                print('Moving on!')
+                continue
 
+            wb_bundle_name = wb_bundle_name[0]
 
+            moved, target = transform_bundles(wb_bundle_name)
 
+            for bnum, b in bundle_dict.items():
+                print(b)
+                file_bundle_name = b + r'_mct01rt20_4d'
+
+                full_bund_name = f'{subj}_{file_bundle_name}'
+                if os.path.isdir(tracts_folder) and f'{full_bund_name}.trk' in os.listdir(tracts_folder):
+                    print('Moving on!')
+                    continue
+                else:
+                    model, recognized_bundle, bundle_labels = extract_one_bundle(moved, target, full_bund_name,
+                                                                                 bnum, subj, fol, rt, mct)
+                    print(f'finished to extract {file_bundle_name} for subj {subj}')
 
 
 

@@ -151,7 +151,6 @@ def create_fa_classifier(gtab,data,white_matter):
     return fa, classifier
 
 
-
 def create_cmc_classifier(folder_name):
     from dipy.tracking.stopping_criterion import CmcStoppingCriterion
 
@@ -168,6 +167,25 @@ def create_cmc_classifier(folder_name):
                                                   average_voxel_size=voxel_size)
 
     return cmc_criterion, step_size
+
+
+def create_act_classifier(fa,folder_name,labels):  # Does not working
+    from dipy.tracking.stopping_criterion import ActStoppingCriterion
+    background = np.ones(labels.shape)
+    background[(np.asarray(labels)>0) > 0] = 0
+    include_map = np.zeros(fa.shape)
+    lab = f'{folder_name}{os.sep}rMegaAtlas_cortex_Labels.nii'
+    lab_file = nib.load(lab)
+    lab_labels = lab_file.get_data()
+    include_map[background>0] = 1
+    include_map[lab_labels > 0] = 1
+    include_map[fa>0.18] = 1
+    include_map = include_map==1
+    exclude_map = labels==1
+
+    act_classifier = ActStoppingCriterion(include_map, exclude_map)
+
+    return act_classifier
 
 
 def create_streamlines(model_fit, seeds, affine, gtab=None, data=None, white_matter=None, folder_name = None, classifier_type="fa"):
@@ -231,11 +249,13 @@ def weighting_streamlines(folder_name, streamlines, bvec_file, show=False, weigh
     q = np.quantile(vol_vec[vol_vec>0], 0.95)
     mean_vol_per_tract = []
     for s, pfr in zip(vol_per_tract, pfr_per_tract):
+    #for s in vol_per_tract:
         s = np.asanyarray(s)
         non_out = [s < q]
         pfr = np.asanyarray(pfr)
         high_pfr = [pfr > 0.5]
         mean_vol_per_tract.append(np.nanmedian(s[tuple(non_out and high_pfr)]))
+        #mean_vol_per_tract.append(np.nanmedian(s[tuple(non_out)]))
 
     if show:
         show_tracts(hue,saturation,scale,streamlines,mean_vol_per_tract,folder_name,fig_type +'_'+weight_by+'_a')
@@ -586,9 +606,9 @@ if __name__ == '__main__':
     #idd = [38,39,40,41,42,43,44,45,46,47,48,49]
     #subj = [s for i, s in enumerate(all_subj_folders) if i in idd]
     #names = [n for i, n in enumerate(all_subj_names) if i in idd]
-    tractography_method = "csd"
+    tractography_method = "msmt"
 
-    for s,n in zip(subj[13:14],names[13:14]):
+    for s,n in zip(subj[::],names[::]):
         folder_name = subj_folder + s
         dir_name = folder_name + '\streamlines'
         gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name,small_delta=15)

@@ -1,5 +1,5 @@
 import networkx as nx
-from nxviz.plots import CircosPlot
+import nxviz as nv
 import matplotlib.pyplot as plt
 import numpy as np
 from all_subj import index_to_text_file
@@ -29,8 +29,8 @@ for l,i in zip(labels_headers,id):
     #nodes_labels[i] = '_'.join(lparts[1:])
     nodes_labels[i]=f'{lparts[1]}_{lparts[2]}_{lparts[-1]}'
     #nodes_labels[i]=l
-pmat_name = r'C:\Users\Admin\Desktop\balance_plasticity\yeo\eo_pval_axcaliber.npy'
-tmat_name = r'C:\Users\Admin\Desktop\balance_plasticity\yeo\eo_ttest_axcaliber.npy'
+pmat_name = r'F:\Hila\balance\eo_pval_aal_norm_add.npy'
+tmat_name = r'F:\Hila\balance\eo_ttest_aal_norm_add.npy'
 pmat = np.load(pmat_name)
 mat = np.load(tmat_name)
 pmat = pmat[id]
@@ -60,18 +60,19 @@ for v, w in G.edges:
         G.edges[v, w]['sign'] = 'neg'
 
 for n in G.nodes():
-    G.node[n]['size']=3
+    G.nodes[n]['size']=3
     if n>len(G)/2:
-        G.node[n]['side'] = "left"
+        G.nodes[n]['side'] = "left"
     else:
-        G.node[n]['side'] = "right"
+        G.nodes[n]['side'] = "right"
 
 G = nx.relabel_nodes(G,nodes_labels)
 G1=G.subgraph(ii)
 
 nodes_list = [nodes_labels[id[idx[node]]] for node in ii]
 
-c = CircosPlot(G.subgraph(nodes_list), node_labels=True, edge_width='weight',
+c = nv.circos(G)
+c = nv.circos(G.subgraph(nodes_list), node_labels=True, edge_width='weight',
                edge_color='weight',edgeprops = {"facecolor": "none", "alpha": 1},
                fig_size = (15,15),node_label_layout='rotation',group_label_offset=4,
                fontsize=7, node_size='size')

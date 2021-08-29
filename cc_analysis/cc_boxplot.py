@@ -101,15 +101,15 @@ def create_cc_boxplot(cc_parts_table):
     plt.show()
 
 
-def create_comperative_cc_vioplot(cc_parts_table, vio_type):
+def create_comperative_cc_vioplot(cc_parts_table, vio_type, split_by = 'Protocol'):
     import seaborn as sb
     import matplotlib.pyplot as plt
     if vio_type == 'split':
-        ax = sb.violinplot(x = 'CC part', y= 'ADD', hue = 'Protocol', data = cc_parts_table, palette="Set2",split=True)
+        ax = sb.violinplot(x = 'CC part', y= 'ADD', hue = split_by, data = cc_parts_table, palette="Set2",split=True)
         plt.show()
 
     else:
-        ax = sb.violinplot(x = 'CC part', y= 'ADD', hue = 'Protocol', data = cc_parts_table, palette="Set2")
+        ax = sb.violinplot(x = 'CC part', y= 'ADD', hue = split_by, data = cc_parts_table, palette="Set2")
         plt.show()
 
 
@@ -178,11 +178,23 @@ def show_vioplot_compare_protocols(vio_type):
 
 def detect_and_remove_outliers(table):
     from sklearn.neighbors import LocalOutlierFactor
-    lof = LocalOutlierFactor()
-    numeric_table = table.select_dtypes(include='float64')
-    detect_outlier = lof.fit_predict(numeric_table.values)
-    mask = detect_outlier != -1
-    new_table = table[mask]
+    from statsmodels.robust.scale import mad
+    if 'CC part' in table.columns:
+        for part in set(table['CC part']):
+            vals = table['ADD'][table['CC part'] == part].values
+            th = mad(vals)
+            diff = abs(vals - np.median(vals))
+            mask = diff/th>2.5
+            vals[mask] = np.nan
+            table['ADD'][table['CC part'] == part] = vals
+            new_table = table
+            print(sum(mask))
+    else:
+        lof = LocalOutlierFactor()
+        numeric_table = table.select_dtypes(include='float64')
+        detect_outlier = lof.fit_predict(numeric_table.values)
+        mask = detect_outlier != -1
+        new_table = table[mask]
 
     return new_table, sum(~mask)
 
@@ -196,7 +208,7 @@ def anova_for_cc_parts(table):
     #kruskal(table['Genu'], table['Anterior Body'], table['Mid Body'],
     #         table['Posterior Body'], table['Splenium'])
 
-def compare_deltas_old_axcaliber(main_path):
+def compare_deltas_old_axcaliber(main_path,group,norm=False):
     subjD31, subjD45, subjD60 = choose_condition(main_path)
 
     deltas_list = ['D31 d18']*len(subjD31)*5+['D45 d13.2']*len(subjD45)*5+['D60 d11.3']*len(subjD60)*5
@@ -222,11 +234,20 @@ def compare_deltas_old_axcaliber(main_path):
         for mask in [mask_genu,mask_abody,mask_mbody,mask_pbody,mask_splenium]:
             parameter_val = calc_parameter_by_mask('median',slice_vol,mask)
             val_list.append(parameter_val)
-
-    d_vals = {'Protocol':deltas_list, 'CC part': parts_list,'ADD':val_list}
+    if norm:
+        for i,v in enumerate(val_list[0:len(val_list):5]):
+            cc = val_list[i*5:i*5+5]
+            cc = cc/cc[2]
+            val_list[i*5:i*5 + 5] = cc
+    d_vals = {'Protocol':deltas_list, 'CC part': parts_list,'ADD':val_list, 'Group':group}
     cc_parts_table = pd.DataFrame(d_vals)
-    #create_comperative_cc_vioplot(cc_parts_table[cc_parts_table['Protocol']=='D31 d18'],'sidebyside')
-    create_comperative_cc_vioplot(cc_parts_table,'sidebyside')
+    #cc_parts_table = detect_and_remove_outliers(cc_parts_table)[0]
+
+    return cc_parts_table
+
+def compare_group_study_OldAxCaliber(cc_parts_table, protocol):
+    create_comperative_cc_vioplot(cc_parts_table[cc_parts_table['Protocol']==protocol],'sidebyside','Group')
+    #create_comperative_cc_vioplot(cc_parts_table,'sidebyside')
 
 
 if __name__ == '__main__':
@@ -234,7 +255,13 @@ if __name__ == '__main__':
     #show_vioplot_compare_protocols(vio_type = 'sidebyside')
     #show_vioplot_compare_protocols(vio_type='split')
 
-    main_path = r'F:\Hila\Ax3D_Pack\V6\v7calibration\Old_AxCaliber'
-    compare_deltas_old_axcaliber(main_path)
+    main_path = r'F:\Hila\Ax3D_Pack\V6\v7calibration\Old_AxCaliber\H'
+    cc_parts_table_H = compare_deltas_old_axcaliber(main_path, group='H')
+    main_path = r'F:\Hila\Ax3D_Pack\V6\v7calibration\Old_AxCaliber\MS'
+    cc_parts_table_MS = compare_deltas_old_axcaliber(main_path, group='MS')
+
+    cc_parts_table = cc_parts_table_H.append(cc_parts_table_MS)
+    protocols = ['D31 d18', 'D45 d13.2', 'D60 d11.3']
+    compare_group_study_OldAxCaliber(cc_parts_table,protocols[0])
 
 

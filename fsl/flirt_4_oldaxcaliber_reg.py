@@ -19,7 +19,7 @@ def flirt_regis(diff_file_1st, diff_file_vol):
     os.system(cmd)
 
 
-def merge_3Ds_2_4D(subj_folder):
+def merge_3Ds_2_4D(subj_folder,diff_file):
     registered_diff = subj_folder + '/diff_corrected.nii'
     sep_files = diff_file[:-4]+'00*_r.nii'
     cmd = fr'bash -lc "fslmerge -t {registered_diff} {sep_files}"'
@@ -47,5 +47,5 @@ if __name__ == '__main__':
                 diff_file_vol = os_path_2_fsl(diff_file_vol)
                 flirt_regis(diff_file_1st, diff_file_vol)
 
-            merge_3Ds_2_4D(subj_folder)
+            merge_3Ds_2_4D(subj_folder,diff_file)
             delete_files(subj_fol)
