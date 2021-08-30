@@ -16,7 +16,7 @@ elif current_computer == 'WORK':
 
 
 elif current_computer == 'SERVER':
-    subj_folder = r'F:\Hila\balance\eo\before'
+    subj_folder = r'F:\Hila\Language'
     #subj_folder = r'F:\Hila\Ax3D_Pack\V6\v7calibration'
     #index_to_text_file = r'F:\Hila\aal\megaatlas\megaatlas2nii.txt'
     #index_to_text_file = r'F:\Hila\aal\aal3\aal2nii.txt'

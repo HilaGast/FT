@@ -74,7 +74,7 @@ def create_seeds(folder_name, lab_labels_index, affine, use_mask = True, mask_ty
 
 def create_csd_model(data, gtab, white_matter, sh_order=6):
     from dipy.reconst.csdeconv import ConstrainedSphericalDeconvModel,auto_response_ssst
-    response, ratio = auto_response_ssst(gtab, data, roi_radius=10, fa_thr=0.7)
+    response, ratio = auto_response_ssst(gtab, data, roi_radii=10, fa_thr=0.7)
 
     csd_model = ConstrainedSphericalDeconvModel(gtab, response, sh_order=sh_order)
     csd_fit = csd_model.fit(data, mask=white_matter)
@@ -200,7 +200,7 @@ def create_streamlines(model_fit, seeds, affine, gtab=None, data=None, white_mat
                                                                  sphere=default_sphere)
     if classifier_type == "fa":
         print("Tractography using local tracking and FA clasifier")
-        classifier = create_fa_classifier(gtab, data, white_matter)
+        classifier = create_fa_classifier(gtab, data, white_matter)[1]
         print('Starting to compute streamlines')
         streamlines = Streamlines(LocalTracking(detmax_dg, classifier, seeds, affine, step_size=1,return_all=False))
 
@@ -617,7 +617,7 @@ if __name__ == '__main__':
             den = 5
             tract_file_name = "_wholebrain_5d_labmask_msmt.trk"
         elif tractography_method == "csd":
-            model_fit = create_csd_model(data, gtab, white_matter, sh_order=6)
+            model_fit = create_csd_model(data, gtab, white_matter, sh_order=8)
             den = 5
             tract_file_name = "_wholebrain_5d_labmask.trk"
 
