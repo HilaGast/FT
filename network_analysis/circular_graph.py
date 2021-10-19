@@ -29,8 +29,8 @@ for l,i in zip(labels_headers,id):
     #nodes_labels[i] = '_'.join(lparts[1:])
     nodes_labels[i]=f'{lparts[1]}_{lparts[2]}_{lparts[-1]}'
     #nodes_labels[i]=l
-pmat_name = r'F:\Hila\balance\eo_pval_aal_norm_add.npy'
-tmat_name = r'F:\Hila\balance\eo_ttest_aal_norm_add.npy'
+pmat_name = r'C:\Users\Admin\Desktop\balance\eo_pval_aal_norm_add.npy'
+tmat_name = r'C:\Users\Admin\Desktop\balance\eo_ttest_aal_norm_add.npy'
 pmat = np.load(pmat_name)
 mat = np.load(tmat_name)
 pmat = pmat[id]

@@ -8,7 +8,7 @@ if current_computer == 'HOME':
 
 elif current_computer == 'WORK':
     #subj_folder = r'C:\Users\Admin\my_scripts\Ax3D_Pack\V6\after_file_prep\questionnaire'
-    subj_folder = r'C:\Users\Admin\Desktop\v7_calibration\TheBase4ever'
+    subj_folder = r'C:\Users\Admin\Desktop\Language'
 
     start_with = 0
     index_to_text_file = r'C:\Users\Admin\my_scripts\aal\yeo7_200\index2label.txt'

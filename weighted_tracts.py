@@ -324,7 +324,10 @@ def nodes_by_index_general(folder_name,atlas='mega'):
         #lab = folder_name + r'\rAAL3_highres_atlas_corrected.nii'
     elif atlas == 'yeo7_200':
         lab = folder_name + r'\ryeo7_200_atlas.nii'
-
+    elif atlas == 'yeo7_1000':
+        lab = folder_name + r'\ryeo7_1000_atlas.nii'
+    elif atlas == 'yeo17_1000':
+        lab = folder_name + r'\ryeo17_1000_atlas.nii'
     lab_file = nib.load(lab)
     lab_labels = lab_file.get_fdata()
     affine = lab_file.affine
@@ -427,10 +430,10 @@ def non_weighted_con_mat_mega(streamlines, lab_labels_index, affine, idx, folder
     #np.save(folder_name + r'\non-weighted_mega'+fig_type, new_data)
     np.save(folder_name + r'\non-weighted'+fig_type+'_nonnorm', mm)
 
-    return new_data, m, grouping
+    return new_data, mm, grouping
 
 
-def weighted_con_mat_mega(bvec_file, weight_by, grouping, idx, folder_name,fig_type=''):
+def weighted_con_mat_mega(weight_by, grouping, idx, folder_name,fig_type=''):
     from dipy.tracking.streamline import values_from_volume
     import numpy as np
 
@@ -533,7 +536,7 @@ def draw_con_mat(data, h, fig_name, is_weighted=False):
         plt.show()
 
 
-def weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type = 'whole brain', weight_by='1.5_2_AxPasi5'):
+def weighted_connectivity_matrix_mega(streamlines, folder_name, fig_type = 'whole brain', weight_by='1.5_2_AxPasi5'):
 
     lab_labels_index, affine = nodes_by_index_general(folder_name,atlas='yeo7_200')
     labels_headers, idx = nodes_labels_yeo7(index_to_text_file)
@@ -549,7 +552,7 @@ def weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_t
 
     # weighted:
 
-    new_data, mm_weighted = weighted_con_mat_mega(bvec_file, weight_by, grouping, idx, folder_name, fig_type)
+    new_data, mm_weighted = weighted_con_mat_mega(weight_by, grouping, idx, folder_name, fig_type)
     #fig_name = folder_name + r'\Weighted('+fig_type+', MegaAtlas).png'
     #fig_name = folder_name + r'\Weighted('+fig_type+', AAL3).png'
     fig_name = folder_name + r'\Weighted(' + fig_type + ', yeo7,200).png'
@@ -631,7 +634,7 @@ if __name__ == '__main__':
         idx = nodes_labels_yeo7(index_to_text_file)[1]
         streamlines = load_ft(tract_path, nii_file)
 
-        weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_5d_labmask_yeo7_200_FA',
+        weighted_connectivity_matrix_mega(streamlines, folder_name, fig_type='wholebrain_5d_labmask_yeo7_200_FA',
                                           weight_by='_FA')
-        weighted_connectivity_matrix_mega(streamlines, folder_name, bvec_file, fig_type='wholebrain_5d_labmask_yeo7_200',
+        weighted_connectivity_matrix_mega(streamlines, folder_name, fig_type='wholebrain_5d_labmask_yeo7_200',
                                           weight_by='_AxPasi7')
