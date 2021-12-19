@@ -5,19 +5,27 @@ import nibabel as nib
 
 class GM_mask:
 
-    def __init__(self,subj_fol,atlas_name='yeo7_1000',weight_by = '3_2_AxPasi7',tractography_type = 'wholebrain_5d_labmask_msmt'):
+    def __init__(self,subj_fol,atlas_name='yeo7_1000',weight_by = '3_2_AxPasi7',tractography_type = 'wholebrain_5d_labmask_msmt',atlas_main_folder = r'C:\Users\Admin\my_scripts\aal\yeo'):
         self.folder_name = subj_fol #full path of subj folder
         self.tractography_type = tractography_type+'.trk'
-        self.atlas_main_folder = r'C:\Users\Admin\my_scripts\aal\yeo'
         self.nii_file_name = load_dwi_files(self.folder_name)[5]
         self.streamline_name = self._streamline_name()
-        self.mask = self._load_gm_mask()
         self.weight_name = weight_by
-        self.atlas_type = atlas_name
-        self.atlas_file_name = os.path.join(self.folder_name,'r'+atlas_name+'_atlas.nii')
         self.streamlines = self._load_streamlines()
-        self.idx_to_txt = f'{self.atlas_main_folder}{os.sep}{self.atlas_type}{os.sep}index2label.txt'
-        self.mni_atlas_label = f'{self.atlas_main_folder}{os.sep}{self.atlas_type}{os.sep}{self.atlas_type}_atlas.nii'
+        self.atlas_type = str.lower(atlas_name)
+        self.atlas_main_folder = atlas_main_folder
+        self.mask = self._load_gm_mask()
+        if 'yeo' in self.atlas_type:
+            self.atlas_file_name = os.path.join(self.folder_name, 'r' + atlas_name + '_atlas.nii')
+            self.idx_to_txt = f'{self.atlas_main_folder}{os.sep}{self.atlas_type}{os.sep}index2label.txt'
+            self.mni_atlas_label = f'{self.atlas_main_folder}{os.sep}{self.atlas_type}{os.sep}{self.atlas_type}_atlas.nii'
+        elif 'bna' in self.atlas_type:
+            self.atlas_type = atlas_name
+            self.atlas_file_name = os.path.join(self.folder_name, 'rBN_Atlas_274_combined_1mm.nii')
+            self.idx_to_txt = f'{self.atlas_main_folder}{os.sep}BNA_with_cerebellum.csv'
+            self.mni_atlas_label = f'{self.atlas_main_folder}{os.sep}BN_Atlas_274_combined_1mm.nii'
+
+
 
     def endpoint_type(self,type_name):
         self.endpoint_type_name = type_name
@@ -46,7 +54,10 @@ class GM_mask:
     def _streamline_name(self):
         import glob
         tract_path = os.path.join(self.folder_name,'streamlines')
-        streamline_name = glob.glob(tract_path+'*/*'+self.tractography_type)[0]
+        try:
+            streamline_name = glob.glob(tract_path+'*/*'+self.tractography_type)[0]
+        except IndexError:
+            print('No streamline file for subject')
 
         return streamline_name
 
@@ -66,9 +77,11 @@ class GM_mask:
             subj_folder = os_path_2_fsl(subj_folder+r'/')
             out_registered = subj_folder + 'r' + mprage_file_name[:-4] + '_brain.nii'
 
-            atlas_label = f'{self.atlas_main_folder}{os.sep}{self.atlas_type}{os.sep}{self.atlas_type}_atlas.nii'
-
-            atlas_template = f'{self.atlas_main_folder}{os.sep}{self.atlas_type}{os.sep}Schaefer_template.nii'
+            atlas_label = self.mni_atlas_label
+            if 'yeo' in self.atlas_type:
+                atlas_template = f'{self.atlas_main_folder}{os.sep}{self.atlas_type}{os.sep}Schaefer_template.nii'
+            elif 'bna' in self.atlas_type:
+                atlas_template = f'{self.atlas_main_folder}{os.sep}MNI152_T1_1mm_brain.nii'
 
             atlas_label = os_path_2_fsl(atlas_label)
             atlas_template = os_path_2_fsl(atlas_template)
@@ -94,10 +107,14 @@ class GM_mask:
         weighted average to compute mean ADD in each label
         '''
         import numpy as np
-        from weighted_tracts import nodes_by_index_general, nodes_labels_yeo7, non_weighted_con_mat_mega, weighted_con_mat_mega
+        from weighted_tracts import nodes_by_index_general, nodes_labels_yeo7, nodes_labels_bna, non_weighted_con_mat_mega, weighted_con_mat_mega
 
         lab_labels_index, affine = nodes_by_index_general(self.folder_name, atlas=self.atlas_type)
-        labels_headers, idx = nodes_labels_yeo7(self.idx_to_txt)
+
+        if 'yeo' in self.atlas_type:
+            labels_headers, idx = nodes_labels_yeo7(self.idx_to_txt)
+        elif 'bna' in self.atlas_type:
+            labels_headers, idx = nodes_labels_bna(self.idx_to_txt)
 
         new_data, num_mat, grouping = non_weighted_con_mat_mega(self.streamlines, lab_labels_index, affine, idx, self.folder_name,
                                                           fig_type = self.atlas_type)
@@ -133,26 +150,29 @@ class GM_mask:
 
 if __name__ == '__main__':
     import glob
-    for subj_fol in glob.glob(r'F:\data\V7\TheBase4Ever\*'):
-        atlas_name = 'yeo7_1000'
-        file_name = 'ADD_by_' + atlas_name
-        if os.path.exists(os.path.join(subj_fol,file_name+'.nii')):
-            print(f'Done with \n {subj_fol} \n {atlas_name}')
-        else:
-            subj_mask = GM_mask(subj_fol=subj_fol,atlas_name=atlas_name)
-            subj_mask.weight_gm_by_add()
-            subj_mask.save_weighted_gm_mask(file_name = file_name)
-            print(f'\n Done with \n {subj_fol} \n {atlas_name}')
+    weight_type = ['ADD','FA','MD']
+    for subj_fol in glob.glob(f'F:\data\V7\TheBase4Ever\*{os.sep}'):
+        atlas_name = 'yeo7_200'
 
-        atlas_name = 'yeo17_1000'
-        file_name = 'ADD_by_' + atlas_name
-        if os.path.exists(os.path.join(subj_fol,file_name+'.nii')):
-            print(f'\n Done with \n {subj_fol} \n {atlas_name}')
-        else:
-            subj_mask = GM_mask(subj_fol=subj_fol,atlas_name=atlas_name)
-            subj_mask.weight_gm_by_add()
-            subj_mask.save_weighted_gm_mask(file_name = file_name)
-            print(f'Done with \n {subj_fol} \n {atlas_name}')
+        if not os.path.exists(os.path.join(subj_fol,'streamlines')):
+            print('Could not find streamlines file')
+            continue
+
+
+        for wt in weight_type:
+            file_name = f'{wt}_by_{atlas_name}'
+            if os.path.exists(os.path.join(subj_fol, file_name + '.nii')):
+                print(f'Done with \n {file_name} \n {subj_fol} \n')
+            else:
+                if 'FA' in wt:
+                    subj_mask = GM_mask(subj_fol=subj_fol, atlas_name=atlas_name, weight_by='FA')
+                elif 'MD' in wt:
+                    subj_mask = GM_mask(subj_fol=subj_fol, atlas_name=atlas_name, weight_by='MD')
+                else:
+                    subj_mask = GM_mask(subj_fol=subj_fol, atlas_name=atlas_name)
+                subj_mask.weight_gm_by_add()
+                subj_mask.save_weighted_gm_mask(file_name=file_name)
+                print(f'Done with \n {file_name} \n {subj_fol} \n')
 
 
 

@@ -62,15 +62,14 @@ def transform_bundles(wb_tracts_name):
 
     target = sft_target.streamlines
     #show_atlas_target_graph(atlas, target,out_path=folder_name+r'\try_atlas_target',interactive=True)
-    #atlas = set_number_of_points(atlas,20)
-    #target = set_number_of_points(target,20)
+    atlas = set_number_of_points(atlas,20)
+    target = set_number_of_points(target,20)
     moved, transform, qb_centroids1, qb_centroids2 = whole_brain_slr(
     atlas, target, x0='affine', verbose=True, progressive=True,
     rng=np.random.RandomState(1984))
     #np.save("slf_L_transform.npy", transform)
     #show_atlas_target_graph(atlas, moved,out_path=r'',interactive=True)
-    #rt=50
-    #mct=0.1
+
     return moved, target
 
 
@@ -111,38 +110,37 @@ def show_model_reco_bundles(model,recognized_bundle,folder_name,file_bundle_name
 
 
 if __name__ == '__main__':
-    bundle_dict = {51:'MCP',67:'SCP',42:'ICP_L',43:'ICP_R',60:'OR_L',61:'OR_R',25:'CST_L',26:'CST_R'}
-    #file_bundle_name = r'F_L_R_mct001rt20'
-    main_folder = r'F:\Hila\balance\ec'
-    #bundle_num = 41
+    bundle_dict = {1:'AF_L',2:'AF_R',68:'SLF_L',69:'SLF_R'}
+    main_folder = r'C:\Users\Admin\Desktop\Language'
     rt=20
     mct=0.01
-    for group in glob.glob(main_folder+r'*/*/'):
-        for subj in os.listdir(group):
-            fol = os.path.join(group,subj)
-            tracts_folder = f'{fol}\streamlines'
-            wb_bundle_name = glob.glob(tracts_folder+'*/*_wholebrain_4d_labmask.trk')
+    for subj in glob.glob(f'{main_folder}{os.sep}*{os.sep}'):
+        s = str.split(subj,os.sep)[-1]
+        tracts_folder = f'{subj}\streamlines'
+        wb_bundle_name = glob.glob(tracts_folder + '*/*_wholebrain_5d_labmask_msmt.trk')
 
-            if not wb_bundle_name:
+        if not wb_bundle_name:
+            print('Moving on!')
+            continue
+
+        wb_bundle_name = wb_bundle_name[0]
+
+        moved, target = transform_bundles(wb_bundle_name)
+
+        for bnum, b in bundle_dict.items():
+            print(b)
+            file_bundle_name = b + r'_mct01rt20_5d'
+
+            full_bund_name = f'{s}_{file_bundle_name}'
+            if os.path.isdir(tracts_folder) and f'{full_bund_name}.trk' in os.listdir(tracts_folder):
                 print('Moving on!')
                 continue
+            else:
+                model, recognized_bundle, bundle_labels = extract_one_bundle(moved, target, full_bund_name,
+                                                                             bnum, subj, subj, rt, mct)
+                print(f'finished to extract {file_bundle_name} for subj {s}')
 
-            wb_bundle_name = wb_bundle_name[0]
 
-            moved, target = transform_bundles(wb_bundle_name)
-
-            for bnum, b in bundle_dict.items():
-                print(b)
-                file_bundle_name = b + r'_mct01rt20_4d'
-
-                full_bund_name = f'{subj}_{file_bundle_name}'
-                if os.path.isdir(tracts_folder) and f'{full_bund_name}.trk' in os.listdir(tracts_folder):
-                    print('Moving on!')
-                    continue
-                else:
-                    model, recognized_bundle, bundle_labels = extract_one_bundle(moved, target, full_bund_name,
-                                                                                 bnum, subj, fol, rt, mct)
-                    print(f'finished to extract {file_bundle_name} for subj {subj}')
 
 
 

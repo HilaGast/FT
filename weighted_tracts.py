@@ -328,6 +328,10 @@ def nodes_by_index_general(folder_name,atlas='mega'):
         lab = folder_name + r'\ryeo7_1000_atlas.nii'
     elif atlas == 'yeo17_1000':
         lab = folder_name + r'\ryeo17_1000_atlas.nii'
+    elif atlas == 'bna':
+        lab = folder_name + r'\rBN_Atlas_274_combined_1mm.nii'
+    elif atlas == 'bna_cor':
+        lab = folder_name + r'\rnewBNA_Labels.nii'
     lab_file = nib.load(lab)
     lab_labels = lab_file.get_fdata()
     affine = lab_file.affine
@@ -388,6 +392,53 @@ def nodes_labels_yeo7(index_to_text_file):
     return labels_headers, idx
 
 
+def nodes_labels_bna(index_to_text_file):
+    labels_file = open(index_to_text_file, 'r', errors='ignore')
+    labels_name = labels_file.readlines()
+    labels_file.close()
+    labels_table = []
+    labels_headers = []
+    idx = []
+
+    for line in labels_name:
+        if not line[0] == '#':
+            labels_table.append([col for col in line.split() if col])
+
+    labels_table = labels_table[1:247:2] + labels_table[247::] + labels_table[2:247:2]
+
+    for l in labels_table:
+        lparts = l[0].split(',')
+        idx.append(int(lparts[0]))
+        labels_headers.append(lparts[1])
+    idx = list(idx)
+
+    return labels_headers,idx
+
+
+def nodes_labels_bnacor(index_to_text_file):
+    labels_file = open(index_to_text_file, 'r', errors='ignore')
+    labels_name = labels_file.readlines()
+    labels_file.close()
+    labels_table = []
+    labels_headers = []
+    idx = []
+
+    for line in labels_name:
+        if not line[0] == '#':
+            labels_table.append([col for col in line.split() if col])
+
+    labels_table = labels_table[1:211:2] + labels_table[2:211:2]
+
+    for l in labels_table:
+        lparts = l[0].split(',')
+        idx.append(int(lparts[0]))
+        labels_headers.append(lparts[1])
+    idx = list(idx)
+
+    return labels_headers,idx
+
+
+
 def nodes_labels_mega(index_to_text_file):
     labels_file = open(index_to_text_file, 'r', errors='ignore')
     labels_name = labels_file.readlines()
@@ -405,6 +456,23 @@ def nodes_labels_mega(index_to_text_file):
         head = l[1]
         labels_headers.append(head[:-1])
         idx.append(int(l[0])-1)
+    return labels_headers, idx
+
+
+
+def nodes_labels_atlas(index_to_text_file,atlas):
+
+    if atlas == 'mega':
+        labels_headers, idx = nodes_labels_mega(index_to_text_file)
+    elif atlas == 'aal3':
+        labels_headers, idx = nodes_labels_aal3(index_to_text_file)
+    elif atlas == 'yeo7_200':
+        labels_headers, idx = nodes_labels_yeo7(index_to_text_file)
+    elif atlas == 'bna':
+        labels_headers, idx = nodes_labels_bna(index_to_text_file)
+    elif atlas == 'bna_cor':
+        labels_headers, idx = nodes_labels_bnacor(index_to_text_file)
+
     return labels_headers, idx
 
 
@@ -496,6 +564,41 @@ def weighted_con_mat_mega(weight_by, grouping, idx, folder_name,fig_type=''):
     return new_data, mm_weighted
 
 
+def weighted_connectivity_matrix(weight_by_data, affine, idx, grouping):
+    '''
+
+    :param weight_by_data: img_matrix according to which the tracts will be weighted
+    :param affine: affine matrix of weight_by_data
+    :param idx: the index of atlas labels in the order it should be presented in the matrix
+    :param grouping: dict of pairs of nodes and the corresponding streamlines
+    :return:
+         m_weighted: weighted connectivity matrix
+
+    '''
+    from dipy.tracking.streamline import values_from_volume
+
+
+    m_weighted = np.zeros((len(idx),len(idx)), dtype='float64')
+    for pair, tracts in grouping.items():
+        if pair[0] == 0 or pair[1] == 0:
+            continue
+        else:
+            mean_vol_per_tract = []
+            vol_per_tract = values_from_volume(weight_by_data, tracts, affine=affine)
+            for s in vol_per_tract:
+                s = np.asanyarray(s)
+                mean_vol_per_tract.append(np.nanmean(s))
+            mean_path_vol = np.nanmean(mean_vol_per_tract)
+
+            m_weighted[pair[0]-1, pair[1]-1] = mean_path_vol
+            m_weighted[pair[1]-1, pair[0]-1] = mean_path_vol
+
+    m_weighted = m_weighted[idx]
+    m_weighted = m_weighted[:, idx]
+
+    return m_weighted
+
+
 def draw_con_mat(data, h, fig_name, is_weighted=False):
     import matplotlib.colors as colors
     import matplotlib.pyplot as plt
@@ -508,7 +611,7 @@ def draw_con_mat(data, h, fig_name, is_weighted=False):
         data[~np.isfinite(data)] = max_val
         mat_title = 'AxCaliber weighted connectivity matrix'
         plt.figure(1, [30, 24])
-        cmap = cm.YlOrRd
+        cmap = cm.get_cmap('YlOrRd').copy()
         cmap.set_over('black')
         plt.imshow(data, interpolation='nearest', cmap=cmap, origin='upper',vmax=0.99*max_val)
         plt.colorbar()
@@ -523,9 +626,9 @@ def draw_con_mat(data, h, fig_name, is_weighted=False):
         data[~np.isfinite(data)] = max_val
         mat_title = 'Number of tracts weighted connectivity matrix'
         plt.figure(1, [30, 24])
-        cmap = cm.YlOrRd
+        cmap = cm.get_cmap('YlOrRd').copy()
         cmap.set_over('black')
-        plt.imshow(data, interpolation='nearest', cmap=cmap, origin='upper',vmax=0.99*max_val, norm = colors.LogNorm(vmax=0.99*max_val))
+        plt.imshow(data, interpolation='nearest', cmap=cmap, origin='upper', norm = colors.LogNorm(vmax=0.99*max_val))
         plt.colorbar()
         plt.xticks(ticks=np.arange(0, len(data), 1), labels=h)
         plt.yticks(ticks=np.arange(0, len(data), 1), labels=h)
@@ -536,10 +639,10 @@ def draw_con_mat(data, h, fig_name, is_weighted=False):
         plt.show()
 
 
-def weighted_connectivity_matrix_mega(streamlines, folder_name, fig_type = 'whole brain', weight_by='1.5_2_AxPasi5'):
+def weighted_connectivity_matrix_mega(streamlines, folder_name, fig_type = 'whole brain', weight_by='1.5_2_AxPasi5',atlas='yeo7_200'):
 
-    lab_labels_index, affine = nodes_by_index_general(folder_name,atlas='yeo7_200')
-    labels_headers, idx = nodes_labels_yeo7(index_to_text_file)
+    lab_labels_index, affine = nodes_by_index_general(folder_name,atlas)
+    labels_headers, idx = nodes_labels_atlas(index_to_text_file, atlas)
 
     # non-weighted:
 
@@ -547,15 +650,15 @@ def weighted_connectivity_matrix_mega(streamlines, folder_name, fig_type = 'whol
     h = labels_headers
     #fig_name = folder_name + r'\non-weighted('+fig_type+', MegaAtlas).png'
     #fig_name = folder_name + r'\non-weighted(' + fig_type + ', AAL3).png'
-    fig_name = folder_name + r'\non-weighted(' + fig_type + ', yeo7,200).png'
-    #draw_con_mat(new_data, h, fig_name, is_weighted=False)
+    fig_name = f'{folder_name}{os.sep}non-weighted({fig_type}, {atlas}).png'
+    draw_con_mat(new_data, h, fig_name, is_weighted=False)
 
     # weighted:
 
     new_data, mm_weighted = weighted_con_mat_mega(weight_by, grouping, idx, folder_name, fig_type)
     #fig_name = folder_name + r'\Weighted('+fig_type+', MegaAtlas).png'
     #fig_name = folder_name + r'\Weighted('+fig_type+', AAL3).png'
-    fig_name = folder_name + r'\Weighted(' + fig_type + ', yeo7,200).png'
+    fig_name = f'{folder_name}{os.sep}Weighted({fig_type}, {atlas}).png'
     draw_con_mat(new_data, h, fig_name, is_weighted=True)
 
 

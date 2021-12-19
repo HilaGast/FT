@@ -12,19 +12,19 @@ for s, n in zip(subj, names):
     id = np.argsort(idx)
 
     folder_name = subj_folder + s
-    axcaliber_file = rf'{folder_name}\weighted_wholebrain_5d_labmask_yeo7_200_nonnorm.npy'
+    axcaliber_file = rf'{folder_name}\weighted_wholebrain_4d_labmask_yeo7_200_nonnorm.npy'
     axcaliber_mat = np.load(axcaliber_file)
     axcaliber_mat = axcaliber_mat[id]
     axcaliber_mat = axcaliber_mat[:, id]
 
-    num_of_tracts_file = rf'{folder_name}\non-weighted_wholebrain_5d_labmask_yeo7_200_nonnorm.npy'
+    num_of_tracts_file = rf'{folder_name}\non-weighted_wholebrain_4d_labmask_yeo7_200_nonnorm.npy'
     num_of_tracts_mat = np.load(num_of_tracts_file)
     num_of_tracts_mat = np.asarray(num_of_tracts_mat,dtype='float64')
     num_of_tracts_mat = num_of_tracts_mat[id]
     num_of_tracts_mat = num_of_tracts_mat[:, id]
 
 
-    fa_file = rf'{folder_name}\weighted_wholebrain_5d_labmask_yeo7_200_FA_nonnorm.npy'
+    fa_file = rf'{folder_name}\weighted_wholebrain_4d_labmask_yeo7_200_FA_nonnorm.npy'
     fa_mat = np.load(fa_file)
     fa_mat = fa_mat / 100
     fa_mat = fa_mat[id]

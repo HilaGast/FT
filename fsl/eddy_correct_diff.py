@@ -1,6 +1,6 @@
 import os
 
-def eddy_corr(subj_folder,diff_file_name, pa_file_name, acqr_file = r'/mnt/c/Users/Admin/my_scripts/Ax3D_Pack/V5/datain.txt', index_file = r'/mnt/c/Users/Admin/my_scripts/Ax3D_Pack/V5/index.txt'):
+def eddy_corr(subj_folder,diff_file_name, pa_file_name, acqr_file = r'/mnt/c/Users/Admin/my_scripts/Ax3D_Pack/V5/datain.txt', index_file = r'/mnt/c/Users/Admin/my_scripts/Ax3D_Pack/V5/index186.txt'):
 #def eddy_corr(subj_folder, diff_file_name, pa_file_name,
 #                  acqr_file=r'/mnt/f/Hila/Ax3D_Pack/V5/datain.txt',index_file=r'/mnt/f/Hila/Ax3D_Pack/V5/index.txt'):
 

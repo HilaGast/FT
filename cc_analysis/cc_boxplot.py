@@ -91,7 +91,7 @@ def calc_parameter_by_mask(parameter_type, slice_vol, mask):
 def create_cc_vioplot(cc_parts_table):
     import seaborn as sb
     import matplotlib.pyplot as plt
-    ax = sb.violinplot(data = cc_parts_table, palette="Set1")
+    ax = sb.violinplot(data = cc_parts_table, color=[0.4, 0.7, 0.4]) #), palette="set1")
     plt.show()
 
 def create_cc_boxplot(cc_parts_table):

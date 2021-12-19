@@ -13,6 +13,8 @@ elif current_computer == 'WORK':
     start_with = 0
     index_to_text_file = r'C:\Users\Admin\my_scripts\aal\yeo7_200\index2label.txt'
     #index_to_text_file = r'C:\Users\Admin\my_scripts\aal\aal3\aal2nii.txt'
+    index_to_text_file = r'F:\data\atlases\BNA\BNA_with_cerebellum.csv'
+
 
 
 elif current_computer == 'SERVER':
@@ -20,7 +22,7 @@ elif current_computer == 'SERVER':
     #subj_folder = r'F:\Hila\Ax3D_Pack\V6\v7calibration'
     #index_to_text_file = r'F:\Hila\aal\megaatlas\megaatlas2nii.txt'
     #index_to_text_file = r'F:\Hila\aal\aal3\aal2nii.txt'
-    index_to_text_file = r'F:\Hila\aal\yeo7_200\index2label.txt'
+    index_to_text_file = r'F:\data\atlases\BNA\BNA_with_cerebellum.csv'
     start_with = 0
 
 
@@ -29,7 +31,10 @@ all_subj_folders = list()
 all_subj_names = list()
 for subj in all_folders[start_with::]:
     name = subj.split('_')
-    name = '/'+name[1]
+    try:
+        name = '/'+name[1]
+    except IndexError:
+        continue
     name = name.replace('/',os.sep)
     all_subj_names.append(name)
     subj = '/' + subj

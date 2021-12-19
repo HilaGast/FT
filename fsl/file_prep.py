@@ -17,20 +17,35 @@ def basic_files(cortex_only=True,atlas_type='mega'):
         #atlas_label = r'F:\Hila\aal\aal3\registered\AAL3_highres_atlas_corrected.nii'
         #atlas_template = r'F:\Hila\aal\aal3\registered\MNI152_T1_1mm.nii'
 
-
     elif atlas_type == 'yeo7_200':
         #atlas_label = r'F:\Hila\aal\yeo7_200\yeo7_200_atlas.nii'
         #atlas_template = r'F:\Hila\aal\yeo7_200\Schaefer_template.nii'
-        atlas_label = r'C:\Users\Admin\my_scripts\aal\yeo7_200\yeo7_200_atlas.nii'
-        atlas_template = r'C:\Users\Admin\my_scripts\aal\yeo7_200\Schaefer_template.nii'
+        atlas_label = r'C:\Users\Admin\my_scripts\aal\yeo\yeo7_200\yeo7_200_atlas.nii'
+        atlas_template = r'C:\Users\Admin\my_scripts\aal\yeo\yeo7_200\Schaefer_template.nii'
+
+    elif atlas_type == 'yeo7_1000':
+        atlas_label = r'C:\Users\Admin\my_scripts\aal\yeo\yeo7_1000\yeo7_1000_atlas.nii'
+        atlas_template = r'C:\Users\Admin\my_scripts\aal\yeo\yeo7_1000\Schaefer_template.nii'
+
+    elif atlas_type == 'yeo17_1000':
+        atlas_label = r'C:\Users\Admin\my_scripts\aal\yeo\yeo17_1000\yeo17_1000_atlas.nii'
+        atlas_template = r'C:\Users\Admin\my_scripts\aal\yeo\yeo17_1000\Schaefer_template.nii'
+
+    elif atlas_type == 'bna':
+        atlas_label = r'F:\data\atlases\BNA\BN_Atlas_274_combined_1mm.nii'
+        atlas_template = r'F:\data\atlases\BNA\MNI152_T1_1mm_brain.nii'
+
+    elif atlas_type == 'bna_cor':
+        atlas_label = r'F:\data\atlases\BNA\newBNA_Labels.nii'
+        atlas_template = r'F:\data\atlases\BNA\MNI152_T1_1mm_brain.nii'
 
 
     atlas_label = os_path_2_fsl(atlas_label)
     atlas_template = os_path_2_fsl(atlas_template)
 
     #folder_name = r'F:\Hila\Ax3D_Pack\V6\after_file_prep'
-    #folder_name = r'C:\Users\Admin\Desktop\v7_calibration\TheBase4Ever'
-    folder_name = r'C:\Users\Admin\Desktop\Language'
+    folder_name = r'C:\Users\Admin\Desktop\v7_calibration\thebase4ever'
+    #folder_name = r'C:\Users\Admin\Desktop\Language'
     all_subj_folders = os.listdir(folder_name)
     subj = all_subj_folders
 
@@ -112,7 +127,7 @@ def flirt_primary_guess(subj_folder,atlas_template, out_registered):
     atlas_registered_flirt = os.path.join(subj_folder+ 'r' + atlas_brain.split(sep="\\")[-1])
     atlas_registered_flirt_mat = atlas_registered_flirt[:-4] + '.mat'
 
-    cmd = 'bash -lc "flirt -ref {0} -in {1} -out {2} -omat {3} {4}"'.format(out_registered, atlas_brain, atlas_registered_flirt, atlas_registered_flirt_mat, options)
+    cmd = f'bash -lc "flirt -ref {out_registered} -in {atlas_brain} -out {atlas_registered_flirt} -omat {atlas_registered_flirt_mat} {options}"'
     cmd = cmd.replace(os.sep,'/')
     os.system(cmd)
 
@@ -124,7 +139,7 @@ def fnirt_from_atlas_2_subj(subj_folder,out_registered, atlas_brain, atlas_regis
         warp_name = subj_folder + 'atlas2subjmegaatlas.nii'
     else:
         warp_name = subj_folder + 'atlas2subj.nii'
-    cmd = 'bash -lc "fnirt --ref={0} --in={1} --aff={2} --cout={3}"'.format(out_registered, atlas_brain, atlas_registered_flirt_mat, warp_name)
+    cmd = f'bash -lc "fnirt --ref={out_registered} --in={atlas_brain} --aff={atlas_registered_flirt_mat} --cout={warp_name}"'
     cmd = cmd.replace(os.sep,'/')
     os.system(cmd)
 
@@ -133,7 +148,7 @@ def fnirt_from_atlas_2_subj(subj_folder,out_registered, atlas_brain, atlas_regis
 
 def apply_fnirt_warp_on_template(subj_folder, atlas_brain, out_registered, warp_name):
     atlas_registered = os.path.join(subj_folder+ 'rr' + atlas_brain.split(sep="\\")[-1])
-    cmd = 'bash -lc "applywarp --ref={0} --in={1} --out={2} --warp={3} --interp={4}"'.format(out_registered, atlas_brain, atlas_registered, warp_name, 'nn')
+    cmd = f'bash -lc "applywarp --ref={out_registered} --in={atlas_brain} --out={atlas_registered} --warp={warp_name} --interp=nn"'
     cmd = cmd.replace(os.sep,'/')
     os.system(cmd)
 
@@ -186,7 +201,7 @@ def all_func_to_run(s, folder_name, atlas_template, atlas_label):
 
     subj_folder = os_path_2_fsl(subj_folder)
 
-    eddy_corr(subj_folder,diff_file_name,pa_file_name,acqr_file='/mnt/c/Users/Admin/Desktop/language_eddy/datain.txt',index_file='/mnt/c/Users/Admin/Desktop/language_eddy/index.txt')
+    eddy_corr(subj_folder,diff_file_name,pa_file_name,acqr_file='/mnt/c/Users/Admin/Desktop/language_eddy/datain.txt',index_file='/mnt/c/Users/Admin/Desktop/language_eddy/index186.txt')
 
     subj_mprage, out_brain = bet_4_regis_mprage(subj_folder, mprage_file_name)
 
@@ -205,12 +220,12 @@ def all_func_to_run(s, folder_name, atlas_template, atlas_label):
         if not performed before, run:   '''
     # atlas_brain = bet_4_atlas(atlas_template)
 
-    '''Registration from megaatlas to regisered MPRAGE:
-        flirt for megaatlas to registered MPRAGE for primary guess:  '''
+    '''Registration from atlas to regisered MPRAGE:
+        flirt for atlas to registered MPRAGE for primary guess:  '''
     atlas_brain, atlas_registered_flirt, atlas_registered_flirt_mat = flirt_primary_guess(subj_folder, atlas_template,
                                                                                           out_registered)
 
-    '''fnirt for megaatlas based on flirt results:    '''
+    '''fnirt for atlas based on flirt results:    '''
     warp_name = fnirt_from_atlas_2_subj(subj_folder, out_registered, atlas_brain, atlas_registered_flirt_mat,
                                         cortex_only=False)
 
@@ -229,7 +244,7 @@ def all_func_to_run(s, folder_name, atlas_template, atlas_label):
 if __name__ == '__main__':
     from multiprocessing import Process
     subj, folder_name, atlas_template, atlas_label = basic_files(False, atlas_type='yeo7_200')
-    for s in subj[16:]:
+    for s in subj[::]:
         all_func_to_run(s, folder_name, atlas_template, atlas_label)
 
 

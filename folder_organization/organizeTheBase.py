@@ -1,28 +1,40 @@
 from glob import glob
 import os
 import shutil
+import re
 
+def copy_files(subj_list):
+    subs = []
+    for s in subj_list:
+        try:
+            subs.append(glob(f'{os.sep}{os.sep}132.66.46.223{os.sep}YA_Shared{os.sep}*{os.sep}YA_lab_Yaniv_00{s}*')[0])
+        except IndexError:
+            try:
+                subs.append(glob(f'{os.sep}{os.sep}132.66.46.223{os.sep}YA_Shared{os.sep}*{os.sep}*{os.sep}YA_lab_Yaniv_00{s}*')[0])
+            except IndexError:
+                break
 
-def copy_files():
-    subs = glob(r'Y:\*')
+    folders = ['.*d15D45_AP$', '.*d15D45_PA$', '.*MPRAGE_RL$']
     for sub in subs:
         print(sub)
-        folders = ['05_ep2d_d15.5D60_MB3_AP', '06_ep2d_d15.5D60_MB3_PA', '03_T1w_MPRAGE_RL']
-        for f in folders:
-            try:
-                shutil.copytree(os.path.join(sub, f), os.path.join(sub.replace(r'Y:', r'C:\Users\admin\Desktop\subj_for_v5'), f))
-            except FileNotFoundError:
-                break
+        for scan in glob(f'{sub}{os.sep}*'):
+            scan_name = scan.split(os.sep)[-1]
+            for f in folders:
+                reg = re.compile(f)
+                sign = reg.search(scan_name)
+                if sign:
+                    shutil.copytree(scan, os.path.join(r'C:\Users\Admin\Desktop\v7_calibration\thebase4ever',scan.split(os.sep)[-2], scan_name))
+
 
 
 def dicom2nii(sub_dir):
     scans = glob(os.path.join(sub_dir, '*/'))
-    folders = ['ep2d_d15.5D60_MB3_AP', 'ep2d_d15.5D60_MB3_PA', 'MPRAGE', 'd15D45']
+    #folders = ['d15D45_AP', 'd15D45_PA', 'MPRAGE']
     for scan in scans:
-        if folders[0] in scan or folders[1] in scan or folders[2] in scan or folders[3] in scan:
-            cmd = fr'"C:\Program Files\mricron\dcm2nii" -g n -o {sub_dir} {scan}'
-            print(cmd)
-            os.system(cmd)
+    #    if folders[0] in scan or folders[1] in scan or folders[2] in scan or folders[3] in scan:
+        cmd = fr'"C:\Program Files\mricron\dcm2nii" -g n -o {sub_dir} {scan}'
+        print(cmd)
+        os.system(cmd)
 
 def rename(nifti_dir):
     scans = glob(os.path.join(nifti_dir, '*'))
@@ -51,8 +63,8 @@ def clean(sub_dir):
 
 
 if __name__ == '__main__':
-    #copy_files()
-    for sub in glob(r'C:\Users\Admin\Desktop\Language\*'):
+    #subj_list = ['2180','2215','2241','2252','2245','2299','2304','2629','2530','2531','2438','2477','2543','2545','2781','2703','2795','2417','2423','2478','2449','2504','2549','2493']
+    #copy_files(subj_list)
+    for sub in glob(r'C:\Users\Admin\Desktop\v7_calibration\thebase4ever\*'):
         dicom2nii(sub)
         clean(sub)
-        #rename(os.path.join(sub, 'nifti'))
