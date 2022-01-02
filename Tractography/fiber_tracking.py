@@ -4,16 +4,17 @@ from Tractography.files_loading import *
 
 
 class Tractography():
-    def __init__(self, subj_main_folder, ft_method, sc_method, seed_type, parameters_dict, diff_file_name = 'data', mask_type=''):
+    def __init__(self, subj_main_folder, ft_method, sc_method, seed_type, parameters_dict, diff_file_name, mask_type='', pve_file_name='', tissue_labels_file_name=''):
         self.subj_folder = subj_main_folder
         self.sc_method = sc_method
         self.ft_method = ft_method
         self.seed_type = seed_type
         self.mask_type = mask_type
         self.parameters_dict = parameters_dict
-        self.three_tissue_labels = load_pve_files(self.subj_folder)[3] # wm=3,gm=2, csf=1
+        self.tissue_labels = load_pve_files(self.subj_folder, tissue_labels_file_name=tissue_labels_file_name)[3] # wm=2,gm=1, csf=3 for Gal's files
         self.gtab = bval_bvec_2_gtab(self.subj_folder, small_delta=15.5)
-        self.nii_ref, self.data, self.affine = load_nii_file(self.subj_folder,diff_file_name)
+        self.nii_ref = diff_file_name
+        self.data, self.affine = load_nii_file(diff_file_name)
         voxel_size = np.mean(load_nifti(self.nii_ref,return_voxsize=True)[2])
         self.parameters_dict['voxel_size'] = voxel_size
         self.parameters_dict['length_margins'] = self.parameters_dict['length_margins_mm']/(self.parameters_dict['step_size']*self.parameters_dict['voxel_size'])
@@ -62,9 +63,9 @@ class Tractography():
         from dipy.core.gradients import unique_bvals_tolerance
 
         bvals = self.gtab.bvals
-        wm = self.tissue_labels == 3
-        gm = self.tissue_labels == 2
-        csf = self.tissue_labels == 1
+        wm = self.tissue_labels == 2
+        gm = self.tissue_labels == 1
+        csf = self.tissue_labels == 3
 
         mask_wm = wm.astype(float)
         mask_gm = gm.astype(float)

@@ -29,27 +29,26 @@ def load_weight_by_img(folder_name, weight_by):
     return weight_by_data, affine
 
 
-def load_nii_file(folder_name, file_name='data'):
+def load_nii_file(diff_file_name):
 
-    fname = os.path.join(folder_name,file_name+'.nii')
-    hardi_img = nib.load(fname)
+    hardi_img = nib.load(diff_file_name)
     data = hardi_img.get_fdata()
     data[data<0]=0
     affine = hardi_img.affine
 
-    return fname, data, affine
+    return data, affine
 
 
-def load_pve_files(folder_name):
+def load_pve_files(folder_name,pve_file_name = '',tissue_labels_file_name=''):
 
     for file in os.listdir(folder_name):
-        if file.endswith("brain_pve_0.nii"):
+        if file.endswith(f"{pve_file_name}_0.nii") or file.endswith(f"CSF_{pve_file_name}"):
             f_pve_csf = os.path.join(folder_name, file)
-        if file.endswith("brain_pve_1.nii"):
+        if file.endswith(f"{pve_file_name}_1.nii") or file.endswith(f"GM_{pve_file_name}"):
             f_pve_gm = os.path.join(folder_name, file)
-        if file.endswith("brain_pve_2.nii"):
+        if file.endswith(f"{pve_file_name}_2.nii") or file.endswith(f"WM_{pve_file_name}"):
             f_pve_wm = os.path.join(folder_name, file)
-        if file.endswith("tissue_labeled.nii"):
+        if file.endswith(tissue_labels_file_name):
             three_tissue_labels = os.path.join(folder_name, file)
 
 
