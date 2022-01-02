@@ -230,7 +230,7 @@ def all_func_to_run(s, folder_name, atlas_template, atlas_label):
                                         cortex_only=False)
 
     '''apply fnirt warp on atlas template:  '''
-    atlas_registered = apply_fnirt_warp_on_template(subj_folder, atlas_brain, out_registered, warp_name)
+    #atlas_registered = apply_fnirt_warp_on_template(subj_folder, atlas_brain, out_registered, warp_name)
 
     '''apply fnirt warp on atlas labels:   '''
     atlas_labels_registered = apply_fnirt_warp_on_label(subj_folder, atlas_label, out_registered, warp_name)
