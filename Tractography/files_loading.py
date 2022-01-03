@@ -5,9 +5,9 @@ import numpy as np
 def load_ft(tract_path, nii_ref):
     from dipy.io.streamline import load_trk, load_tck, Space
 
-    if tract_path.endwith('.trk'):
+    if tract_path.endswith('.trk'):
         streams = load_trk(tract_path, nii_ref, Space.RASMM)
-    elif tract_path.endwith('.tck'):
+    elif tract_path.endswith('.tck'):
         streams = load_tck(tract_path, nii_ref, Space.RASMM)
     else:
         print("Couldn't recognize streamline file type")

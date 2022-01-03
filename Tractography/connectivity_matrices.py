@@ -157,14 +157,14 @@ class ConMatNodes():
         self.affine = lab_file.affine
         lab_labels_index = [labels for labels in lab_labels]
         self.lab_labels_index = np.asarray(lab_labels_index, dtype='int')
-        return self.affine, self,lab_labels_index
+        return self.affine, self.lab_labels_index
 
 
 class ConMat():
 
     def __init__(self,atlas,subj_folder,index_to_text_file=None, tract_name = 'HCP_tracts.tck'):
         from dipy.tracking import utils
-        from Tractography.files_loading import load_ft, load_nii_file
+        from Tractography.files_loading import load_ft
 
         self.subj_folder = subj_folder
         self.atlas = atlas
@@ -173,7 +173,7 @@ class ConMat():
         self.labels = cm_nodes.labels_headers
         self.idx = cm_nodes.idx
         self.affine, self.lab_labels_index = cm_nodes.nodes_by_idx(self.subj_folder)
-        nii_ref = load_nii_file(self.subj_folder,'data')[0]
+        nii_ref = os.path.join(subj_folder,'data.nii')
         tract_path = os.path.join(self.subj_folder,'streamlines',tract_name)
         streamlines = load_ft(tract_path, nii_ref)
         m, self.grouping = utils.connectivity_matrix(streamlines, self.affine, self.lab_labels_index,
@@ -203,9 +203,9 @@ class ConMat():
         if mat_type == 'cm':
             np.save(self.fig_name, self.cm)
         elif mat_type == 'cm_ord':
-            np.save(self.fig_name, self.cm_ord)
+            np.save(self.fig_name, self.ord_cm)
         elif mat_type == 'cm_norm':
-            np.save(self.fig_name, self.cm_norm)
+            np.save(self.fig_name, self.norm_cm)
         else:
             print("Couldn't recognize which mat to save.\n Please specify one of the following: \n 'cm' : for original matrix\n 'cm_ord' : for matrix ordered using atlas indices (default)\n 'cm_norm' : for normalized matrix")
 
