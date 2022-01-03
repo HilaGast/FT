@@ -41,6 +41,10 @@ def load_nii_file(diff_file_name):
 
 def load_pve_files(folder_name,pve_file_name = '',tissue_labels_file_name=''):
 
+    f_pve_csf = ''
+    f_pve_gm = ''
+    f_pve_wm = ''
+    three_tissue_labels = ''
     for file in os.listdir(folder_name):
         if file.endswith(f"{pve_file_name}_0.nii") or file.endswith(f"CSF_{pve_file_name}"):
             f_pve_csf = os.path.join(folder_name, file)

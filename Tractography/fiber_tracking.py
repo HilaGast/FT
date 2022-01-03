@@ -11,7 +11,8 @@ class Tractography():
         self.seed_type = seed_type
         self.mask_type = mask_type
         self.parameters_dict = parameters_dict
-        self.tissue_labels = load_pve_files(self.subj_folder, tissue_labels_file_name=tissue_labels_file_name)[3] # wm=2,gm=1, csf=3 for Gal's files
+        self.pve_file_name = pve_file_name
+        self.tissue_labels = nib.load(load_pve_files(self.subj_folder, tissue_labels_file_name=tissue_labels_file_name)[3]).get_fdata() # wm=2,gm=1, csf=3 for Gal's files
         self.gtab = bval_bvec_2_gtab(self.subj_folder, small_delta=15.5)
         self.nii_ref = diff_file_name
         self.data, self.affine = load_nii_file(diff_file_name)
@@ -115,14 +116,15 @@ class Tractography():
 
     def _act_sc(self):
         from dipy.tracking.stopping_criterion import ActStoppingCriterion
-
-        act_classifier = ActStoppingCriterion()
+        include_map = self.tissue_labels < 3
+        exclude_map = self.tissue_labels == 3
+        act_classifier = ActStoppingCriterion(include_map, exclude_map)
         self.classifier = act_classifier
 
     def _cmc_sc(self):
         from dipy.tracking.stopping_criterion import CmcStoppingCriterion
 
-        f_pve_csf, f_pve_gm, f_pve_wm = load_pve_files(self.subj_folder)
+        f_pve_csf, f_pve_gm, f_pve_wm = load_pve_files(self.subj_folder,self.pve_file_name)[:3]
         pve_csf_data = load_nifti_data(f_pve_csf)
         pve_gm_data = load_nifti_data(f_pve_gm)
         pve_wm_data = load_nifti_data(f_pve_wm)
@@ -174,7 +176,7 @@ class Tractography():
 
 def fiber_tracking_parameters(max_angle = 30, sh_order = 8, seed_density = 4, streamlines_lengths_mm = [30,500], step_size = 0.2, fa_th = 0.18):
     parameters_dict = dict()
-    parameters_dict['max_angle'] = max_angle
+    parameters_dict['max_ang'] = max_angle
     parameters_dict['sh_order'] = sh_order
     parameters_dict['den'] = seed_density
     parameters_dict['length_margins_mm'] = streamlines_lengths_mm
