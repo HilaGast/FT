@@ -18,7 +18,9 @@ class Tractography():
         self.data, self.affine = load_nii_file(diff_file_name)
         voxel_size = np.mean(load_nifti(self.nii_ref,return_voxsize=True)[2])
         self.parameters_dict['voxel_size'] = voxel_size
-        self.parameters_dict['length_margins'] = self.parameters_dict['length_margins_mm']/(self.parameters_dict['step_size']*self.parameters_dict['voxel_size'])
+        length_margins = self.parameters_dict['length_margins_mm']/(self.parameters_dict['step_size']*self.parameters_dict['voxel_size'])
+        self.parameters_dict['length_margins'] = [round(lm) for lm in length_margins]
+
         self.create_seeds()
 
     def create_seeds(self):
