@@ -204,10 +204,15 @@ class ConMat():
             np.save(self.fig_name, self.cm)
         elif mat_type == 'cm_ord':
             np.save(self.fig_name, self.ord_cm)
+            self.save_lookup()
         elif mat_type == 'cm_norm':
             np.save(self.fig_name, self.norm_cm)
+            self.save_lookup()
         else:
             print("Couldn't recognize which mat to save.\n Please specify one of the following: \n 'cm' : for original matrix\n 'cm_ord' : for matrix ordered using atlas indices (default)\n 'cm_norm' : for normalized matrix")
+
+    def save_lookup(self):
+        np.save(self.cm_dir+self.atlas+'_cm_ord_lookup', self.idx)
 
     def draw_con_mat(self,mat_type, show=True, cmap_colors = 'YlOrRd'):
         import matplotlib.colors as colors
@@ -245,7 +250,7 @@ class WeightConMat(ConMat):
 
         self.weight_by = weight_by
         self.factor = norm_factor
-        super().__init__(self,atlas,subj_folder,index_to_text_file)
+        super().__init__(atlas, subj_folder,index_to_text_file)
         self.weight_cm()
 
     def weight_cm(self):
@@ -286,7 +291,7 @@ class WeightConMat(ConMat):
                     m_weighted[pair[1] - 1, pair[0] - 1] = mean_path_vol
 
         self.cm = m_weighted
-        self.ord_cm()
+        super().ord_cm()
         self.norm_cm = 1 / (self.ord_cm * self.factor)  # 8.75 - axon diameter 2 ACV constant
 
     def draw_con_mat(self,mat_type, show=True, cmap_colors = 'YlOrRd'):
