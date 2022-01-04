@@ -8,7 +8,7 @@ def save_ft(folder_name, streamlines, nii_file, file_name = "wholebrain.trk"):
     if not os.path.exists(dir_name):
         os.mkdir(dir_name)
 
-    tract_name = dir_name + file_name
+    tract_name = dir_name + os.sep + file_name
 
     if tract_name.endswith('.trk'):
         save_trk(StatefulTractogram(streamlines,nii_file,Space.RASMM),tract_name)

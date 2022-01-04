@@ -27,17 +27,17 @@ class Tractography():
         from dipy.tracking.utils import seeds_from_mask
 
         if self.seed_type == 'gm':
-            seed_mask = self.tissue_labels = 2
+            seed_mask = self.tissue_labels == 2
 
         elif self.seed_type == 'mask':
             mask_mat = load_mask(self.subj_folder, self.mask_type)
             seed_mask = mask_mat == 1
 
         elif self.seed_type == 'wm':
-            seed_mask = self.tissue_labels = 3
+            seed_mask = self.tissue_labels == 3
 
         elif self.seed_type == 'wb':
-            seed_mask = self.tissue_labels > 0
+            seed_mask = self.tissue_labels >> 0
 
         else:
             print("Couldn't recognize seed type, please specify one of the following: gm, wm, mask, wb")
