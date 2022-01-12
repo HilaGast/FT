@@ -24,17 +24,21 @@ for rf in ronnies_folders[::]:
             continue
 
 
-#shortlist = glob.glob(f'F:\data\V7\HCP\*{os.sep}')
-#for sf in shortlist:
-#    subjnum = str.split(sf, os.sep)[-2]
-#    dir_name = f'F:\data\V7\HCP{os.sep}{subjnum}{os.sep}'
-#    org_name = f'H:\HCP{os.sep}{subjnum}{os.sep}'
-#    if not os.path.exists(f'{dir_name}streamlines'):
-#        os.mkdir(f'{dir_name}streamlines')
-#    sf = f'{org_name}tracts\HCP.tck'
-#    df = f'{dir_name}streamlines\HCP_tracts.tck'
-#    copy(sf, df)
-#
+shortlist = glob.glob(f'F:\data\V7\HCP\*{os.sep}')
+for sf in shortlist:
+    subjnum = str.split(sf, os.sep)[-2]
+    dir_name = f'F:\data\V7\HCP{os.sep}{subjnum}{os.sep}'
+    org_name = f'Y:\hcp{os.sep}{subjnum}{os.sep}'
+    if not os.path.exists(f'{dir_name}streamlines'):
+        os.mkdir(f'{dir_name}streamlines')
+    sf = f'{org_name}tracts_unsifted\HCP.tck'
+    df = f'{dir_name}streamlines\HCP_tracts_unsifted.tck'
+    if not os.path.exists(df):
+        try:
+            copy(sf, df)
+        except FileNotFoundError:
+            continue
+
 #    sf = f'{org_name}raw_data\mprage.nii.gz'
 #    df = f'{dir_name}MPRAGE.nii'
 #    copy(sf, df)

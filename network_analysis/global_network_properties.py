@@ -27,7 +27,7 @@ def get_efficiency(cm=None):
     return eff
 
 
-def get_rich_club_curve(cm):
+def get_rich_club_curve(cm, max_k):
     cm = np.array(cm)
     cm = cm / np.nanmax(cm)
     cm[np.isnan(cm)] = 0
@@ -38,8 +38,8 @@ def get_rich_club_curve(cm):
     klevel = np.nanmax(node_degree)
 
     wrank = np.sort(cm.reshape(1,-1)[0])[::-1]
-    rw = np.zeros(20)
-    for kk in range(0,20):
+    rw = np.zeros(max_k)
+    for kk in range(0,max_k):
 
         small_n = np.where(np.asarray(node_degree) < kk)[0]
 

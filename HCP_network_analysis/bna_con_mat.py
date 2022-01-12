@@ -1,7 +1,13 @@
-from HCP_network_analysis.cc_violin_HCP import load_tck
+from Tractography.connectivity_matrices import *
+import glob,os
 
-tck_file_name = f'{s}HCP_tracts.tck'
-nii_file_name = sl + 'data.nii'
-affine = nib.load(nii_file_name).affine
-streamlines = load_tck(tck_file_name, nii_file_name)
-weighted_connectivity_matrix_mega(streamlines, folder_name, fig_type = 'whole brain', weight_by='3_2_AxPasi7',atlas='bna')
+shortlist = glob.glob(f'F:\data\V7\HCP\*{os.sep}')
+
+for sl in shortlist:
+    cm = ConMat(atlas='bna',subj_folder=sl, tract_name='HCP_tracts_unsifted.tck')
+    cm.save_cm(fig_name='num_bna',mat_type='cm_ord')
+    cm.draw_con_mat(mat_type='cm_ord')
+
+    cm = WeightConMat(weight_by='3_2_AxPasi7',atlas='bna',subj_folder=sl, tract_name='HCP_tracts_unsifted.tck')
+    cm.save_cm(fig_name='add_bna',mat_type='cm_ord')
+    cm.draw_con_mat(mat_type='cm_ord')

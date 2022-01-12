@@ -162,7 +162,7 @@ class ConMatNodes():
 
 class ConMat():
 
-    def __init__(self,atlas,subj_folder,index_to_text_file=None, tract_name = 'HCP_tracts.tck'):
+    def __init__(self,atlas,subj_folder,cm_name = None, index_to_text_file=None, tract_name = 'HCP_tracts.tck'):
         from dipy.tracking import utils
         from Tractography.files_loading import load_ft
 
@@ -174,14 +174,19 @@ class ConMat():
         self.idx = cm_nodes.idx
         self.affine, self.lab_labels_index = cm_nodes.nodes_by_idx(self.subj_folder)
         nii_ref = os.path.join(subj_folder,'data.nii')
-        tract_path = os.path.join(self.subj_folder,'streamlines',tract_name)
-        streamlines = load_ft(tract_path, nii_ref)
-        m, self.grouping = utils.connectivity_matrix(streamlines, self.affine, self.lab_labels_index,
-                                                return_mapping=True,
-                                                mapping_as_streamlines=True)
-        self.fix_cm(m)
-        self.ord_cm()
-        self.norm_cm = 1/self.ord_cm
+        if not cm_name:
+            tract_path = os.path.join(self.subj_folder, 'streamlines', tract_name)
+            streamlines = load_ft(tract_path, nii_ref)
+            m, self.grouping = utils.connectivity_matrix(streamlines, self.affine, self.lab_labels_index,
+                                                         return_mapping=True,
+                                                         mapping_as_streamlines=True)
+            self.fix_cm(m)
+            self.ord_cm()
+            self.norm_cm = 1 / self.ord_cm
+
+        else:
+            cm_file_name = f'{subj_folder}cm{os.sep}{cm_name}.npy'
+            self.cm = np.load(cm_file_name)
 
     def fix_cm(self,m):
         mm = m[1:]
@@ -239,18 +244,21 @@ class ConMat():
         plt.title(mat_title, fontsize=32)
         plt.tick_params(axis='x', pad=10.0, labelrotation=90, labelsize=11)
         plt.tick_params(axis='y', pad=10.0, labelsize=11)
-        plt.savefig(self.fig_name+'.png')
+        try:
+            plt.savefig(self.fig_name+'.png')
+        except AttributeError:
+            plt.savefig(f'{self.subj_folder}cm{os.sep}{mat_type}.png')
         if show:
             plt.show()
 
 
 class WeightConMat(ConMat):
 
-    def __init__(self,weight_by, atlas,subj_folder,index_to_text_file=None, norm_factor = 8.75):
+    def __init__(self,weight_by, atlas,subj_folder,index_to_text_file=None, norm_factor = 8.75, tract_name = 'HCP_tracts.tck'):
 
         self.weight_by = weight_by
         self.factor = norm_factor
-        super().__init__(atlas, subj_folder,index_to_text_file)
+        super().__init__(atlas, subj_folder,index_to_text_file, tract_name)
         self.weight_cm()
 
     def weight_cm(self):
