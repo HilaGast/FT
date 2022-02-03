@@ -52,7 +52,7 @@ def register_atlas_2_diff(subj_folder, atlas_template, atlas_label):
 
     subj_folder = os_path_2_fsl(subj_folder)
 
-    subj_mprage, out_brain = bet_4_regis_mprage(subj_folder, mprage_file_name)
+    subj_mprage, out_brain = bet_4_regis_mprage(subj_folder, mprage_file_name, diff_file_name)
     ''' Registration from MPRAGE to 1st CHARMED scan using inverse matrix of CHARMED to MPRAGE registration:
     From CHARMED to MPRAGE:'''
     subj_first_charmed, out_registered, out_registered_mat = reg_from_diff_2_mprage(subj_folder, subj_mprage, diff_file_name)

@@ -162,7 +162,7 @@ class ConMatNodes():
 
 class ConMat():
 
-    def __init__(self,atlas,subj_folder,cm_name = None, index_to_text_file=None, tract_name = 'HCP_tracts.tck'):
+    def __init__(self,atlas,subj_folder,diff_file = 'data.nii',cm_name = None, index_to_text_file=None, tract_name = 'HCP_tracts.tck'):
         from dipy.tracking import utils
         from Tractography.files_loading import load_ft
 
@@ -173,7 +173,7 @@ class ConMat():
         self.labels = cm_nodes.labels_headers
         self.idx = cm_nodes.idx
         self.affine, self.lab_labels_index = cm_nodes.nodes_by_idx(self.subj_folder)
-        nii_ref = os.path.join(subj_folder,'data.nii')
+        nii_ref = os.path.join(subj_folder,diff_file)
         if not cm_name:
             tract_path = os.path.join(self.subj_folder, 'streamlines', tract_name)
             streamlines = load_ft(tract_path, nii_ref)
@@ -254,11 +254,15 @@ class ConMat():
 
 class WeightConMat(ConMat):
 
-    def __init__(self,weight_by, atlas,subj_folder,index_to_text_file=None, norm_factor = 8.75, tract_name = 'HCP_tracts.tck'):
+    def __init__(self,weight_by, atlas,subj_folder,diff_file = 'data.nii',index_to_text_file=None, norm_factor = 8.75, tract_name = 'HCP_tracts.tck'):
 
         self.weight_by = weight_by
         self.factor = norm_factor
-        super().__init__(atlas, subj_folder,index_to_text_file, tract_name)
+        if not index_to_text_file:
+            super().__init__(atlas, subj_folder, diff_file, tract_name = tract_name)
+        else:
+            super().__init__(atlas, subj_folder,diff_file, index_to_text_file=index_to_text_file, tract_name = tract_name)
+
         self.weight_cm()
 
     def weight_cm(self):

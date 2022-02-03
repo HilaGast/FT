@@ -20,22 +20,29 @@ def norm_mat(subj_folder, cm_name, atlas):
     for i, a1 in enumerate(lookup):
         for j, a2 in enumerate(lookup):
             try:
-                mean_area = np.mean([lab_sizes[a1], lab_sizes[a2]])
+                mean_area = np.sum([lab_sizes[a1], lab_sizes[a2]])
                 m[i, j] = mean_area
                 m[j, i] = mean_area
             except KeyError:
                 m[i, j] = 0
                 m[j, i] = 0
 
-    new_mat = cm * (m/np.nanmax(m))
+    new_mat = cm / (m/np.nanmax(m))
     new_mat[np.isnan(new_mat)] = 0
 
     #import matplotlib.pyplot as plt
-    #n_trk = np.sum(new_mat, 0)
-    #n_trk = n_trk[lookup]
-    #zero_size = np.sum(m,axis=0)<1
-    #s_trk = [n_trk[i] for i,ok in enumerate(zero_size) if not ok]
-    #plt.scatter(s_trk,count)
+    from scipy.stats import pearsonr
+    n_trk = np.sum(cm, 0)
+    cn_trk = np.sum(new_mat, 0)
+
+    for i in lookup:
+        if i not in lab_sizes.keys():
+            lab_sizes[i]=0
+    l_size = [lab_sizes[i] for i in lookup]
+    print(f'before correction:{pearsonr(n_trk,l_size)}')
+    print(f'after correction:{pearsonr(cn_trk,l_size)}')
+
+    #plt.scatter(n_trk,l_size)
     #plt.show()
 
 

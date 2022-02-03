@@ -16,6 +16,26 @@ def remove_outliers_IsoForest(x,y):
 
     return x,y
 
+def remove_outliers_Cooks(x,y,maxi=5):
+    import statsmodels.api as sm
+    np.set_printoptions(suppress=True)
+    orig_len = len(y)
+    removei = len(y)
+    round=0
+    while removei>maxi:
+        round+=1
+        rmodel = sm.OLS(y, x).fit()
+        influence = rmodel.get_influence()
+        cooks = influence.cooks_distance
+        ii = np.where(cooks[0] <= (4 / len(y)))
+        x = list(np.asarray(x)[ii])
+        y = list(np.asarray(y)[ii])
+        removei = orig_len-len(ii[0])
+        print(f' Removed {str(removei)} outliers in round {str(round)}')
+        orig_len = len(ii[0])
+
+    return x,y
+
 
 def remove_outliers_y(x,y):
     my = np.nanmean(y)
@@ -49,7 +69,8 @@ def remove_nans(x,y):
 def draw_scatter_fit(x,y,fit_type = 'poly', deg=1, ttl=None, comp_reg = False, norm_x = True):
     txt1 = None
     x,y = remove_nans(x,y)
-    x,y = remove_outliers_y(x,y)
+    x,y = remove_outliers_Cooks(x,y)
+
     #x,y = remove_outliers_y(x,y)
     #y = list((np.asarray(y)-np.nanmin(y))/(np.nanmax(y)-np.nanmin(y)))
     if norm_x:

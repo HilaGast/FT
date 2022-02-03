@@ -13,8 +13,8 @@ for sl in shortlist:
     add_cm = np.load(f'{sl}cm{os.sep}add_bna_cm_ord.npy')
     add_rc.append(get_rich_club_curve(add_cm, max_k))
 
-    num_cm = f'{sl}cm{os.sep}num_bna_cm_ord.npy'
-    num_cm = norm_mat(sl,num_cm,'bna')
+    num_cm = np.load(f'{sl}cm{os.sep}num_bna_cm_ord_corrected.npy')
+    #num_cm = norm_mat(sl,num_cm,'bna')
     num_rc.append(get_rich_club_curve(num_cm, max_k))
 
 

@@ -31,8 +31,8 @@ for sf in shortlist:
     org_name = f'Y:\hcp{os.sep}{subjnum}{os.sep}'
     if not os.path.exists(f'{dir_name}streamlines'):
         os.mkdir(f'{dir_name}streamlines')
-    sf = f'{org_name}tracts_unsifted\HCP.tck'
-    df = f'{dir_name}streamlines\HCP_tracts_unsifted.tck'
+    sf = f'{org_name}tracts\HCP.tck'
+    df = f'{dir_name}streamlines\HCP_tracts.tck'
     if not os.path.exists(df):
         try:
             copy(sf, df)

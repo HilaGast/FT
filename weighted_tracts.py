@@ -649,7 +649,7 @@ def weighted_connectivity_matrix_mega(streamlines, folder_name, fig_type = 'whol
 def load_weight_by_img(folder_name, weight_by):
     import nibabel as nib
     for file in os.listdir(folder_name):
-        if weight_by in file and file.endswith(weight_by+'.nii') and not file.startswith("r"):
+        if weight_by in file and file.endswith(('.nii','.nii.gz')) and not file.startswith("r"):
             weight_by_file = os.path.join(folder_name,file)
             continue
     weight_by_img = nib.load(weight_by_file)

@@ -9,14 +9,20 @@ subj = []
 sn = []
 add_eff=[]
 num_eff=[]
+cerbellum_i = [i for i in range(123,151)]
+
 for sl in shortlist:
     if os.path.exists(sl+'rBN_Atlas_274_combined_1mm.nii'):
         subj.append(sl)
         sn.append(int(sl.split(os.sep)[-2]))
-        add_cm = np.load(f'{sl}cm_add.npy')
+        add_cm = np.load(f'{sl}cm{os.sep}add_bna_cm_ord.npy')
+        add_cm = np.delete(add_cm, cerbellum_i, axis=0)
+        add_cm = np.delete(add_cm, cerbellum_i, axis=1)
         add_eff.append(get_efficiency(add_cm))
 
-        num_cm = np.load(f'{sl}cm_num.npy')
+        num_cm = np.load(f'{sl}cm{os.sep}num_bna_cm_ord_corrected.npy')
+        num_cm = np.delete(num_cm, cerbellum_i, axis=0)
+        num_cm = np.delete(num_cm, cerbellum_i, axis=1)
         num_eff.append(get_efficiency(num_cm))
 
 table1 = pd.read_csv('F:\data\V7\HCP\HCP_behavioural_data.csv')

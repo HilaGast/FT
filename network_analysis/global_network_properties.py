@@ -22,7 +22,7 @@ def get_efficiency(cm=None):
     for i in short_paths.keys():
         d.extend([short_paths[i][x] for x in short_paths[i].keys() if x != i])
     eff = 1/np.array(d)
-    eff[np.array(d) == 0] = 0
+    eff[np.array(d) == 0] = np.nan
     eff = np.nanmean(eff)
     return eff
 
@@ -31,7 +31,7 @@ def get_rich_club_curve(cm, max_k):
     cm = np.array(cm)
     cm = cm / np.nanmax(cm)
     cm[np.isnan(cm)] = 0
-    cm = (cm / np.nansum(cm)) * 100
+    #cm = (cm / np.nansum(cm)) * 100
 
     num_of_nodes = np.shape(cm)[0]
     node_degree = np.sum(cm!=0, axis=0)

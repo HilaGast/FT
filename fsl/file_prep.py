@@ -64,17 +64,24 @@ def subj_files(subj_folder):
     return mprage_file_name, diff_file_name, pa_file_name
 
 
-def bet_4_regis_mprage(subj_folder,mprage_file_name):
+def bet_4_regis_mprage(subj_folder,mprage_file_name,diff_file_name):
 
     subj_mprage = subj_folder + mprage_file_name
     # BET for registered MPRAGE:
-    out_brain = subj_mprage[:-4]+'_brain'
+    if subj_mprage.endswith('.nii'):
+        in_brain = subj_mprage[:-4]
+        out_brain = subj_mprage[:-4]+'_brain'
+        diff_file_1st = diff_file_name[:-4]+'_1st'
+    elif subj_mprage.endswith('.nii.gz'):
+        out_brain = subj_mprage[:-7]+'_brain'
+        diff_file_1st = diff_file_name[:-7]+'_1st'
+        in_brain = subj_mprage[:-7]
 
-    cmd = 'bash -lc "bet {0} {1} {2} {3}"'.format(subj_mprage[:-4], out_brain,'-f 0.30','-g 0.20')
+    cmd = 'bash -lc "bet {0} {1} {2} {3}"'.format(in_brain, out_brain,'-f 0.30','-g 0.20')
     cmd = cmd.replace(os.sep,'/')
     os.system(cmd)
     # save first corrected diff:
-    cmd = fr'bash -lc "fslroi {subj_folder}/diff_corrected.nii {subj_folder}/diff_corrected_1st 0 1"'
+    cmd = fr'bash -lc "fslroi {subj_folder}/{diff_file_name} {subj_folder}/{diff_file_1st} 0 1"'
     os.system(cmd)
 
     return subj_mprage, out_brain
@@ -103,7 +110,11 @@ def create_inv_mat(out_registered_mat):
 
 
 def reg_from_mprage_2_chm_inv(subj_folder, mprage_file_name, out_brain, subj_first_charmed, inv_mat):
-    out_registered = subj_folder + 'r' + mprage_file_name[:-4]+'_brain.nii'
+    if mprage_file_name.endswith('.nii'):
+        out_registered = subj_folder + 'r' + mprage_file_name[:-4] + '_brain.nii'
+    elif mprage_file_name.endswith('.nii.gz'):
+        out_registered = subj_folder + 'r' + mprage_file_name[:-7] + '_brain.nii'
+
     cmd = 'bash -lc "flirt -in {0} -ref {1} -out {2} -applyxfm -init {3}"'.format(out_brain, subj_first_charmed, out_registered, inv_mat)
     cmd = cmd.replace(os.sep,'/')
     os.system(cmd)
