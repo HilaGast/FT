@@ -14,4 +14,4 @@ for sl in shortlist:
 
         cm = WeightConMat(weight_by='data_3_2_AxPasi7', atlas='bna',diff_file='data.nii.gz', subj_folder=sl, tract_name='HCP_tracts.tck')
         cm.save_cm(fig_name='add_bna', mat_type='cm_ord')
-        cm.draw_con_mat(mat_type='cm_ord')
+        cm.draw_con_mat(mat_type='cm_ord',show=False)
