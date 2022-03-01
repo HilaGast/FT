@@ -7,20 +7,20 @@ def choose_group(group):
     subj = list()
 
     if group == 'hcp':
-        subj_folder = r'F:\Hila\Ax3D_Pack\V6\v7calibration\hcp'
+        subj_folder = r'F:\data\V7\hcp'
         names = [ name for name in os.listdir(subj_folder) if os.path.isdir(os.path.join(subj_folder, name)) ]
         for n in names:
             s = os.path.join(subj_folder,n)
             subj.append(s)
     elif group == 'thebase4ever':
-        subj_folder = r'F:\Hila\Ax3D_Pack\V6\v7calibration\TheBase4Ever'
+        subj_folder = r'F:\data\V7\TheBase4Ever'
         names = [ name for name in os.listdir(subj_folder) if os.path.isdir(os.path.join(subj_folder, name)) ]
         for n in names:
             s = os.path.join(subj_folder,n)
             subj.append(s)
 
     elif group == 'thebase':
-        subj_folder = r'F:\Hila\Ax3D_Pack\V6\v7calibration\TheBase'
+        subj_folder = r'F:\data\V7\TheBase'
         names = [ name for name in os.listdir(subj_folder) if os.path.isdir(os.path.join(subj_folder, name)) ]
         for n in names:
             s = os.path.join(subj_folder,n)
@@ -105,11 +105,16 @@ def create_comperative_cc_vioplot(cc_parts_table, vio_type, split_by = 'Protocol
     import seaborn as sb
     import matplotlib.pyplot as plt
     if vio_type == 'split':
-        ax = sb.violinplot(x = 'CC part', y= 'ADD', hue = split_by, data = cc_parts_table, palette="Set2",split=True)
+        ax = sb.violinplot(x = 'CC Part', y= 'ADD', hue = split_by, data = cc_parts_table,palette="Set2", split=True)
         plt.show()
 
     else:
-        ax = sb.violinplot(x = 'CC part', y= 'ADD', hue = split_by, data = cc_parts_table, palette="Set2")
+        for part in set(cc_parts_table['CC Part']):
+            print(f'{part}:')
+            print(np.nanmin(cc_parts_table["ADD [\u03BCm]"][cc_parts_table["CC Part"] == part]))
+
+        sb.set_theme(rc={'figure.figsize':(10,10),'axes.facecolor':'black','figure.facecolor':'black', 'text.color': 'white', 'xtick.color': 'white', 'ytick.color': 'white','axes.grid':False,'grid.color':'gray','axes.labelcolor':'white','axes.labelsize':28,'axes.labelweight':'bold','legend.fontsize':18,'legend.title_fontsize':22,'xtick.labelsize':20,'ytick.labelsize':20})
+        ax = sb.violinplot(x = 'CC Part', y= 'ADD [\u03BCm]', hue = split_by,scale='width', data = cc_parts_table,palette="Set2")
         plt.show()
 
 
@@ -144,12 +149,16 @@ def show_vioplot_compare_protocols(vio_type):
     subj_hcp = choose_group('hcp')[1]
     subj_thebase = choose_group('thebase')[1]
     subj_thebase4ever = choose_group('thebase4ever')[1]
-
-    protocol_list = ['HCP']*len(subj_hcp)*5+['The Base']*len(subj_thebase)*5+['The Base 4 Ever']*len(subj_thebase4ever)*5
-    parts_list = ['Genu','Anterior Body', 'Mid Body', 'Posterior Body', 'Splenium']*(len(subj_hcp)+len(subj_thebase)+len(subj_thebase4ever))
+    nhcp=0
+    nthebase=0
+    nthebase4ever=0
     val_list = []
     for i,folder_name in enumerate(subj_hcp):
-        slice_num, mask_genu, mask_abody, mask_mbody, mask_pbody, mask_splenium = load_mat_cc_file(folder_name)
+        try:
+            slice_num, mask_genu, mask_abody, mask_mbody, mask_pbody, mask_splenium = load_mat_cc_file(folder_name)
+        except FileNotFoundError:
+            continue
+        nhcp+=1
         slice_vol = find_slice(folder_name, '3_2_AxPasi7', slice_num,'hcp')
         for mask in [mask_genu,mask_abody,mask_mbody,mask_pbody,mask_splenium]:
             parameter_val = calc_parameter_by_mask('median',slice_vol,mask)
@@ -157,44 +166,77 @@ def show_vioplot_compare_protocols(vio_type):
 
 
     for i,folder_name in enumerate(subj_thebase):
-        slice_num, mask_genu, mask_abody, mask_mbody, mask_pbody, mask_splenium = load_mat_cc_file(folder_name)
+        try:
+            slice_num, mask_genu, mask_abody, mask_mbody, mask_pbody, mask_splenium = load_mat_cc_file(folder_name)
+        except FileNotFoundError:
+            continue
+        nthebase+=1
         slice_vol = find_slice(folder_name, '3_2_AxPasi7', slice_num,'thebase')
         for mask in [mask_genu,mask_abody,mask_mbody,mask_pbody,mask_splenium]:
             parameter_val = calc_parameter_by_mask('median',slice_vol,mask)
             val_list.append(parameter_val)
 
     for i,folder_name in enumerate(subj_thebase4ever):
-        slice_num, mask_genu, mask_abody, mask_mbody, mask_pbody, mask_splenium = load_mat_cc_file(folder_name)
+        try:
+            slice_num, mask_genu, mask_abody, mask_mbody, mask_pbody, mask_splenium = load_mat_cc_file(folder_name)
+        except FileNotFoundError:
+            continue
+        nthebase4ever+=1
         slice_vol = find_slice(folder_name, '3_2_AxPasi7', slice_num,'thebase4ever')
         for mask in [mask_genu,mask_abody,mask_mbody,mask_pbody,mask_splenium]:
             parameter_val = calc_parameter_by_mask('median',slice_vol,mask)
             val_list.append(parameter_val)
 
-    d_vals = {'Protocol':protocol_list, 'CC part': parts_list,'ADD':val_list}
-    cc_parts_table = pd.DataFrame(d_vals)
+    #protocol_list = ['HCP']*nhcp*5+['The Base']*nthebase*5+['The Base 4 Ever']*nthebase4ever*5
+    protocol_list = ['\u0394 = 43.1[ms], \u03B4 = 10.6[ms], gmax = 10[G/cm]'] * nhcp * 5 + ['\u0394 = 60[ms], \u03B4 = 15.5[ms], gmax = 7.2[G/cm]'] * nthebase * 5 + ['\u0394 = 45[ms], \u03B4 = 15[ms], gmax = 7.9[G/cm]'] * nthebase4ever * 5
+    parts_list = ['Genu','Anterior Body', 'Mid Body', 'Posterior Body', 'Splenium']*(nhcp+nthebase+nthebase4ever)
 
+    d_vals = {'Protocol':protocol_list, 'CC Part': parts_list,'ADD [\u03BCm]':val_list}
+    cc_parts_table = pd.DataFrame(d_vals)
+    cc_parts_table = detect_and_remove_outliers(cc_parts_table)[0]
     create_comperative_cc_vioplot(cc_parts_table, vio_type)
 
 
 def detect_and_remove_outliers(table):
     from sklearn.neighbors import LocalOutlierFactor
     from statsmodels.robust.scale import mad
-    if 'CC part' in table.columns:
-        for part in set(table['CC part']):
-            vals = table['ADD'][table['CC part'] == part].values
-            th = mad(vals)
-            diff = abs(vals - np.median(vals))
-            mask = diff/th>2.5
-            vals[mask] = np.nan
-            table['ADD'][table['CC part'] == part] = vals
-            new_table = table
-            print(sum(mask))
+
+    if 'CC Part' in table.columns:
+        if 'Protocol' in table.columns:
+            for protocol in set(table['Protocol']):
+                #print(protocol)
+
+                for part in set(table['CC Part']):
+                    #print(part)
+                    vals = table['ADD [\u03BCm]'][table['CC Part'] == part][table['Protocol'] == protocol].values
+                    new_vals = vals.copy()
+                    th = mad(vals)
+                    diff = abs(vals - np.median(vals))
+                    mask = diff / th > 2
+                    #print(f'{vals} \n {mask}')
+                    new_vals[mask] = np.nan
+                    ii = table.loc[table['CC Part'] == part][table['Protocol'] == protocol].index
+                    table['ADD [\u03BCm]'][ii]=new_vals
+                    print(sum(mask))
+
+        else:
+            for part in set(table['CC Part']):
+                vals = table['ADD [\u03BCm]'][table['CC Part'] == part].values
+                th = mad(vals)
+                diff = abs(vals - np.median(vals))
+                mask = diff / th > 2.5
+                vals[mask] = np.nan
+                table['ADD [\u03BCm]'][table['CC Part'] == part] = vals
+                #print(sum(mask))
+
+        new_table = table
     else:
         lof = LocalOutlierFactor()
         numeric_table = table.select_dtypes(include='float64')
         detect_outlier = lof.fit_predict(numeric_table.values)
         mask = detect_outlier != -1
         new_table = table[mask]
+
 
     return new_table, sum(~mask)
 
@@ -252,16 +294,17 @@ def compare_group_study_OldAxCaliber(cc_parts_table, protocol):
 
 if __name__ == '__main__':
     #show_vioplot_single_protocol('thebase4ever')
-    #show_vioplot_compare_protocols(vio_type = 'sidebyside')
+    show_vioplot_compare_protocols(vio_type = 'sidebyside')
     #show_vioplot_compare_protocols(vio_type='split')
 
-    main_path = r'F:\Hila\Ax3D_Pack\V6\v7calibration\Old_AxCaliber\H'
-    cc_parts_table_H = compare_deltas_old_axcaliber(main_path, group='H')
-    main_path = r'F:\Hila\Ax3D_Pack\V6\v7calibration\Old_AxCaliber\MS'
-    cc_parts_table_MS = compare_deltas_old_axcaliber(main_path, group='MS')
+    # main_path = r'F:\Hila\Ax3D_Pack\V6\v7calibration\Old_AxCaliber\H'
+    # cc_parts_table_H = compare_deltas_old_axcaliber(main_path, group='H')
+    # main_path = r'F:\Hila\Ax3D_Pack\V6\v7calibration\Old_AxCaliber\MS'
+    # cc_parts_table_MS = compare_deltas_old_axcaliber(main_path, group='MS')
+    #
+    # cc_parts_table = cc_parts_table_H.append(cc_parts_table_MS)
+    # protocols = ['D31 d18', 'D45 d13.2', 'D60 d11.3']
+    # compare_group_study_OldAxCaliber(cc_parts_table,protocols[0])
 
-    cc_parts_table = cc_parts_table_H.append(cc_parts_table_MS)
-    protocols = ['D31 d18', 'D45 d13.2', 'D60 d11.3']
-    compare_group_study_OldAxCaliber(cc_parts_table,protocols[0])
 
 
