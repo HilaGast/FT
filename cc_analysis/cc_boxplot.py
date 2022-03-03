@@ -214,7 +214,8 @@ def detect_and_remove_outliers(table):
                     diff = abs(vals - np.median(vals))
                     mask = diff / th > 2
                     #print(f'{vals} \n {mask}')
-                    new_vals[mask] = np.nan
+                    #new_vals[mask] = np.nan
+                    new_vals[mask] = np.nanmean(new_vals[mask<1])
                     ii = table.loc[table['CC Part'] == part][table['Protocol'] == protocol].index
                     table['ADD [\u03BCm]'][ii]=new_vals
                     print(sum(mask))
@@ -249,6 +250,17 @@ def anova_for_cc_parts(table):
     #from scipy.stats import kruskal
     #kruskal(table['Genu'], table['Anterior Body'], table['Mid Body'],
     #         table['Posterior Body'], table['Splenium'])
+
+def anova_for_different_protocols(table):
+    from scipy.stats import f_oneway
+    grouped_table = table.groupby('Protocol')
+    for protocol in set(table['Protocol']):
+        print(protocol)
+        protable = grouped_table.get_group(protocol)
+        print(len(protable)/5)
+        f,p = f_oneway(protable['ADD [\u03BCm]'][protable['CC Part'] == 'Genu'].values,protable['ADD [\u03BCm]'][protable['CC Part'] == 'Anterior Body'].values,protable['ADD [\u03BCm]'][protable['CC Part'] == 'Mid Body'].values,protable['ADD [\u03BCm]'][protable['CC Part'] == 'Posterior Body'].values,protable['ADD [\u03BCm]'][protable['CC Part'] == 'Splenium'].values)
+        print(f'F={f}, p = {p}')
+
 
 def compare_deltas_old_axcaliber(main_path,group,norm=False):
     subjD31, subjD45, subjD60 = choose_condition(main_path)
