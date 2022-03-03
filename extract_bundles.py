@@ -110,8 +110,15 @@ def show_model_reco_bundles(model,recognized_bundle,folder_name,file_bundle_name
 
 
 if __name__ == '__main__':
+<<<<<<< Updated upstream
     bundle_dict = {1:'AF_L',2:'AF_R',68:'SLF_L',69:'SLF_R'}
     main_folder = r'C:\Users\Admin\Desktop\Language'
+=======
+    file_bundle_name = r'IFOF_R_mct001rt20'
+    main_folder = subj_folder
+
+    bundle_num = 46
+>>>>>>> Stashed changes
     rt=20
     mct=0.01
     for subj in glob.glob(f'{main_folder}{os.sep}*{os.sep}'):

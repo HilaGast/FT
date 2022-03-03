@@ -156,9 +156,12 @@ if __name__ == '__main__':
     fascicle = 'SLF_L_mct001rt20'
     methods = ['agglomerative','kmeans']
     method = methods[1]
-    for fol,n in zip(all_subj_folders,all_subj_names):
+    volume = 'AxPasi'
+    for fol,n in zip(all_subj_folders[15::],all_subj_names[15::]):
         folder_name = main_folder + fol
         if not show_cluster and any(fi.startswith(f'model_{fascicle}_{method}_') for fi in os.listdir(folder_name)):
+        #if not show_cluster and any(fi.startswith(f'model_{volume}_{fascicle}_{method}_') for fi in os.listdir(folder_name)):
+
             print('Moving on!')
             continue
 
@@ -171,7 +174,11 @@ if __name__ == '__main__':
                 s_list = load_trk(fascicle_file_name, "same", bbox_valid_check=False)
                 masked_streamlines = s_list.streamlines
                 break
+<<<<<<< Updated upstream
         streamlines,vec_vols = streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, fascicle,masked_streamlines,weight_by = '_AxPasi')
+=======
+        streamlines,vec_vols = streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, fascicle,masked_streamlines,weight_by = volume)
+>>>>>>> Stashed changes
         dist_method = 'mam'
         tracts_num = streamlines.__len__()
 
@@ -179,7 +186,7 @@ if __name__ == '__main__':
 
     #show_23456_groups(method,streamlines,folder_name,X,fascicle)
 
-        g=[2,3]
+        g=[3]
         for i in g:
             model = compute_clustering_model(method,X,i)
             save_model(model,i,folder_name,method,fascicle)

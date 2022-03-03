@@ -230,6 +230,10 @@ def streamline_mean_fascicle_value_weighted(folder_name, n, nii_file, mask_type,
     lab_labels_index, affine = nodes_by_index_general(folder_name,atlas='yeo7_200')
     streamline_dict = create_streamline_dict(masked_streamlines, lab_labels_index, affine)
     bvec_file = load_dwi_files(folder_name)[6]
+<<<<<<< Updated upstream
+=======
+    index_to_text_file = r'F:\Hila\aal\megaatlas\megaatlas2nii.txt'
+>>>>>>> Stashed changes
     idx = nodes_labels_mega(index_to_text_file)[1]
 
     mat_medians = weighted_con_mat_mega(bvec_file, weight_by, streamline_dict, idx, folder_name, fig_type='')[1]

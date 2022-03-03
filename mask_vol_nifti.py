@@ -58,7 +58,7 @@ if __name__ == '__main__':
     # main_feo = r'F:\Hila\balance\eo'
     # main_fec = r'F:\Hila\balance\ec'
     # subj_folder = glob(os.path.join(main_feo,'*/')) +glob(os.path.join(main_fec,'*/'))
-    subj_folder = glob(f'F:\data\V7\TheBase4Ever{os.sep}*{os.sep}')
+    subj_folder = glob(fr'F:\Hila\Ax3D_Pack\V6\v7calibration\TheBase4Ever{os.sep}*{os.sep}')
     all_subj_folders = []
     for folder_name in subj_folder[::]:
         dir_name = folder_name + 'streamlines'
