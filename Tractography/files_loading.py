@@ -3,14 +3,15 @@ import nibabel as nib
 import numpy as np
 
 def load_ft(tract_path, nii_ref):
-    from dipy.io.streamline import load_trk, load_tck, Space
+    from dipy.io.streamline import load_trk, load_tck, Space, StatefulTractogram
 
     if tract_path.endswith('.trk'):
-        streams = load_trk(tract_path, nii_ref, Space.RASMM)
+        streams = load_trk(tract_path, nii_ref, Space.RASMM, bbox_valid_check = False)
     elif tract_path.endswith('.tck'):
-        streams = load_tck(tract_path, nii_ref, Space.RASMM)
+        streams = load_tck(tract_path, nii_ref, Space.RASMM, bbox_valid_check = False)
     else:
         print("Couldn't recognize streamline file type")
+    streams.remove_invalid_streamlines()
 
     streamlines = streams.get_streamlines_copy()
 

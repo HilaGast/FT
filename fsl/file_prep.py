@@ -32,8 +32,8 @@ def basic_files(cortex_only=True,atlas_type='mega'):
         atlas_template = r'C:\Users\Admin\my_scripts\aal\yeo\yeo17_1000\Schaefer_template.nii'
 
     elif atlas_type == 'bna':
-        atlas_label = r'F:\data\atlases\BNA\BN_Atlas_274_combined_1mm.nii'
-        atlas_template = r'F:\data\atlases\BNA\MNI152_T1_1mm_brain.nii'
+        atlas_label = r'G:\data\atlases\BNA\BN_Atlas_274_combined_1mm.nii'
+        atlas_template = r'G:\data\atlases\BNA\MNI152_T1_1mm.nii'
 
     elif atlas_type == 'bna_cor':
         atlas_label = r'F:\data\atlases\BNA\newBNA_Labels.nii'
@@ -53,11 +53,13 @@ def basic_files(cortex_only=True,atlas_type='mega'):
 
 
 def subj_files(subj_folder):
-
+    mprage_file_name=[]
+    diff_file_name=[]
+    pa_file_name=[]
     for file in os.listdir(subj_folder):
         if 'MPRAGE' in file and not (file.startswith('r') or 'brain' in file):
             mprage_file_name = file
-        if file.endswith('001.nii') and 'AP' in file:
+        if (file.endswith('001.nii') and 'AP' in file) or  ('diff_corrected_D' in file and file.endswith('.nii') and not 'mask' in file):
             diff_file_name = file
         if file.endswith('001.nii') and 'PA' in file:
             pa_file_name = file
@@ -196,7 +198,10 @@ def os_path_2_fsl(path):
         path = path.replace('C:', '/mnt/c')
     elif 'D:' in path:
         path = path.replace('D:', '/mnt/d')
-
+    elif 'G:' in path:
+        path = path.replace('G:', '/mnt/g')
+    elif 'Y:' in path:
+        path = path.replace('Y:', '/mnt/y')
     return path
 
 
@@ -212,9 +217,9 @@ def all_func_to_run(s, folder_name, atlas_template, atlas_label):
 
     subj_folder = os_path_2_fsl(subj_folder)
 
-    eddy_corr(subj_folder,diff_file_name,pa_file_name,acqr_file='/mnt/c/Users/Admin/Desktop/language_eddy/datain.txt',index_file='/mnt/c/Users/Admin/Desktop/language_eddy/index186.txt')
+    eddy_corr(subj_folder,diff_file_name,pa_file_name,acqr_file='/mnt/h/comp/Desktop/language_eddy/datain.txt',index_file='/mnt/h/comp/Desktop/language_eddy/index186.txt')
 
-    subj_mprage, out_brain = bet_4_regis_mprage(subj_folder, mprage_file_name)
+    subj_mprage, out_brain = bet_4_regis_mprage(subj_folder,mprage_file_name,'diff_corrected.nii')
 
     ''' Registration from MPRAGE to 1st CHARMED scan using inverse matrix of CHARMED to MPRAGE registration:
     From CHARMED to MPRAGE:'''

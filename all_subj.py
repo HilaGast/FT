@@ -1,5 +1,5 @@
 import os
-current_computer = os.environ['COMP']
+current_computer = 'SERVER'
 
 if current_computer == 'HOME':
     subj_folder = r'C:\Users\hila\data\subj'
@@ -18,8 +18,8 @@ elif current_computer == 'WORK':
 
 
 elif current_computer == 'SERVER':
-    subj_folder = r'F:\Hila\Language'
-    #subj_folder = r'F:\Hila\Ax3D_Pack\V6\v7calibration'
+    #subj_folder = r'F:\Hila\Language'
+    subj_folder = r'G:\data\V7\TheBase4Ever'
     #index_to_text_file = r'F:\Hila\aal\megaatlas\megaatlas2nii.txt'
     #index_to_text_file = r'F:\Hila\aal\aal3\aal2nii.txt'
     index_to_text_file = r'F:\data\atlases\BNA\BNA_with_cerebellum.csv'

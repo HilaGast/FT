@@ -1,6 +1,7 @@
 import os
 import nibabel as nib
 
+
 def show_tracts_simple(s_list, folder_name, fig_type, down_samp=1, vec_vols=None,hue=[0.25, -0.05],saturation=[0.1,1],scale=[3, 6], weighted=False):
     from dipy.viz import window, actor
 

@@ -6,11 +6,28 @@ import numpy as np
 from scipy.stats import mode
 
 
+def detect_and_remove_outliers(mat):
+    from statsmodels.robust.scale import mad
+    new_mat = np.zeros(mat.shape)
+    for i in range(0,mat.shape[1]):
+        val_vec = mat[:,i]
+        th = mad(val_vec)
+        diff = abs(val_vec - np.median(val_vec))
+        mask = diff / th > 2
+        print(f'{val_vec} \n {mask}')
+        print(sum(mask))
+        val_vec[mask] = np.nan
+        new_mat[:,i] = val_vec
+
+    return new_mat
+
+
 def calc_mutual_mat(subj_main_folder,atlas_main_folder, atlas_type):
     file_name = 'ADD_by_' + atlas_type
     atlas_labels, mni_atlas_label, idx = atlas_and_idx(atlas_type, atlas_main_folder)
     subj_mat = all_subj_add_vals(file_name, atlas_labels, subj_main_folder, idx)
     subj_mat[subj_mat == 0] = np.nan
+    subj_mat = detect_and_remove_outliers(subj_mat)
     subj_means = np.nanmean(subj_mat,0)
     subj_medians = np.nanmedian(subj_mat,0)
 
@@ -90,18 +107,18 @@ def load_atlas_weights_dict(file_name):
 
 
 if __name__ == '__main__':
-    subj_main_folder = 'F:\data\V7\TheBase4Ever'
-    atlas_main_folder = r'C:\Users\Admin\my_scripts\aal\yeo'
+    subj_main_folder = 'G:\data\V7\HCP'
+    atlas_main_folder = r'G:\data\atlases\yeo\yeo7_200'
 
     atlas_type = 'yeo7_200'
-    idx, mni_atlas_file_name, subj_means, subj_medians = calc_mutual_mat(subj_main_folder,atlas_main_folder)
+    idx, mni_atlas_file_name, subj_means, subj_medians = calc_mutual_mat(subj_main_folder,atlas_main_folder,atlas_type)
 
     weighted_by_means, weights_dict = weight_atlas_by_add(mni_atlas_file_name, subj_means, idx)
-    save_as_nii(weighted_by_means,mni_atlas_file_name,'ADD_mean_'+atlas_type,subj_main_folder)
+    save_as_nii(weighted_by_means,mni_atlas_file_name,'NoOuliers_ADD_mean_'+atlas_type,subj_main_folder)
     #save_atlas_weights_dict(weights_dict,os.path.join(subj_main_folder,atlas_type+'_mean.json'))
 
     weighted_by_medians, weights_dict = weight_atlas_by_add(mni_atlas_file_name, subj_medians, idx)
-    save_as_nii(weighted_by_medians,mni_atlas_file_name,'ADD_median_'+atlas_type,subj_main_folder)
+    save_as_nii(weighted_by_medians,mni_atlas_file_name,'NoOuliers_ADD_median_'+atlas_type,subj_main_folder)
     #save_atlas_weights_dict(weights_dict,os.path.join(subj_main_folder,atlas_type+'_median.json'))
 
 

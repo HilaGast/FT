@@ -12,14 +12,14 @@ from dipy.tracking.streamline import set_number_of_points
 
 subj = all_subj_folders
 names = all_subj_names
-s=subj[10]
-n=names[10]
+s=subj[66]
+n=names[66]
 folder_name = subj_folder + s
 nii_file = rf'{subj_folder}{s}\diff_corrected_b2000_masked_T2.nii'
 hardi_img = nib.load(nii_file)
 affine = hardi_img.affine
-tract_file = load_trk(rf'{subj_folder}{s}\streamlines\Tracts_CC_ARC.trk',"same")
-downsamp = 2
+tract_file = load_trk(rf'{subj_folder}{s}\streamlines\Tracts_SLF_l.trk',"same")
+downsamp = 1
 affine1, dimensions1, voxel_sizes1, voxel_order1 = tract_file.space_attributes
 
 str1 = tract_file.streamlines
@@ -53,13 +53,13 @@ for s in vol_per_tract:
 
 hue = [0.25,-0.05]
 saturation = [0,1]
-scale = [3,12]
+scale = [7,10]
 
 if downsamp != 1:
     mean_vol_per_tract= mean_vol_per_tract[::downsamp]
     str1 = str1[::downsamp]
 
-mean_pasi_weighted_img = f'{folder_name}{os.sep}streamlines{os.sep}CC_3-12_Exp_DTI_PreReg_1_ds2_tube0p3.png'
+mean_pasi_weighted_img = f'{folder_name}{os.sep}streamlines{os.sep}SLF_l_7-10_Exp_DTI_PreReg_1_ds1_tube0p3.png'
 
 lut_cmap = actor.colormap_lookup_table(hue_range=hue,
                                         saturation_range=saturation, scale_range=scale)

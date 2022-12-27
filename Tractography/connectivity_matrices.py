@@ -9,37 +9,37 @@ class ConMatNodes():
 
         if not index_to_text_file:
             if atlas == 'bna':
-                self.index_to_text_file = r'F:\data\atlases\BNA\BNA_with_cerebellum.csv'
+                self.index_to_text_file = r'G:\data\atlases\BNA\BNA_with_cerebellum.csv'
                 self.nodes_labels_bna()
                 self.lab = r'\rBN_Atlas_274_combined_1mm.nii'
 
             elif atlas == 'bnacor':
-                self.index_to_text_file = r'F:\data\atlases\BNA\BNA_with_cerebellum.csv'
+                self.index_to_text_file = r'G:\data\atlases\BNA\BNA_with_cerebellum.csv'
                 self.nodes_labels_bnacor()
                 self.lab = r'\rnewBNA_Labels.nii'
 
             elif atlas == 'mega':
-                self.index_to_text_file = r'F:\data\atlases\megaatlas\megaatlas2nii.txt'
+                self.index_to_text_file = r'G:\data\atlases\megaatlas\megaatlascortex2nii.txt'
                 self.nodes_labels_mega()
-                self.lab = r'\rMegaAtlas_Labels_highres.nii'
+                self.lab = r'\rMegaAtlas_cortex_Labels.nii'
 
             elif atlas == 'aal3':
-                self.index_to_text_file = r'F:\data\atlases\aal3\AAL3\AAL3v1_1mm.nii.txt'
+                self.index_to_text_file = r'G:\data\atlases\aal3\AAL3\AAL3v1_1mm.nii.txt'
                 self.nodes_labels_aal3()
                 self.lab = r'\rAAL3_highres_atlas.nii'
 
             elif atlas == 'yeo7_200':
-                self.index_to_text_file = r'F:\data\atlases\yeo\yeo7_200\index2label.txt'
+                self.index_to_text_file = r'G:\data\atlases\yeo\yeo7_200\index2label.txt'
                 self.nodes_labels_yeo()
                 self.lab = r'\ryeo7_200_atlas.nii'
 
             elif atlas == 'yeo7_1000':
-                self.index_to_text_file = r'F:\data\atlases\yeo\yeo7_1000\index2label.txt'
+                self.index_to_text_file = r'G:\data\atlases\yeo\yeo7_1000\index2label.txt'
                 self.nodes_labels_yeo()
                 self.lab = r'\ryeo7_1000_atlas.nii'
 
             elif atlas == 'yeo17_1000':
-                self.index_to_text_file = r'F:\data\atlases\yeo\yeo17_1000\index2label.txt'
+                self.index_to_text_file = r'G:\data\atlases\yeo\yeo17_1000\index2label.txt'
                 self.nodes_labels_yeo()
                 self.lab = r'\ryeo17_1000_atlas.nii'
 
@@ -250,6 +250,8 @@ class ConMat():
             plt.savefig(f'{self.subj_folder}cm{os.sep}{mat_type}.png')
         if show:
             plt.show()
+        else:
+            plt.clf()
 
 
 class WeightConMat(ConMat):
@@ -263,7 +265,10 @@ class WeightConMat(ConMat):
         else:
             super().__init__(atlas, subj_folder,diff_file, index_to_text_file=index_to_text_file, tract_name = tract_name)
 
-        self.weight_cm()
+        if self.weight_by == 'dist':
+            self.dist_cm()
+        else:
+            self.weight_cm()
 
     def weight_cm(self):
         from Tractography.files_loading import load_weight_by_img
@@ -305,6 +310,43 @@ class WeightConMat(ConMat):
         self.cm = m_weighted
         super().ord_cm()
         self.norm_cm = 1 / (self.ord_cm * self.factor)  # 8.75 - axon diameter 2 ACV constant
+
+    def dist_cm(self):
+        from dipy.tracking.utils import length
+
+        m_weighted = np.zeros((len(self.idx), len(self.idx)), dtype='float64')
+        for pair, tracts in self.grouping.items():
+            if pair[0] == 0 or pair[1] == 0:
+                continue
+            else:
+                s_len = 1/np.nanmean([s.shape[0] for s in tracts])
+                if not np.isfinite(s_len):
+                    s_len = 0
+
+            if 'aal3' in self.atlas:
+                r = pair[0] - 1
+                c = pair[1] - 1
+
+                if r > 81:
+                    r -= 4
+                elif r > 35:
+                    r -= 2
+
+                if c > 81:
+                    c -= 4
+                elif c > 35:
+                    c -= 2
+
+                m_weighted[r, c] = s_len
+                m_weighted[c, r] = s_len
+
+            else:
+                m_weighted[pair[0] - 1, pair[1] - 1] = s_len
+                m_weighted[pair[1] - 1, pair[0] - 1] = s_len
+
+            self.cm = m_weighted
+            super().ord_cm()
+
 
     def draw_con_mat(self,mat_type, show=True, cmap_colors = 'YlOrRd'):
         import matplotlib.pyplot as plt

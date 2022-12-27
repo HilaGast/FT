@@ -23,16 +23,17 @@ def load_cc_mask_parts(dir_name):
 
     return mask_genu, mask_abody, mask_mbody, mask_pbody, mask_splenium
 
-def calc_cc_part_val(streamlines, mask, affine, calc_type='mean'):
+def calc_cc_part_val(streamlines, mask, affine, folder_name, calc_type='mean', weight_by='3_2_AxPasi7'):
     from dipy.tracking import utils
     from dipy.tracking.streamline import Streamlines
-    from weighted_tracts import weighting_streamlines
+    #from weighted_tracts import weighting_streamlines
+    from Tractography.fiber_weighting import weight_streamlines
 
     masked_streamlines = utils.target(streamlines, affine, mask)
 
     masked_streamlines = Streamlines(masked_streamlines)
 
-    weights = weighting_streamlines(dir_name, masked_streamlines, affine, show=False, weight_by='3_2_AxPasi7')
+    weights = weight_streamlines(masked_streamlines, folder_name, weight_by)
 
     if 'mean' in calc_type:
         val = np.nanmean(weights)

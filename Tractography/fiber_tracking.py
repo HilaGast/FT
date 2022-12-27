@@ -34,10 +34,10 @@ class Tractography():
             seed_mask = mask_mat == 1
 
         elif self.seed_type == 'wm':
-            seed_mask = self.tissue_labels == 2
+            seed_mask = self.tissue_labels == 3
 
         elif self.seed_type == 'wb':
-            seed_mask = (self.tissue_labels > 0) & (self.tissue_labels < 3)
+            seed_mask = (self.tissue_labels > 1)
 
         else:
             print("Couldn't recognize seed type, please specify one of the following: gm, wm, mask, wb")
@@ -111,7 +111,7 @@ class Tractography():
         from dipy.tracking.stopping_criterion import ThresholdStoppingCriterion
 
         tensor_model = dti.TensorModel(self.gtab)
-        tenfit = tensor_model.fit(self.data, mask=self.tissue_labels == 2)
+        tenfit = tensor_model.fit(self.data, mask=self.tissue_labels == 3)
         fa = fractional_anisotropy(tenfit.evals)
         classifier = ThresholdStoppingCriterion(fa, self.parameters_dict['fa_th'])
         self.classifier = classifier
@@ -151,18 +151,26 @@ class Tractography():
         from dipy.data import default_sphere
         from dipy.direction import DeterministicMaximumDirectionGetter
         from dipy.tracking.streamline import Streamlines
-        from dipy.tracking.local_tracking import ParticleFilteringTracking
+        from dipy.tracking.local_tracking import ParticleFilteringTracking, LocalTracking
         from Tractography.files_saving import save_ft
 
         self.create_model_fit()
         detmax_dg = DeterministicMaximumDirectionGetter.from_shcoeff(self.model_fit.shm_coeff,
                                                                      max_angle=self.parameters_dict['max_ang'],
                                                                      sphere=default_sphere)
-        print(f"Tractography using PFT and {self.sc_method} clasifier")
-        self.create_classifier()
+        if self.sc_method == 'fa':
+            print(f"Tractography using Local Tracking and {self.sc_method} clasifier")
+            self.create_classifier()
+            print('Starting to compute streamlines')
+            self.streamlines = Streamlines(LocalTracking(
+            detmax_dg, self.classifier, self.seeds, self.affine, step_size=self.parameters_dict['step_size'],
+            maxlen=self.parameters_dict['length_margins'][1], return_all=False))
 
-        print('Starting to compute streamlines')
-        self.streamlines = Streamlines(ParticleFilteringTracking(
+        else:
+            print(f"Tractography using PFT and {self.sc_method} clasifier")
+            self.create_classifier()
+            print('Starting to compute streamlines')
+            self.streamlines = Streamlines(ParticleFilteringTracking(
             detmax_dg, self.classifier, self.seeds, self.affine, step_size=self.parameters_dict['step_size'],
             maxlen=self.parameters_dict['length_margins'][1],
             pft_back_tracking_dist=2,

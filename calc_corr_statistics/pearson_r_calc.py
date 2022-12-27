@@ -7,7 +7,7 @@ def multi_comp_correction(r, p):
     print('Correction for multiple comparisons')
     r = np.asarray(r)
     p = np.asarray(p)
-    for_comp = [p > 0]
+    for_comp = [r > 0]
     p_corr_fc = fdr(p[for_comp], 0.05, 'fdr_bh')[1]
     p_corr = p
     p_corr[for_comp] = p_corr_fc

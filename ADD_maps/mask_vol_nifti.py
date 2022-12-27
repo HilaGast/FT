@@ -1,5 +1,5 @@
-#from all_subj import *
-from weighted_tracts import load_ft, weighting_streamlines, load_dwi_files
+from Tractography.files_loading import load_ft, load_nii_file
+from Tractography.fiber_weighting import weight_streamlines
 import numpy as np
 import nibabel as nib
 from glob import glob
@@ -58,28 +58,37 @@ if __name__ == '__main__':
     # main_feo = r'F:\Hila\balance\eo'
     # main_fec = r'F:\Hila\balance\ec'
     # subj_folder = glob(os.path.join(main_feo,'*/')) +glob(os.path.join(main_fec,'*/'))
-    subj_folder = glob(fr'F:\Hila\Ax3D_Pack\V6\v7calibration\TheBase4Ever{os.sep}*{os.sep}')
+    subj_folder = glob(fr'G:\data\V7\HCP{os.sep}*{os.sep}')
     all_subj_folders = []
     for folder_name in subj_folder[::]:
         dir_name = folder_name + 'streamlines'
-        gtab, data, affine, labels, white_matter, nii_file, bvec_file = load_dwi_files(folder_name, small_delta=15)
+        vol_file_name = folder_name+f'average_add_map.nii'
+        if os.path.exists(vol_file_name):
+            continue
+        try:
+            diff_file = glob(f'{folder_name}data_1st.nii.gz')[0]
+        except IndexError:
+            try:
+                diff_file = glob(f'{folder_name}data_1st.nii')[0]
+            except IndexError:
+                continue
+        data, affine = load_nii_file(diff_file)
 
-        # tract_path = f'{dir_name}{n}_wholebrain_5d_labmask_msmt.trk'
         for tfiles in glob(os.path.join(dir_name, '*')):
-            if 'wholebrain_5d_labmask_msmt.trk' in tfiles:
+            #if 'wholebrain_5d_labmask_msmt.trk' in tfiles:
+            if 'HCP_tracts.tck' in tfiles:
                 tract_path = os.path.join(dir_name, tfiles)
                 continue
-        streamlines = load_ft(tract_path, nii_file)
-        mean_vol_per_tract = weighting_streamlines(folder_name, streamlines, bvec_file, weight_by='3_2_AxPasi7')
-        vox_vol = vol_map(streamlines, affine, mean_vol_per_tract, white_matter.shape)
+        streamlines = load_ft(tract_path, diff_file)
+        mean_vol_per_tract = weight_streamlines(streamlines, folder_name, weight_by='3_2_AxPasi7')
+        vox_vol = vol_map(streamlines, affine, mean_vol_per_tract, data.shape)
 
         empty_header = nib.Nifti1Header()
-        # vol_img = nib.Nifti1Image(vox_vol,affine,empty_header)
-        # vol_file_name = folder_name+f'{n}_ADD_along_streamlines.nii'
-        # nib.save(vol_img,vol_file_name)
+        vol_img = nib.Nifti1Image(vox_vol,affine,empty_header)
+        nib.save(vol_img,vol_file_name)
 
-        vox_vol_masked = vox_vol * white_matter
-        masked_vol_img = nib.Nifti1Image(vox_vol_masked, affine, empty_header)
-        masked_vol_file_name = os.path.join(folder_name, 'ADD_along_streamlines_WMmasked.nii')
-        nib.save(masked_vol_img, masked_vol_file_name)
+        # vox_vol_masked = vox_vol * white_matter
+        # masked_vol_img = nib.Nifti1Image(vox_vol_masked, affine, empty_header)
+        # masked_vol_file_name = os.path.join(folder_name, 'average_add_map_WMmasked.nii')
+        # nib.save(masked_vol_img, masked_vol_file_name)
 

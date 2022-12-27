@@ -10,6 +10,8 @@ def create_nodes_position(atlas, slice='horizontal'):
         img_file = r'F:\Hila\aal\aal3\AAL3_highres_atlas.nii'
     elif atlas == 'yeo7_200':
         img_file = r'F:\Hila\aal\yeo7_200\yeo7_200_atlas.nii'
+    elif atlas == 'bna':
+        img_file = r'G:\data\atlases\BNA\BN_Atlas_274_combined_1mm.nii'
     img_mat = nib.load(img_file)
     img = img_mat.get_fdata()
     img = np.asarray(img, int)

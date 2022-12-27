@@ -1,7 +1,7 @@
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
-from weighted_tracts import *
+from weighted_tracts import nodes_labels_aal3
 from network_analysis.create_labels_centroid_2d import create_nodes_position
 
 def find_largest_connected_component(g, show=False):

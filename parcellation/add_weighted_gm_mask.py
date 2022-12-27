@@ -7,14 +7,16 @@ class GM_mask:
 
     def __init__(self,subj_fol,atlas_name='yeo7_1000',weight_by = '3_2_AxPasi7',tractography_type = 'wholebrain_5d_labmask_msmt',atlas_main_folder = r'C:\Users\Admin\my_scripts\aal\yeo'):
         self.folder_name = subj_fol #full path of subj folder
-        self.tractography_type = tractography_type+'.trk'
-        self.nii_file_name = load_dwi_files(self.folder_name)[5]
+        self.tractography_type = tractography_type+'.tck'
+        #self.nii_file_name = load_dwi_files(self.folder_name)[5]
+        self.nii_file_name = self.folder_name+'data.nii.gz'
+        if not os.path.exists(self.nii_file_name):
+            self.nii_file_name = self.folder_name + 'data.nii'
         self.streamline_name = self._streamline_name()
         self.weight_name = weight_by
         self.streamlines = self._load_streamlines()
         self.atlas_type = str.lower(atlas_name)
         self.atlas_main_folder = atlas_main_folder
-        self.mask = self._load_gm_mask()
         if 'yeo' in self.atlas_type:
             self.atlas_file_name = os.path.join(self.folder_name, 'r' + atlas_name + '_atlas.nii')
             self.idx_to_txt = f'{self.atlas_main_folder}{os.sep}{self.atlas_type}{os.sep}index2label.txt'
@@ -24,6 +26,8 @@ class GM_mask:
             self.atlas_file_name = os.path.join(self.folder_name, 'rBN_Atlas_274_combined_1mm.nii')
             self.idx_to_txt = f'{self.atlas_main_folder}{os.sep}BNA_with_cerebellum.csv'
             self.mni_atlas_label = f'{self.atlas_main_folder}{os.sep}BN_Atlas_274_combined_1mm.nii'
+        self._load_mni_atlas()
+        self.mask = self._load_gm_mask()
 
 
 
@@ -31,13 +35,16 @@ class GM_mask:
         self.endpoint_type_name = type_name
 
 
-    def _load_gm_mask(self):
+    def _load_gm_mask(self, type=None):
         '''
         Load tissue scan (from Fast in preprocessing) to choose GM mask
         '''
+        if type == 'fast':
+            labels = load_dwi_files(self.folder_name)[3]
+            mask = (labels==2)
+        else:
+            mask = self.atlas_labels>0
 
-        labels = load_dwi_files(self.folder_name)[3]
-        mask = (labels==2)
         return mask
 
 
@@ -53,9 +60,9 @@ class GM_mask:
 
     def _streamline_name(self):
         import glob
-        tract_path = os.path.join(self.folder_name,'streamlines')
+        tract_path = self.folder_name + 'streamlines'
         try:
-            streamline_name = glob.glob(tract_path+'*/*'+self.tractography_type)[0]
+            streamline_name = glob.glob(tract_path+os.sep+self.tractography_type+'*')[0]
         except IndexError:
             print('No streamline file for subject')
 
@@ -133,7 +140,6 @@ class GM_mask:
     def weight_gm_by_add(self):
         import numpy as np
         ''' for each voxel or brain area find all streamlines passes through it and average ADD of them'''
-        self._load_mni_atlas()
         self._calc_weights()
         weighted_by_atlas = self.atlas_labels
         for i,weight in self.labels_weights.items():
@@ -150,8 +156,8 @@ class GM_mask:
 
 if __name__ == '__main__':
     import glob
-    weight_type = ['ADD','FA','MD']
-    for subj_fol in glob.glob(f'F:\data\V7\TheBase4Ever\*{os.sep}'):
+    weight_type = ['ADD','FA','Dist','Num']
+    for subj_fol in glob.glob(f'G:\data\V7\HCP\*{os.sep}'):
         atlas_name = 'yeo7_200'
 
         if not os.path.exists(os.path.join(subj_fol,'streamlines')):
@@ -165,11 +171,11 @@ if __name__ == '__main__':
                 print(f'Done with \n {file_name} \n {subj_fol} \n')
             else:
                 if 'FA' in wt:
-                    subj_mask = GM_mask(subj_fol=subj_fol, atlas_name=atlas_name, weight_by='FA')
+                    subj_mask = GM_mask(subj_fol=subj_fol, atlas_name=atlas_name, tractography_type='HCP_tracts', weight_by='FA', atlas_main_folder = r'G:\data\atlases\BNA')
                 elif 'MD' in wt:
-                    subj_mask = GM_mask(subj_fol=subj_fol, atlas_name=atlas_name, weight_by='MD')
+                    subj_mask = GM_mask(subj_fol=subj_fol, atlas_name=atlas_name, tractography_type='HCP_tracts', weight_by='MD', atlas_main_folder = r'G:\data\atlases\BNA')
                 else:
-                    subj_mask = GM_mask(subj_fol=subj_fol, atlas_name=atlas_name)
+                    subj_mask = GM_mask(subj_fol=subj_fol, atlas_name=atlas_name, tractography_type='HCP_tracts', atlas_main_folder = r'G:\data\atlases\BNA')
                 subj_mask.weight_gm_by_add()
                 subj_mask.save_weighted_gm_mask(file_name=file_name)
                 print(f'Done with \n {file_name} \n {subj_fol} \n')

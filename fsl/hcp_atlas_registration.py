@@ -6,9 +6,9 @@ def reg_from_diff_2_mprage(subj_folder,subj_mprage, diff_file_name):
 
     cmd = fr'bash -lc "fslroi {subj_folder}/{diff_file_name} {subj_folder}/data_1st 0 1"'
     os.system(cmd)
-    subj_first_charmed = subj_folder + '/data_1st.nii'
-    out_registered = subj_folder + '/rdata_1st.nii'
-    out_registered_mat = out_registered[:-4] +'.mat'
+    subj_first_charmed = subj_folder + '/data_1st.nii.gz'
+    out_registered = subj_folder + '/rdata_1st.nii.gz'
+    out_registered_mat = out_registered[:-7] +'.mat'
     options = '-bins 256 -cost normmi -searchrx -90 90 -searchry -90 90 -searchrz -90 90 -dof 12'
     cmd = 'bash -lc "flirt -ref {0} -in {1} -out {2} -omat {3} {4}"'.format(subj_mprage, subj_first_charmed, out_registered, out_registered_mat, options)
     cmd = cmd.replace(os.sep,'/')
@@ -26,19 +26,29 @@ def hcp_subj_files(subj_folder):
     return mprage_file_name, diff_file_name
 
 
-def basic_files_hcp(cortex_only=False):
-    if cortex_only:
-        atlas_label = r'F:\data\atlases\BNA\newBNA_Labels.nii'
-        atlas_template = r'F:\data\atlases\BNA\MNI152_T1_1mm_brain.nii'
+def basic_files_hcp(atlas = 'bna', cortex_only=False):
+    if atlas == 'bna':
+        if cortex_only:
+            atlas_label = r'G:\data\atlases\BNA\newBNA_Labels.nii'
+            atlas_template = r'G:\data\atlases\BNA\MNI152_T1_1mm.nii'
 
-    else:
-        atlas_label = r'F:\data\atlases\BNA\BN_Atlas_274_combined_1mm.nii'
-        atlas_template = r'F:\data\atlases\BNA\MNI152_T1_1mm.nii'
+        else:
+            atlas_label = r'G:\data\atlases\BNA\BN_Atlas_274_combined_1mm.nii'
+            atlas_template = r'G:\data\atlases\BNA\MNI152_T1_1mm.nii'
+
+    elif atlas == 'megaatlas':
+        atlas_label = r'G:\data\atlases\megaatlas\MegaAtlas_cortex_Labels.nii'
+        atlas_template = r'G:\data\atlases\megaatlas\Schaefer_template.nii'
+
+    elif atlas == 'yeo7_200':
+        atlas_label = r'G:\data\atlases\yeo\yeo7_200\yeo7_200_atlas.nii'
+        atlas_template = r'G:\data\atlases\yeo\yeo7_200\Schaefer_template.nii'
+
 
     atlas_label = os_path_2_fsl(atlas_label)
     atlas_template = os_path_2_fsl(atlas_template)
 
-    folder_name = r'F:\data\V7\HCP'
+    folder_name = r'G:\data\V7\HCP'
     subj = glob.glob(f'{folder_name}\*{os.sep}')
 
     return subj, folder_name, atlas_template, atlas_label
@@ -78,19 +88,26 @@ def register_atlas_2_diff(subj_folder, atlas_template, atlas_label):
 
 def delete_files(s):
     files = []
-    files.append(s+'rMPRAGE_brain.nii')
+    #files.append(s+'rMPRAGE_brain.nii')
     files.append(s+'rdata_1st_inv.mat')
     files.append(s+'rdata_1st.mat')
     files.append(s+'rdata_1st.nii')
     files.append(s+'rMNI152_T1_1mm_brain.mat')
+    files.append(s+'rSchaefer_template.mat')
+
     for fi in files:
         if os.path.exists(fi):
             os.remove(fi)
+    if os.path.exists(s+'data_1st.nii') and os.path.exists(s+'data_1st.nii.gz'):
+        os.remove(s+'data_1st.nii')
+
 
 if __name__ == '__main__':
-    subj, folder_name, atlas_template, atlas_label = basic_files_hcp(False)
+    subj, folder_name, atlas_template, atlas_label = basic_files_hcp(atlas = 'yeo7_200', cortex_only=False)
     for s in subj[::]:
-        if os.path.exists(s+'rBN_Atlas_274_combined_1mm.nii'):
+        if os.path.exists(s+'ryeo7_200_atlas.nii'):
+        #if os.path.exists(s+'rMegaAtlas_cortex_Labels.nii'):
+        #if os.path.exists(s + 'rBN_Atlas_274_combined_1mm.nii'):
             continue
         else:
             try:
