@@ -127,7 +127,7 @@ class ConMatNodes():
             idx.append(int(lparts[0]))
             labels_headers.append(lparts[1])
         self.idx = list(idx)
-        self.labels_headers
+        self.labels_headers = labels_headers
 
     def nodes_labels_mega(self):
         labels_file = open(self.index_to_text_file, 'r', errors='ignore')
@@ -162,7 +162,7 @@ class ConMatNodes():
 
 class ConMat():
 
-    def __init__(self,atlas,subj_folder,diff_file = 'data.nii',cm_name = None, index_to_text_file=None, tract_name = 'HCP_tracts.tck'):
+    def __init__(self,atlas,subj_folder,diff_file = 'data.nii',cm_name = None, index_to_text_file=None, tract_name = 'HCP_tracts.tck',streamlines=None):
         from dipy.tracking import utils
         from Tractography.files_loading import load_ft
 
@@ -175,8 +175,10 @@ class ConMat():
         self.affine, self.lab_labels_index = cm_nodes.nodes_by_idx(self.subj_folder)
         nii_ref = os.path.join(subj_folder,diff_file)
         if not cm_name:
-            tract_path = os.path.join(self.subj_folder, 'streamlines', tract_name)
-            streamlines = load_ft(tract_path, nii_ref)
+            if not streamlines:
+                tract_path = os.path.join(self.subj_folder, 'streamlines', tract_name)
+                streamlines = load_ft(tract_path, nii_ref)
+
             m, self.grouping = utils.connectivity_matrix(streamlines, self.affine, self.lab_labels_index,
                                                          return_mapping=True,
                                                          mapping_as_streamlines=True)
@@ -256,14 +258,14 @@ class ConMat():
 
 class WeightConMat(ConMat):
 
-    def __init__(self,weight_by, atlas,subj_folder,diff_file = 'data.nii',index_to_text_file=None, norm_factor = 8.75, tract_name = 'HCP_tracts.tck'):
+    def __init__(self,weight_by, atlas,subj_folder,diff_file = 'data.nii',index_to_text_file=None, norm_factor = 8.75, tract_name = 'HCP_tracts.tck', streamlines=None):
 
         self.weight_by = weight_by
         self.factor = norm_factor
         if not index_to_text_file:
-            super().__init__(atlas, subj_folder, diff_file, tract_name = tract_name)
+            super().__init__(atlas, subj_folder, diff_file, tract_name = tract_name, streamlines=streamlines)
         else:
-            super().__init__(atlas, subj_folder,diff_file, index_to_text_file=index_to_text_file, tract_name = tract_name)
+            super().__init__(atlas, subj_folder,diff_file, index_to_text_file=index_to_text_file, tract_name = tract_name, streamlines=streamlines)
 
         if self.weight_by == 'dist':
             self.dist_cm()

@@ -1,7 +1,7 @@
 from balance.ADD_before_vs_after import *
 from calc_corr_statistics.pearson_r_calc import *
 
-def load_rms_subj(subj_folder_list, table_file_name = r'F:\data\balance\Balance Study subjects.xlsx', sheet='All'):
+def load_rms_subj(subj_folder_list, table_file_name = r'F:\Hila\balance\Balance Study subjects.xlsx', sheet='All'):
     import pandas as pd
 
     t1 = pd.read_excel(table_file_name,sheet)

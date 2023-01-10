@@ -2,7 +2,7 @@ import os
 from fsl.eddy_correct_diff import eddy_corr
 
 
-def basic_files(cortex_only=True,atlas_type='mega'):
+def basic_files(cortex_only=True,atlas_type='mega',folder_name=r'C:\Users\Admin\Desktop\v7_calibration\thebase4ever'):
     if atlas_type == 'mega':
         if cortex_only:
             atlas_label = r'C:\Users\Admin\my_scripts\aal\megaatlas\MegaAtlas_cortex_Labels.nii'
@@ -20,8 +20,8 @@ def basic_files(cortex_only=True,atlas_type='mega'):
     elif atlas_type == 'yeo7_200':
         #atlas_label = r'F:\Hila\aal\yeo7_200\yeo7_200_atlas.nii'
         #atlas_template = r'F:\Hila\aal\yeo7_200\Schaefer_template.nii'
-        atlas_label = r'C:\Users\Admin\my_scripts\aal\yeo\yeo7_200\yeo7_200_atlas.nii'
-        atlas_template = r'C:\Users\Admin\my_scripts\aal\yeo\yeo7_200\Schaefer_template.nii'
+        atlas_label = r'G:\data\atlases\yeo\yeo7_200\yeo7_200_atlas.nii'
+        atlas_template = r'G:\data\atlases\yeo\yeo7_200\Schaefer_template.nii'
 
     elif atlas_type == 'yeo7_1000':
         atlas_label = r'C:\Users\Admin\my_scripts\aal\yeo\yeo7_1000\yeo7_1000_atlas.nii'
@@ -43,9 +43,9 @@ def basic_files(cortex_only=True,atlas_type='mega'):
     atlas_label = os_path_2_fsl(atlas_label)
     atlas_template = os_path_2_fsl(atlas_template)
 
-    #folder_name = r'F:\Hila\Ax3D_Pack\V6\after_file_prep'
-    folder_name = r'C:\Users\Admin\Desktop\v7_calibration\thebase4ever'
-    #folder_name = r'C:\Users\Admin\Desktop\Language'
+    # #folder_name = r'F:\Hila\Ax3D_Pack\V6\after_file_prep'
+    # folder_name = r'C:\Users\Admin\Desktop\v7_calibration\thebase4ever'
+    # #folder_name = r'C:\Users\Admin\Desktop\Language'
     all_subj_folders = os.listdir(folder_name)
     subj = all_subj_folders
 
