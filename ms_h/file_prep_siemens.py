@@ -5,8 +5,10 @@ main_fol = 'F:\Hila\siemens'
 all_subj_fol = glob.glob(f'{main_fol}{os.sep}*{os.sep}')
 
 experiments = ['D31d18','D45d13','D60d11']
-atlas_label = r'G:\data\atlases\BNA\newBNA_Labels.nii'
-atlas_template = r'G:\data\atlases\BNA\MNI152_T1_1mm.nii'
+#atlas_label = r'G:\data\atlases\BNA\newBNA_Labels.nii'
+#atlas_template = r'G:\data\atlases\BNA\MNI152_T1_1mm.nii'
+atlas_label = r'G:\data\atlases\yeo\yeo7_200\yeo7_200_atlas.nii'
+atlas_template = r'G:\data\atlases\yeo\yeo7_200\Schaefer_template.nii'
 atlas_label = os_path_2_fsl(atlas_label)
 atlas_template = os_path_2_fsl(atlas_template)
 
@@ -30,7 +32,7 @@ for fol in all_subj_fol:
         out_registered_mat = out_registered[:-4] + '.mat'
 
         '''Creation of inverse matrix:  '''
-        inv_mat = create_inv_mat(out_registered_mat)
+        #inv_mat = create_inv_mat(out_registered_mat)
 
         '''From MPRAGE to CHARMED using the inverse matrix: '''
         out_registered = f'{exp_fol}mprage_reg.nii'

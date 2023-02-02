@@ -1,7 +1,7 @@
 from balance.ADD_before_vs_after import *
 from calc_corr_statistics.pearson_r_calc import *
 from balance.delta_ADD_vs_delta_RMS import load_rms_subj
-from HCP_network_analysis.predict_traits_by_networks import from_whole_brain_to_networks
+from HCP_network_analysis.prediction_model.predict_traits_by_networks import from_whole_brain_to_networks
 def create_all_subject_connectivity_matrices(subjects, atlas, weight):
     connectivity_matrices = []
     for s in subjects:

@@ -1,9 +1,6 @@
-import pandas as pd
-
 from figure_creation_scripts.plot_for_predictors_values import from_model_2_bar, plot_coeff_over_iterations
-from HCP_network_analysis.predict_traits_by_networks import *
+from HCP_network_analysis.prediction_model.predict_traits_by_networks import *
 from HCP_network_analysis.hcp_cm_parameters import *
-from figure_creation_scripts.plot_for_pca_components import *
 from figure_creation_scripts.plot_regression_model_results import *
 from useful_tools.merge_dict_with_common_keys import *
 
@@ -29,7 +26,7 @@ model_allruns_mean = dict()
 
 for model_result in model_results_dict:
     model_allruns[model_result] = pd.DataFrame(columns=['value','trait','weight','iter'])
-figs_folder = r'G:\data\V7\HCP\pca analysis results\Figs\Intelligence multiple matrices - multi runs'
+figs_folder = r'G:\data\V7\HCP\pca analysis results\Figs\Intelligence multiple matrices - multi runs - PCA40'
 all_var_table = pd.DataFrame(columns = ['component', 'explained_var','sub_network'])
 
 coefficient_table = pd.DataFrame(columns = ['SomMot', 'Vis', 'Cont', 'Default', 'SalVentAttn', 'DorsAttn', 'Limbic', 'inter_network'])
@@ -63,7 +60,7 @@ for trait_name in traits:
                 networks_pca_dict[weight_by], n_components_per_network_dict[weight_by], explained_var_table, \
                 all_var_table_dict[weight_by] = pca_for_each_network_different_number_of_components(networks_matrices,
                                                                                                     network_mask_vecs,
-                                                                                                    explained_variance_th=0.2,
+                                                                                                    explained_variance_th=0.4,
                                                                                                     explained_var_table=explained_var_table,
                                                                                                     weight_by=weight_by,
                                                                                                     all_var_table=
@@ -99,7 +96,7 @@ for trait_name in traits:
     for result_value in model_results_dict:
         current_table = pd.DataFrame({'weight':list(model_results_dict[result_value].index),'trait':[trait_name]*nw,'iter':[run]*nw,'value':model_results_dict[result_value][trait_name].values})
         model_allruns[result_value] = model_allruns[result_value].append(current_table, ignore_index=True)
-    plot_coeff_over_iterations(net_coeff_dict, number_of_iterations, trait_name, figs_folder, color_dict, save_fig=True)
+    #plot_coeff_over_iterations(net_coeff_dict, number_of_iterations, trait_name, figs_folder, color_dict, save_fig=True)
 
 
 if show_graphs:
@@ -108,7 +105,7 @@ if show_graphs:
         model_allruns_mean[result_value] = model_allruns_mean[result_value].pivot(index='weight', columns='trait')
         model_allruns_mean[result_value].columns = model_allruns_mean[result_value].columns.droplevel(0)
         model_allruns_mean[result_value] = model_allruns_mean[result_value].reindex(weights)
-    label = f'{atlas}_{trait_name}_mean_{number_of_iterations}iters'
+    label = f'{atlas}_mean_{number_of_iterations}iters'
     model_heatmaps(model_allruns_mean, weights, figs_folder, label=label)
 
 

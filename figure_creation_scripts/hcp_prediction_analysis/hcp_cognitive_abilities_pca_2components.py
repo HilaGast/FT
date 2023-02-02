@@ -1,7 +1,6 @@
-import numpy as np
 import matplotlib.pyplot as plt
 
-from HCP_network_analysis.predict_traits_by_networks import *
+from HCP_network_analysis.prediction_model.predict_traits_by_networks import *
 from HCP_network_analysis.hcp_cm_parameters import *
 
 atlas_index_labels = r'G:\data\atlases\yeo\yeo7_200\index2label.txt'

@@ -1,5 +1,5 @@
 from figure_creation_scripts.plot_for_predictors_values import from_model_2_bar
-from HCP_network_analysis.predict_traits_by_networks import *
+from HCP_network_analysis.prediction_model.predict_traits_by_networks import *
 from HCP_network_analysis.hcp_cm_parameters import *
 from figure_creation_scripts.plot_for_pca_components import *
 from figure_creation_scripts.plot_regression_model_results import *
