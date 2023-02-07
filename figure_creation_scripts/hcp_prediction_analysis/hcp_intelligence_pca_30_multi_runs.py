@@ -26,7 +26,7 @@ model_allruns_mean = dict()
 
 for model_result in model_results_dict:
     model_allruns[model_result] = pd.DataFrame(columns=['value','trait','weight','iter'])
-figs_folder = r'G:\data\V7\HCP\pca analysis results\Figs\Intelligence multiple matrices - multi runs - PCA40'
+figs_folder = r'G:\data\V7\HCP\pca analysis results\Figs\Intelligence multiple matrices - multi runs - PCA50'
 all_var_table = pd.DataFrame(columns = ['component', 'explained_var','sub_network'])
 
 coefficient_table = pd.DataFrame(columns = ['SomMot', 'Vis', 'Cont', 'Default', 'SalVentAttn', 'DorsAttn', 'Limbic', 'inter_network'])
@@ -60,7 +60,7 @@ for trait_name in traits:
                 networks_pca_dict[weight_by], n_components_per_network_dict[weight_by], explained_var_table, \
                 all_var_table_dict[weight_by] = pca_for_each_network_different_number_of_components(networks_matrices,
                                                                                                     network_mask_vecs,
-                                                                                                    explained_variance_th=0.4,
+                                                                                                    explained_variance_th=0.5,
                                                                                                     explained_var_table=explained_var_table,
                                                                                                     weight_by=weight_by,
                                                                                                     all_var_table=
