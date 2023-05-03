@@ -1,2 +1,2 @@
 # FT
-all fiber tracking codes 
+All code relevant to Fiber Tracking, including preprocessing, and network analysis 
