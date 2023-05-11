@@ -15,7 +15,7 @@ def volume_based_var(atlas_type,volume_type, atlas_main_folder, subj_main_folder
     return vol_mat, mni_atlas_file_name, idx, subj_idx
 
 
-def age_var(subj_main_folder, subj_idx):
+def age_var(subj_main_folder, subj_idx=None):
     folder_list = glob.glob(f'{subj_main_folder}\*{os.sep}')
     ages=[]
     t1 = SubjTable()
@@ -24,7 +24,8 @@ def age_var(subj_main_folder, subj_idx):
         ages.append(t1.find_age_by_scan(subj))
 
     ages = np.asarray(ages)
-    ages = list(ages[subj_idx])
+    if subj_idx:
+        ages = list(ages[subj_idx])
     print(ages)
     return ages
 

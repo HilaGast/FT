@@ -44,12 +44,16 @@ def basic_files_hcp(atlas = 'bna', cortex_only=False):
         atlas_label = r'G:\data\atlases\yeo\yeo7_200\yeo7_200_atlas.nii'
         atlas_template = r'G:\data\atlases\yeo\yeo7_200\Schaefer_template.nii'
 
+    elif atlas == 'yeo7_100':
+        atlas_label = r'G:\data\atlases\yeo\yeo7_100\yeo7_100_atlas.nii'
+        atlas_template = r'G:\data\atlases\yeo\yeo7_100\Schaefer_template.nii'
+
 
     atlas_label = os_path_2_fsl(atlas_label)
     atlas_template = os_path_2_fsl(atlas_template)
 
     folder_name = r'G:\data\V7\HCP'
-    subj = glob.glob(f'{folder_name}\*{os.sep}')
+    subj = glob.glob(f'{folder_name}{os.sep}*[0-9]{os.sep}')
 
     return subj, folder_name, atlas_template, atlas_label
 
@@ -103,11 +107,12 @@ def delete_files(s):
 
 
 if __name__ == '__main__':
-    subj, folder_name, atlas_template, atlas_label = basic_files_hcp(atlas = 'yeo7_200', cortex_only=False)
+    subj, folder_name, atlas_template, atlas_label = basic_files_hcp(atlas = 'yeo7_100', cortex_only=True)
     for s in subj[::]:
-        if os.path.exists(s+'ryeo7_200_atlas.nii'):
+        # if os.path.exists(s+'ryeo7_200_atlas.nii'):
         #if os.path.exists(s+'rMegaAtlas_cortex_Labels.nii'):
         #if os.path.exists(s + 'rBN_Atlas_274_combined_1mm.nii'):
+        if os.path.exists(s + 'ryeo7_100_atlas.nii'):
             continue
         else:
             try:

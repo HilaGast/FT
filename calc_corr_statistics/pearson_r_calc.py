@@ -64,8 +64,8 @@ def calc_corr(x,y,fdr_correct = False, remove_outliers = False):
             x,y = remove_outliers_y(x,y)
 
         r, p = pearsonr(x,y)
-        if p>0.05:
-            r=0
+        #if p>0.05:
+        #    r=0
 
         return r, p
 
@@ -79,7 +79,7 @@ def calc_corr_mat(x,y,fdr_correct = True, remove_outliers = False):
 
     r_vec = []
     p_vec = []
-    for i in range(np.shape(y)[1]):
+    for i in range(np.shape(y)[0]):
         yi = y[:,i]
         xi = x[:,i]
         xi,yi = remove_nans(xi,yi)

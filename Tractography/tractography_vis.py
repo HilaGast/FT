@@ -2,22 +2,30 @@ import os
 import nibabel as nib
 
 
-def show_tracts_simple(s_list, folder_name, fig_type, down_samp=1, vec_vols=None,hue=[0.25, -0.05],saturation=[0.1,1],scale=[3, 6], weighted=False):
+def show_tracts_simple(s_list, folder_name, fig_type, down_samp=1, vec_vols=None,hue=[0.25, -0.05],saturation=[0.1,1],scale=[3, 6], weighted=False, colormap=None, min=0, max=1):
     from dipy.viz import window, actor
-
+    from fury.colormap import create_colormap
+    import numpy as np
     if weighted:
         if down_samp != 1:
             vec_vols = vec_vols[::down_samp]
             s_list = s_list[::down_samp]
+        if colormap:
+            vec_vols.append(max)
+            vec_vols.append(min)
+            cmap = create_colormap(np.asarray(vec_vols), name='seismic')
+            vec_vols = vec_vols[:-2]
+            cmap = cmap[:-2]
+            streamlines_actor = actor.line(s_list, cmap, linewidth=2)
 
-        lut_cmap = actor.colormap_lookup_table(hue_range=hue, saturation_range=saturation, scale_range=scale)
-
-        streamlines_actor = actor.line(s_list, vec_vols, linewidth=2, lookup_colormap=lut_cmap)
-        bar = actor.scalar_bar(lut_cmap)
+        else:
+            cmap = actor.colormap_lookup_table(hue_range=hue, saturation_range=saturation, scale_range=scale)
+            streamlines_actor = actor.line(s_list, vec_vols, linewidth=2, lookup_colormap=cmap)
+        bar = actor.scalar_bar(cmap)
         r = window.Scene()
         r.add(streamlines_actor)
         r.add(bar)
-        weighted_img = f'{folder_name}{os.sep}streamlines{os.sep}add_weighted_{fig_type}.png'
+        weighted_img = f'{folder_name}{os.sep}streamlines{os.sep}{fig_type}.png'
         window.show(r)
         r.set_camera(r.camera_info())
         window.record(r, out_path=weighted_img, size=(800, 800))
@@ -50,3 +58,6 @@ def show_tracts_by_mask(folder_name, mask_file_name, s_list, affine,fig_type=Non
     if not fig_type:
         fig_type = mask_file_name
     show_tracts_simple(masked_streamlines, folder_name, fig_type)
+
+
+

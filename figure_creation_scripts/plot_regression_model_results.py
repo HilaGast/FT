@@ -24,29 +24,30 @@ def model_heatmaps(model_results_dict, weights, figs_folder = None, save_fig=Tru
         plt.savefig(rf'{figs_folder}\RMSE_{label}.png')
     plt.show()
 
-    figure = plt.figure(figsize=(len(traits), 1+len(weights)/2))
+    # figure = plt.figure(figsize=(len(traits), 1+len(weights)/2))
+    #
+    # ax = sns.heatmap(model_results_dict['F'], linewidths=0.7, annot=True, fmt='.2f', cmap='mako', square=True,
+    #                  xticklabels=traits, yticklabels=list(model_results_dict['F'].index))
 
-    ax = sns.heatmap(model_results_dict['F'], linewidths=0.7, annot=True, fmt='.2f', cmap='mako', square=True,
-                     xticklabels=traits, yticklabels=list(model_results_dict['F'].index))
-    ax.set_title('F')
-    if save_fig:
-        plt.savefig(rf'{figs_folder}\F_{label}.png')
-    plt.show()
+    # figure = plt.figure(figsize=(len(traits), 1+len(weights)/2))
+    #
+    # ax = sns.heatmap(model_results_dict['Accuracy']/100, linewidths=0.7, annot=True, fmt='.0%', cmap='mako', square=True,
+    #                  xticklabels=traits, yticklabels=list(model_results_dict['Accuracy'].index))
+    # ax.set_title('Accuracy')
+    # if save_fig:
+    #     plt.savefig(rf'{figs_folder}\Accuracy_{label}.png')
+    # plt.show()
+    # ax.set_title('F')
+    # if save_fig:
+    #     plt.savefig(rf'{figs_folder}\F_{label}.png')
+    # plt.show()
+    #
+    # figure = plt.figure(figsize=(len(traits), 1+len(weights)/2))
+    #
+    # ax = sns.heatmap(model_results_dict['p-value'], linewidths=0.7, annot=True, fmt='.0e', cmap='mako', vmax=0.05,
+    #                  square=True, xticklabels=traits, yticklabels=list(model_results_dict['p-value'].index), norm=LogNorm())
+    # ax.set_title('p-value')
+    # if save_fig:
+    #     plt.savefig(rf'{figs_folder}\p-value_{label}.png')
+    # plt.show()
 
-    figure = plt.figure(figsize=(len(traits), 1+len(weights)/2))
-
-    ax = sns.heatmap(model_results_dict['p-value'], linewidths=0.7, annot=True, fmt='.0e', cmap='mako', vmax=0.05,
-                     square=True, xticklabels=traits, yticklabels=list(model_results_dict['p-value'].index), norm=LogNorm())
-    ax.set_title('p-value')
-    if save_fig:
-        plt.savefig(rf'{figs_folder}\p-value_{label}.png')
-    plt.show()
-
-    figure = plt.figure(figsize=(len(traits), 1+len(weights)/2))
-
-    ax = sns.heatmap(model_results_dict['Accuracy']/100, linewidths=0.7, annot=True, fmt='.0%', cmap='mako', square=True,
-                     xticklabels=traits, yticklabels=list(model_results_dict['Accuracy'].index))
-    ax.set_title('Accuracy')
-    if save_fig:
-        plt.savefig(rf'{figs_folder}\Accuracy_{label}.png')
-    plt.show()

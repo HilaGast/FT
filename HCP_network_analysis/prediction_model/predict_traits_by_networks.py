@@ -1,6 +1,9 @@
 import numpy as np
 import glob, os
 import pandas as pd
+
+from HCP_network_analysis.prediction_model.choose_random_state import random_state
+from calc_corr_statistics.spearman_r_calc import calc_corr
 from draw_scatter_fit import draw_scatter_fit
 
 def create_all_subject_connectivity_matrices(subjects):
@@ -14,35 +17,45 @@ def create_all_subject_connectivity_matrices(subjects):
     return connectivity_matrices
 
 
-def from_whole_brain_to_networks(connectivity_matrices, atlas_index_labels):
+def from_whole_brain_to_networks(connectivity_matrices, atlas_index_labels, hemi_flag=True):
 
     labels_file = open(atlas_index_labels, 'r', errors='ignore')
     labels_name = labels_file.readlines()
     labels_file.close()
-    labels_networks = find_network_names(labels_name)
-    network_mask_dict = create_dict_of_networks_indices(labels_name, labels_networks)
-    networks_matrices, network_mask_vecs = create_networks_matrices(connectivity_matrices, network_mask_dict)
+    labels_networks = find_network_names(labels_name, hemi_flag)
+    network_mask_dict = create_dict_of_networks_indices(labels_name, labels_networks, hemi_flag)
+    if hemi_flag:
+        networks_matrices, network_mask_vecs = create_networks_hemi_matrices(connectivity_matrices, network_mask_dict)
+    else:
+        networks_matrices, network_mask_vecs = create_networks_matrices(connectivity_matrices, network_mask_dict)
 
     return networks_matrices, network_mask_vecs
 
 
-def find_network_names(labels_name):
+def find_network_names(labels_name, hemi_flag):
     label_networks = []
     for l in labels_name:
         label_parts = l.split('\t')
-        label_networks.append(label_parts[1].split('_')[2])
+        if hemi_flag:
+            label_networks.append(label_parts[1].split('_')[2]+'_'+label_parts[1].split('_')[1])
+        else:
+            label_networks.append(label_parts[1].split('_')[2])
     label_networks = list(set(label_networks))
 
     return label_networks
 
 
-def create_dict_of_networks_indices(labels_name, label_networks):
+def create_dict_of_networks_indices(labels_name, label_networks, hemi_flag):
     network_mask_dict = {}
     for network in label_networks:
         network_mask_dict[network] = []
     for l in labels_name:
         label_parts = l.split('\t')
-        network_mask_dict[label_parts[1].split('_')[2]].append(int(label_parts[0])-1)
+        if hemi_flag:
+            network_mask_dict[label_parts[1].split('_')[2]+'_'+label_parts[1].split('_')[1]].append(int(label_parts[0]) - 1)
+        else:
+            network_mask_dict[label_parts[1].split('_')[2]].append(int(label_parts[0])-1)
+
     return network_mask_dict
 
 
@@ -67,6 +80,38 @@ def create_networks_matrices(connectivity_matrices, network_mask_dict):
 
     return networks_matrices, network_mask_vecs
 
+def create_networks_hemi_matrices(connectivity_matrices, network_mask_dict):
+    networks_matrices = {}
+    network_mask_vecs = {}
+    inter_network_mask_lh = np.zeros(connectivity_matrices.shape, dtype = bool)
+    inter_network_mask_rh = np.zeros(connectivity_matrices.shape, dtype=bool)
+    for network1 in network_mask_dict.keys():
+        network1_name_parts = network1.split('_')
+        for network2 in network_mask_dict.keys():
+            network2_name_parts = network2.split('_')
+            network_mask = np.zeros(connectivity_matrices.shape, dtype = bool)
+
+            for r in network_mask_dict[network1]:
+                for c in network_mask_dict[network2]:
+                    network_mask[r, c, :] = True
+            if network1_name_parts[0]==network2_name_parts[0] and network1_name_parts[1]==network2_name_parts[1]:
+                networks_matrices[network1] = connectivity_matrices*network_mask
+                network_mask_vecs[network1] = network_mask[:,:,0].flatten()
+            elif network1_name_parts[0]==network2_name_parts[0] and network1_name_parts[1]!=network2_name_parts[1]:
+                networks_matrices[network1_name_parts[0]] = connectivity_matrices*network_mask
+                network_mask_vecs[network1_name_parts[0]] = network_mask[:,:,0].flatten()
+            elif network1_name_parts[1]==network2_name_parts[1]:
+                if network1_name_parts[1] == 'LH':
+                    inter_network_mask_lh+=network_mask
+                elif network2_name_parts[1] == 'RH':
+                    inter_network_mask_rh += network_mask
+
+    networks_matrices['inter_network_LH'] = connectivity_matrices*inter_network_mask_lh
+    network_mask_vecs['inter_network_LH'] = inter_network_mask_lh[:,:,0].flatten()
+    networks_matrices['inter_network_RH'] = connectivity_matrices*inter_network_mask_rh
+    network_mask_vecs['inter_network_RH'] = inter_network_mask_rh[:,:,0].flatten()
+
+    return networks_matrices, network_mask_vecs
 
 def pca_for_each_network(networks_matrices, network_mask_vecs, n_components = 2, explained_var_table = None, weight_by = ''):
     from sklearn.preprocessing import StandardScaler
@@ -104,13 +149,13 @@ def pca_for_each_network_different_number_of_components(networks_matrices, netwo
             network_vector[s,:] = vec[network_mask_vecs[network]].reshape(1,-1)
         network_vector = StandardScaler().fit_transform(network_vector)
         n_components = 2
-        pca = PCA(n_components=n_components)
+        pca = PCA(n_components=n_components, svd_solver = 'full',random_state=42) #former xgboost:42
         n_pca = pca.fit_transform(network_vector)
         explained_variance = np.cumsum(pca.explained_variance_ratio_)[-1]
 
         while explained_variance < explained_variance_th:
             n_components += 1
-            pca = PCA(n_components=n_components)
+            pca = PCA(n_components=n_components, svd_solver = 'full',random_state=42) #former xgboost:42
             n_pca = pca.fit_transform(network_vector)
             explained_variance = np.cumsum(pca.explained_variance_ratio_)[-1]
         #print(f'Total explained variance for {n_components} components:')
@@ -125,6 +170,25 @@ def pca_for_each_network_different_number_of_components(networks_matrices, netwo
 
     return networks_pca, n_components_per_network, explained_var_table, all_var_table
 
+
+
+def network_components_without_PCA(networks_matrices, network_mask_vecs):
+    from sklearn.preprocessing import StandardScaler
+
+    networks_features = {}
+    n_components_per_network = {}
+    for network in networks_matrices:
+        network_vector = np.zeros((networks_matrices[network].shape[-1], np.sum(network_mask_vecs[network])))
+        for s in range(networks_matrices[network].shape[-1]):
+            vec = networks_matrices[network][:, :, s].flatten()
+            network_vector[s,:] = vec[network_mask_vecs[network]].reshape(1,-1)
+        network_vector = StandardScaler().fit_transform(network_vector)
+        n_components = len(network_vector[0])
+
+        networks_features[network] = network_vector
+        n_components_per_network[network] = n_components
+
+    return networks_features, n_components_per_network
 
 def positive_negative_components_for_each_network(connectivity_matrices, networks_matrices, trait_vector, th = 0.005):
 
@@ -194,15 +258,14 @@ def remove_nans(network_components,trait_vector):
     return network_components_nonan, trait_vector
 
 
-def linear_regression(networks_components, trait_vector, network_list, n_components = 2, model_results_dict = None, weight_by = '', trait_name = '', lasso_regularized = False, alpha = 0.01):
+def linear_regression(networks_components, trait_vector, network_list, figs_folder = 'G:\data\V7\HCP\pca analysis results\Figs', n_components = 2, return_r=True, weight_by = '', trait_name = '', lasso_regularized = False, alpha = 0.01, rs=0):
     from sklearn.model_selection import train_test_split
     import statsmodels.api as sm
-    from statsmodels.tools.eval_measures import rmse
 
     X, y = create_X_y(networks_components, trait_vector, network_list, n_components)
     mask_vec = []
     X = sm.add_constant(X)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=rs) #Fine:
     if lasso_regularized:
         model = sm.OLS(y_train, X_train, 'drop').fit_regularized(alpha=alpha, L1_wt=1, refit=True) #Lasso
         mask_vec = model.params != 0
@@ -212,18 +275,40 @@ def linear_regression(networks_components, trait_vector, network_list, n_compone
     #print(model.summary())
     y_pred = model.predict(X_test)
 
-    if type(model_results_dict) == dict:
 
-        model_results_dict['R2_adj'][trait_name][weight_by] = model.rsquared_adj
-        model_results_dict['F'][trait_name][weight_by] = model.fvalue
-        model_results_dict['p-value'][trait_name][weight_by] = model.f_pvalue
-        model_results_dict['CV(RMSE)'][trait_name][weight_by] = rmse(y_test, y_pred)/np.nanmean(y_test)
-        errors = abs(y_pred - y_test)
-        mape = 100 * (errors / y_test) # mean absolute percentage error
-        accuracy = 100 - np.mean(mape)
-        model_results_dict['Accuracy'][trait_name][weight_by] = accuracy # %
+    r,p = calc_corr(y_test, y_pred ,trait_name, weight_by, figs_folder)
+    #print(f'Pearson r: {r},   p: {p}')
+    if return_r:
+        return model, mask_vec, r, p
+    else:
+        return model, mask_vec
 
-    return model, model_results_dict, mask_vec
+
+def linear_regression_permutation_test(networks_components, trait_vector, network_list, n, model_params, figs_folder = 'G:\data\V7\HCP\pca analysis results\Figs', n_components = 2,  lasso_regularized = False, alpha = 0.01):
+    import statsmodels.api as sm
+    from sklearn.model_selection import train_test_split
+
+    X, y = create_X_y(networks_components, trait_vector, network_list, n_components)
+    X = sm.add_constant(X)
+
+    all_r = []
+    for i in range(n):
+        # Splitting:
+        train_X, test_X, train_y, test_y = train_test_split(X, y,
+                                                            test_size=model_params['test_size'], random_state=1)
+
+        # Instantiation:
+        if lasso_regularized:
+            model = sm.OLS(train_y, train_X, 'drop').fit_regularized(alpha=alpha, L1_wt=1, refit=True)  # Lasso
+
+        else:
+            model = sm.OLS(train_y, train_X, 'drop').fit()  # No regularization
+
+        y_pred = model.predict(test_X)
+        r = calc_corr(test_y, y_pred, 'Total', '', figs_folder, show=False)[0]
+        all_r.append(r)
+
+    return all_r
 
 
 def create_X_y(networks_components, trait_vector, network_list, n_components = 2):
@@ -259,9 +344,9 @@ if __name__ == '__main__':
     n_components = 2
     subjects = glob.glob(f'G:\data\V7\HCP\*[0-9]{os.sep}cm{os.sep}{atlas}_{weight_by}_{regularization}_{ncm}_cm_ord.npy')
     connectivity_matrices = create_all_subject_connectivity_matrices(subjects)
-    networks_matrices, network_mask_vecs = from_whole_brain_to_networks(connectivity_matrices, atlas_index_labels)
+    networks_matrices, network_mask_vecs = from_whole_brain_to_networks(connectivity_matrices, atlas_index_labels,hemi_flag=True)
     #networks_pca = pca_for_each_network(networks_matrices, network_mask_vecs, n_components = n_components)
-    networks_pca, n_components_per_network = pca_for_each_network_different_number_of_components(networks_matrices, network_mask_vecs, explained_variance_th = 0.2)
+    networks_pca, n_components_per_network, explained_var_table, all_var_table = pca_for_each_network_different_number_of_components(networks_matrices, network_mask_vecs, explained_variance_th = 0.2)
     trait_vector = load_trait_vector(trait_name, subjects)
     print(weight_by, regularization, ncm)
     linear_regression(networks_pca, trait_vector, n_components = n_components)

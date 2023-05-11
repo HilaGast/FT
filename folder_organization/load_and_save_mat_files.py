@@ -1,34 +1,19 @@
-from all_subj import all_subj_names,all_subj_folders,index_to_text_file,subj_folder
 import numpy as np
 from weighted_tracts import nodes_labels_yeo7
 import scipy.io as sio
-
-subj = all_subj_folders
-names = all_subj_names
-i=0
-for s, n in zip(subj, names):
-    i+=1
-    idx = nodes_labels_yeo7(index_to_text_file)[1]
-    id = np.argsort(idx)
-
-    folder_name = subj_folder + s
-    axcaliber_file = rf'{folder_name}\weighted_wholebrain_4d_labmask_yeo7_200_nonnorm.npy'
-    axcaliber_mat = np.load(axcaliber_file)
-    axcaliber_mat = axcaliber_mat[id]
-    axcaliber_mat = axcaliber_mat[:, id]
-
-    num_of_tracts_file = rf'{folder_name}\non-weighted_wholebrain_4d_labmask_yeo7_200_nonnorm.npy'
-    num_of_tracts_mat = np.load(num_of_tracts_file)
-    num_of_tracts_mat = np.asarray(num_of_tracts_mat,dtype='float64')
-    num_of_tracts_mat = num_of_tracts_mat[id]
-    num_of_tracts_mat = num_of_tracts_mat[:, id]
+import os, glob
 
 
-    fa_file = rf'{folder_name}\weighted_wholebrain_4d_labmask_yeo7_200_FA_nonnorm.npy'
-    fa_mat = np.load(fa_file)
-    fa_mat = fa_mat / 100
-    fa_mat = fa_mat[id]
-    fa_mat = fa_mat[:, id]
+subj_list = glob.glob(f'G:\data\V7\HCP\*[0-9]{os.sep}')
+th = 'Org'
+atlas = 'yeo7_200'
 
-    mat_file_name = rf'{folder_name}\subj{i}.mat'
-    sio.savemat(mat_file_name, {'axcaliber': axcaliber_mat,'number_of_tracts':num_of_tracts_mat,'fa':fa_mat})
+for sl in subj_list:
+
+    add_cm = np.load(f'{sl}cm{os.sep}{atlas}_ADD_{th}_SC_cm_ord.npy')
+    num_cm = np.load(f'{sl}cm{os.sep}{atlas}_Num_{th}_SC_cm_ord.npy')
+    fa_cm = np.load(f'{sl}cm{os.sep}{atlas}_FA_{th}_SC_cm_ord.npy')
+
+
+    mat_file_name = rf'{sl}{os.sep}cm{os.sep}{atlas}_{th}.mat'
+    sio.savemat(mat_file_name, {'axsi': add_cm,'number_of_tracts':num_cm,'fa':fa_cm})

@@ -38,6 +38,11 @@ class ConMatNodes():
                 self.nodes_labels_yeo()
                 self.lab = r'\ryeo7_1000_atlas.nii'
 
+            elif atlas == 'yeo7_100':
+                self.index_to_text_file = r'G:\data\atlases\yeo\yeo7_100\index2label.txt'
+                self.nodes_labels_yeo()
+                self.lab = r'\ryeo7_100_atlas.nii'
+
             elif atlas == 'yeo17_1000':
                 self.index_to_text_file = r'G:\data\atlases\yeo\yeo17_1000\index2label.txt'
                 self.nodes_labels_yeo()
@@ -321,7 +326,8 @@ class WeightConMat(ConMat):
             if pair[0] == 0 or pair[1] == 0:
                 continue
             else:
-                s_len = 1/np.nanmean([s.shape[0] for s in tracts])
+                #s_len = 1/np.nanmean([s.shape[0] for s in tracts])
+                s_len = np.nanmean(list(length(tracts)))
                 if not np.isfinite(s_len):
                     s_len = 0
 

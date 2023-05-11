@@ -17,3 +17,22 @@ def weight_streamlines(streamlines, folder_name, weight_by='3_2_AxPasi7'):
         mean_vol_per_tract.append(np.nanmean(s[non_out]))
 
     return mean_vol_per_tract
+
+
+def weight_streamlines_by_cm(streamlines, affine, labels, cm, cm_lookup):
+    from dipy.tracking import utils
+
+    cm = cm[cm_lookup,:]
+    cm = cm[:,cm_lookup]
+
+    m, grouping = utils.connectivity_matrix(streamlines, affine, labels, return_mapping=True, mapping_as_streamlines=True)
+    s_list = []
+    vec_vols = []
+    for nodes in grouping.keys():
+        if nodes[0] == 0 or nodes[1] == 0:
+            continue
+        for s in grouping[nodes]:
+            s_list.append(s)
+            vec_vols.append(cm[nodes[0]-1,nodes[1]-1])
+
+    return s_list, vec_vols

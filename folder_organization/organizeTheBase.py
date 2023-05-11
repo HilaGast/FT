@@ -41,16 +41,18 @@ def rename(nifti_dir):
     print(scans)
     for scan in scans:
         scan_parts = os.path.split(scan)
-        if 'MB3AP' in scan_parts[-1]:
+        if 'd15D45AP' in scan_parts[-1]:
             if 'bval' in scan_parts[-1]:
-                os.rename(scan, os.path.join(scan_parts[0], 'bvals'))
+                os.rename(scan, os.path.join(scan_parts[0], 'data.bval'))
             elif 'bvec' in scan_parts[-1]:
-                os.rename(scan, os.path.join(scan_parts[0], 'bvecs'))
+                os.rename(scan, os.path.join(scan_parts[0], 'data.bvec'))
             elif '.nii' in scan_parts[-1]:
-                os.rename(scan, os.path.join(scan_parts[0], 'dif_AP.nii'))
-        elif 'MB3PA' in scan_parts[-1]:
+                os.rename(scan, os.path.join(scan_parts[0], 'data.nii'))
+        elif 'd15D45PA' in scan_parts[-1]:
             if '.nii' in scan_parts[-1]:
-                os.rename(scan, os.path.join(scan_parts[0], 'dif_PA.nii'))
+                os.rename(scan, os.path.join(scan_parts[0], 'data_PA.nii'))
+            else:
+                os.remove(scan)
         elif 'MPRAGE' in scan_parts[-1]:
             os.rename(scan, os.path.join(scan_parts[0], 'MPRAGE.nii'))
 
@@ -63,8 +65,8 @@ def clean(sub_dir):
 
 
 if __name__ == '__main__':
-    #subj_list = ['2180','2215','2241','2252','2245','2299','2304','2629','2530','2531','2438','2477','2543','2545','2781','2703','2795','2417','2423','2478','2449','2504','2549','2493']
-    #copy_files(subj_list)
-    for sub in glob(r'C:\Users\Admin\Desktop\v7_calibration\thebase4ever\*'):
+
+    for sub in glob(r'F:\Hila\TDI\moreTheBase4Ever\*'):
         dicom2nii(sub)
         clean(sub)
+        rename(sub)

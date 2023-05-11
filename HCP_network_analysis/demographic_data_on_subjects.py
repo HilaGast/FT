@@ -11,7 +11,8 @@ def count_subjects(subj_list):
         #    load_mat_cc_file(dir_name)
         #except FileNotFoundError:
         #    continue
-        if os.path.exists(sl+'raverage_add_map.nii'):
+        #if os.path.exists(sl+'raverage_add_map.nii'):
+        if os.path.exists(sl + 'cm' + os.sep):
             subj_number = sl.split(os.sep)[-2]
             short_list.append(subj_number)
     print(f"{len(short_list)} subjects in group")

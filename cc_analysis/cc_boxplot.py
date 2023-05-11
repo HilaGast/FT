@@ -45,9 +45,9 @@ def choose_condition(main_path):
 
 
 
-def load_mat_cc_file(cc_file):
+def load_mat_cc_file(folder_name):
     import scipy.io as sio
-    #cc_file = os.path.join(folder_name,'CC_mask.mat')
+    cc_file = os.path.join(folder_name,'CC_mask.mat')
     mat_content = sio.loadmat(cc_file)
     slice_num = mat_content['SliceNum'][0][0]
     mask_genu = mat_content['masks'][:,:,1]
@@ -96,7 +96,7 @@ def create_cc_vioplot(cc_parts_table):
             'xtick.color': 'white', 'ytick.color': 'white', 'axes.grid': False, 'grid.color': 'gray',
             'axes.labelcolor': 'white', 'axes.labelsize': 40, 'axes.labelweight': 'bold', 'legend.fontsize': 32,
             'legend.title_fontsize': 32, 'xtick.labelsize': 32, 'ytick.labelsize': 38})
-    ax = sb.violinplot(data = cc_parts_table, color=[0.4, 0.7, 0.4]) #), palette="set1")
+    ax = sb.violinplot(data = cc_parts_table, color=[0.4, 0.7, 0.4],showmedians=True, linewidth=5) #), palette="set1")
     plt.show()
 
 def create_cc_boxplot(cc_parts_table):
@@ -110,23 +110,36 @@ def create_comperative_cc_vioplot(cc_parts_table, vio_type, split_by = 'Protocol
     import seaborn as sb
     import matplotlib.pyplot as plt
     if vio_type == 'split':
+        sb.set_theme(rc={'figure.figsize':(14,18),'axes.facecolor':'black','figure.facecolor':'black', 'text.color': 'white', 'xtick.color': 'white', 'ytick.color': 'white','axes.grid':False,'grid.color':'gray','axes.labelcolor':'white','axes.labelsize':40,'axes.labelweight':'bold','legend.fontsize':32,'legend.title_fontsize':32,'xtick.labelsize':32,'ytick.labelsize':38})
         ax = sb.violinplot(x = 'CC_Part', y= 'ADD', hue = split_by, data = cc_parts_table,palette="Set2", split=True)
         plt.show()
 
     else:
         for part in set(cc_parts_table['CC_Part']):
             print(f'{part}:')
-            print(np.nanmin(cc_parts_table["ADD [\u03BCm]"][cc_parts_table["CC_Part"] == part]))
+            print(np.nanmean(cc_parts_table["ADD [\u03BCm]"][cc_parts_table["CC_Part"] == part]))
 
-        sb.set_theme(rc={'figure.figsize':(14,18),'axes.facecolor':'black','figure.facecolor':'black', 'text.color': 'white', 'xtick.color': 'white', 'ytick.color': 'white','axes.grid':False,'grid.color':'gray','axes.labelcolor':'white','axes.labelsize':40,'axes.labelweight':'bold','legend.fontsize':32,'legend.title_fontsize':32,'xtick.labelsize':32,'ytick.labelsize':38})
-        ax = sb.violinplot(x = 'CC_Part', y= 'ADD [\u03BCm]', hue = split_by,scale='width', data = cc_parts_table,palette="Set2")
+        sb.set_theme(rc={'figure.figsize':(22,24),'axes.facecolor':'black','figure.facecolor':'black', 'text.color': 'white', 'xtick.color': 'white', 'ytick.color': 'white','axes.grid':False,'grid.color':'gray','axes.labelcolor':'white','axes.labelsize':50,'axes.labelweight':'bold','legend.fontsize':32,'legend.title_fontsize':34,'xtick.labelsize':34,'ytick.labelsize':38})
+        ax = sb.violinplot(x = 'CC_Part', y= 'ADD [\u03BCm]', hue = split_by,scale='width', data = cc_parts_table,palette="Set2",showmedians=True, linewidth=5)
+
+        ax.set_ylabel('eADD')
+        ax.set_xlabel('\n CC parts')
+
         plt.show()
 
 
 def create_comperative_cc_boxplot(cc_parts_table):
     import seaborn as sb
     import matplotlib.pyplot as plt
-    ax = sb.boxplot(x = 'CC part', y= 'ADD', hue = 'Protocol', data = cc_parts_table, palette="Set2")
+    sb.set_theme(
+        rc={'figure.figsize': (18, 24), 'axes.facecolor': 'black', 'figure.facecolor': 'black', 'text.color': 'white',
+            'xtick.color': 'white', 'ytick.color': 'white', 'axes.grid': False, 'grid.color': 'gray',
+            'axes.labelcolor': 'white', 'axes.labelsize': 40, 'axes.labelweight': 'bold', 'legend.fontsize': 32,
+            'legend.title_fontsize': 32, 'xtick.labelsize': 32, 'ytick.labelsize': 38})
+    ax = sb.boxplot(x='CC_Part', y='ADD [\u03BCm]', hue='Protocol', data=cc_parts_table, palette="Set2")
+    ax.set_ylim(4, 11)
+    ax.set_ylabel('eADD')
+    ax.set_xlabel('\n CC parts')
     plt.show()
 
 
@@ -208,6 +221,7 @@ def show_vioplot_compare_protocols(vio_type):
     cc_parts_table = pd.DataFrame(d_vals)
     cc_parts_table = detect_and_remove_outliers(cc_parts_table)[0]
     create_comperative_cc_vioplot(cc_parts_table, vio_type)
+    #create_comperative_cc_boxplot(cc_parts_table)
     anova_for_different_protocols(cc_parts_table)
 
 
@@ -215,14 +229,14 @@ def detect_and_remove_outliers(table):
     from sklearn.neighbors import LocalOutlierFactor
     from statsmodels.robust.scale import mad
 
-    if 'CC Part' in table.columns:
+    if 'CC_Part' in table.columns:
         if 'Protocol' in table.columns:
             for protocol in set(table['Protocol']):
                 #print(protocol)
 
-                for part in set(table['CC Part']):
+                for part in set(table['CC_Part']):
                     #print(part)
-                    vals = table['ADD [\u03BCm]'][table['CC Part'] == part][table['Protocol'] == protocol].values
+                    vals = table['ADD [\u03BCm]'][table['CC_Part'] == part][table['Protocol'] == protocol].values
                     new_vals = vals.copy()
                     th = mad(vals)
                     diff = abs(vals - np.median(vals))
@@ -230,18 +244,18 @@ def detect_and_remove_outliers(table):
                     #print(f'{vals} \n {mask}')
                     #new_vals[mask] = np.nan
                     new_vals[mask] = np.nanmean(new_vals[mask<1])
-                    ii = table.loc[table['CC Part'] == part][table['Protocol'] == protocol].index
+                    ii = table.loc[table['CC_Part'] == part][table['Protocol'] == protocol].index
                     table['ADD [\u03BCm]'][ii]=new_vals
                     print(sum(mask))
 
         else:
-            for part in set(table['CC Part']):
-                vals = table['ADD [\u03BCm]'][table['CC Part'] == part].values
+            for part in set(table['CC_Part']):
+                vals = table['ADD [\u03BCm]'][table['CC_Part'] == part].values
                 th = mad(vals)
                 diff = abs(vals - np.median(vals))
                 mask = diff / th > 2.5
                 vals[mask] = np.nan
-                table['ADD [\u03BCm]'][table['CC Part'] == part] = vals
+                table['ADD [\u03BCm]'][table['CC_Part'] == part] = vals
                 #print(sum(mask))
 
         new_table = table
@@ -264,7 +278,7 @@ def anova_for_cc_parts(table):
 
 
 
-def anova_for_different_protocols(table):
+def anova_for_different_protocols(table, posthoc=True):
     from scipy.stats import f_oneway
     from pingouin import rm_anova
     grouped_table = table.groupby('Protocol')
@@ -278,6 +292,10 @@ def anova_for_different_protocols(table):
         aov = rm_anova(data=protable, subject='SubjNum', dv='ADD [\u03BCm]', within=['CC_Part'])
         print(f"F={aov['F'][0]},p={aov['p-unc'][0]}")
         print(aov)
+        if posthoc:
+            from pingouin import pairwise_tests
+            ptest = pairwise_tests(data=protable, subject='SubjNum', dv='ADD [\u03BCm]', within=['CC_Part'],padjust='bonf')
+            print(ptest)
 
 def compare_deltas_old_axcaliber(main_path,group,norm=False):
     subjD31, subjD45, subjD60 = choose_condition(main_path)
@@ -322,8 +340,8 @@ def compare_group_study_OldAxCaliber(cc_parts_table, protocol):
 
 
 if __name__ == '__main__':
-    show_vioplot_single_protocol('hcp')
-    #show_vioplot_compare_protocols(vio_type = 'sidebyside')
+    #show_vioplot_single_protocol('hcp')
+    show_vioplot_compare_protocols(vio_type = 'sidebyside')
     #show_vioplot_compare_protocols(vio_type='split')
 
     # main_path = r'F:\Hila\Ax3D_Pack\V6\v7calibration\Old_AxCaliber\H'

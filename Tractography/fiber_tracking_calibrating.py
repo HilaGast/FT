@@ -29,7 +29,7 @@ for sf in subj_folders:
 
     # MSMT Tractography:
     if not os.path.exists(subj_main_folder+f'streamlines{os.sep}wb_msmt_cmc.tck'):
-        parameters_dict = fiber_tracking_parameters(max_angle= 30,sh_order= 8, seed_density= 3, streamlines_lengths_mm= [50, 1000], step_size= 0.2)
+        parameters_dict = fiber_tracking_parameters(max_angle= 30,sh_order= 6, seed_density= 4, streamlines_lengths_mm= [50, 500], step_size= 1)
         trk1 = Tractography(subj_main_folder, 'msmt' , 'cmc' , 'wm' , parameters_dict, dat, tissue_labels_file_name=tissue_labels_file_name, pve_file_name=pve_file_name)
         trk1.fiber_tracking()
 

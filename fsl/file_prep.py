@@ -37,7 +37,7 @@ def basic_files(cortex_only=True,atlas_type='mega',folder_name=r'C:\Users\Admin\
 
     elif atlas_type == 'bna_cor':
         atlas_label = r'F:\data\atlases\BNA\newBNA_Labels.nii'
-        atlas_template = r'F:\data\atlases\BNA\MNI152_T1_1mm_brain.nii'
+        atlas_template = r'G:\data\atlases\BNA\MNI152_T1_1mm.nii'
 
 
     atlas_label = os_path_2_fsl(atlas_label)
@@ -59,9 +59,9 @@ def subj_files(subj_folder):
     for file in os.listdir(subj_folder):
         if 'MPRAGE' in file and not (file.startswith('r') or 'brain' in file):
             mprage_file_name = file
-        if (file.endswith('001.nii') and 'AP' in file) or  ('diff_corrected_D' in file and file.endswith('.nii') and not 'mask' in file):
+        if (file.endswith('001.nii') and 'AP' in file) or  ('diff_corrected_D' in file and file.endswith('.nii') and not 'mask' in file) or ('data.nii' in file):
             diff_file_name = file
-        if file.endswith('001.nii') and 'PA' in file:
+        if (file.endswith('001.nii') and 'PA' in file) or ('data_PA.nii' in file):
             pa_file_name = file
     return mprage_file_name, diff_file_name, pa_file_name
 
@@ -208,28 +208,28 @@ def os_path_2_fsl(path):
 
 
 
-def all_func_to_run(s, folder_name, atlas_template, atlas_label):
+def all_func_to_run(s, folder_name, atlas_template, atlas_label, fast = True, atlas_registration_only = False):
     subj_name = r'/' + s + r'/'
     subj_folder = folder_name + subj_name
     subj_folder = subj_folder.replace(os.sep, '/')
 
     mprage_file_name, diff_file_name, pa_file_name = subj_files(subj_folder)
-
+    out_registered = None
     subj_folder = os_path_2_fsl(subj_folder)
+    if not atlas_registration_only:
+        eddy_corr(subj_folder,diff_file_name,pa_file_name,acqr_file='/mnt/h/comp/Desktop/language_eddy/datain.txt',index_file='/mnt/h/comp/Desktop/language_eddy/index186.txt')
 
-    eddy_corr(subj_folder,diff_file_name,pa_file_name,acqr_file='/mnt/h/comp/Desktop/language_eddy/datain.txt',index_file='/mnt/h/comp/Desktop/language_eddy/index186.txt')
+        subj_mprage, out_brain = bet_4_regis_mprage(subj_folder,mprage_file_name,'diff_corrected.nii')
 
-    subj_mprage, out_brain = bet_4_regis_mprage(subj_folder,mprage_file_name,'diff_corrected.nii')
+        ''' Registration from MPRAGE to 1st CHARMED scan using inverse matrix of CHARMED to MPRAGE registration:
+        From CHARMED to MPRAGE:'''
+        subj_first_charmed, out_registered, out_registered_mat = reg_from_chm_2_mprage(subj_folder, subj_mprage)
 
-    ''' Registration from MPRAGE to 1st CHARMED scan using inverse matrix of CHARMED to MPRAGE registration:
-    From CHARMED to MPRAGE:'''
-    subj_first_charmed, out_registered, out_registered_mat = reg_from_chm_2_mprage(subj_folder, subj_mprage)
+        '''Creation of inverse matrix:  '''
+        inv_mat = create_inv_mat(out_registered_mat)
 
-    '''Creation of inverse matrix:  '''
-    inv_mat = create_inv_mat(out_registered_mat)
-
-    '''From MPRAGE to CHARMED using the inverse matrix: '''
-    out_registered = reg_from_mprage_2_chm_inv(subj_folder, mprage_file_name, out_brain, subj_first_charmed, inv_mat)
+        '''From MPRAGE to CHARMED using the inverse matrix: '''
+        out_registered = reg_from_mprage_2_chm_inv(subj_folder, mprage_file_name, out_brain, subj_first_charmed, inv_mat)
 
     ''' BET for mni template:
         BET for mni template:
@@ -238,6 +238,8 @@ def all_func_to_run(s, folder_name, atlas_template, atlas_label):
 
     '''Registration from atlas to regisered MPRAGE:
         flirt for atlas to registered MPRAGE for primary guess:  '''
+    if not out_registered:
+        out_registered = subj_folder + 'rMPRAGE_brain.nii'
     atlas_brain, atlas_registered_flirt, atlas_registered_flirt_mat = flirt_primary_guess(subj_folder, atlas_template,
                                                                                           out_registered)
 
@@ -251,27 +253,18 @@ def all_func_to_run(s, folder_name, atlas_template, atlas_label):
     '''apply fnirt warp on atlas labels:   '''
     atlas_labels_registered = apply_fnirt_warp_on_label(subj_folder, atlas_label, out_registered, warp_name)
 
-    '''FAST segmentation:   '''
-    fast_seg(out_registered)
+    if fast:
+        '''FAST segmentation:   '''
+        fast_seg(out_registered)
 
     print('Finished file prep for ' + subj_name[:-1])
 
 
 if __name__ == '__main__':
     from multiprocessing import Process
-    subj, folder_name, atlas_template, atlas_label = basic_files(False, atlas_type='yeo7_200')
-    for s in subj[::]:
-        all_func_to_run(s, folder_name, atlas_template, atlas_label)
+    subj, folder_name, atlas_template, atlas_label = basic_files(False, atlas_type='yeo7_200',folder_name = 'F:\Hila\TDI\moreTheBase4Ever')
 
 
-
-
-    '''multi procesing:'''
-    '''i= [41,42,43,44,46,47,50,53]
-    subj= [subj[j] for j in i]
-    process = [Process(target=all_func_to_run,args=(s, folder_name, atlas_template, atlas_label)) for s in subj]
-    for p in process:
-        p.start()
-    for p in process:
-        p.join()
-    '''
+    subj, folder_name, atlas_template, atlas_label = basic_files(False, atlas_type='bna_cor', folder_name = 'F:\Hila\TDI\moreTheBase4Ever')
+    for s in subj[4::]:
+        all_func_to_run(s, folder_name, atlas_template, atlas_label, fast=False, atlas_registration_only=True)

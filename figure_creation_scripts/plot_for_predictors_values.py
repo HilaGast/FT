@@ -1,14 +1,18 @@
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 import seaborn as sns
 from scipy.stats import t
 
 def network_2_colors_dict(network_list):
     networks = list(set(network_list))
     networks.sort()
-    colors = ['tomato', 'lightblue', 'lightgreen', 'gray', 'khaki', 'orange', 'plum', 'pink']
-    colors_dict = dict(zip(networks, colors))
-    return colors_dict
+    if len(network_list)<=8:
+        colors = ['tomato', 'lightblue', 'lightgreen', 'gray', 'khaki', 'orange', 'plum', 'pink']
+    else:
+        colors = ['r','tomato', 'darkred','b', 'lightblue','darkblue', 'forestgreen', 'lightgreen', 'darkgreen', 'goldenrod', 'wheat','brown', 'm','plum', 'purple','orange', 'gold','darkorange', 'hotpink','pink', 'deeppink','lightgray','gray']
+    color_dict = dict(zip(networks, colors))
+    return color_dict
 
 def create_network_col(network_list, all_var_table, n_components_per_network):
 
@@ -63,6 +67,36 @@ def from_model_2_bar(model, network_list, all_var_table, n_components_per_networ
 
     return sum_table, color_dict
 
+def from_model_2_bar_fi(model, network_list, all_var_table, n_components_per_network, trait_name, weight_by, ncm, atlas, figs_folder = None, ax=None, label=None, save_fig=True):
+    if label is None:
+        label = f'{weight_by}_{ncm}_{atlas}_{trait_name}'
+    network_col = create_network_col(network_list, all_var_table, n_components_per_network)
+    table = pd.DataFrame({'feature_importance': np.abs(model.feature_importances_), 'network':network_col})
+    table = table[1:]
+
+    color_dict = network_2_colors_dict(network_list)
+    sum_table = table.groupby('network').max()
+    sum_table = sum_table.sort_values(by='feature_importance', ascending=False)
+    if ax is None:
+        ax = plt.gca()
+
+    fi = sum_table['feature_importance'].values
+    fi = fi/np.nansum(fi)
+    sns.barplot(x=sum_table.index, y=fi, hue=sum_table.index, palette=color_dict, width=5, ax=ax)
+
+    ax.set_title(f'Feature Importance for \n {label} \n', fontsize=80)
+    ax.set_ylabel('Feature Importance', fontsize=80)
+    ax.set_xlabel('\n \n Sub Network', fontsize=80)
+    plt.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
+    plt.tick_params(axis='y', which='both', labelsize=70)
+
+    ax.figure.set_size_inches(60, 40)
+    ax.legend(title='network', fontsize=55, title_fontsize=65, loc='lower right')
+    ax.set_xlim(-4, 33)
+    ax.set_ylim(0, 0.15)
+    if save_fig:
+        plt.savefig(rf'{figs_folder}\barplot_of_FI_for_{label}.png')
+    plt.show()
 
 
 def pie_chart_of_significant_coefficient_pca_components_from_each_network(table, color_dict, label, figs_folder, save_fig=True):

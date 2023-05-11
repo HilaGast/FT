@@ -6,8 +6,9 @@ leave_one_out_results = pd.DataFrame(columns=['all','no_vis','no_default','no_co
 
 #Total:
 total = leave_one_out_results.copy()
-total['all'] = [0.08,0.12,0.18,0.05]
-total['no_cont'] = [0.06,0.09,0.12,0.04]
+total['all'] = [0.2, 0.17, 0.25]
+
+total['Cont'] = [0.06,0.09,0.12]
 total['no_default'] = [0.06,0.09,0.12,0.05]
 total['no_sommot'] = [0.07,0.13,0.11,0.04]
 total['no_limbic'] = [0.06,0.11,0.12,0.05]
@@ -15,6 +16,7 @@ total['no_inter'] = [0.07,0.10,0.11,0.04]
 total['no_dorsattn'] = [0.05,0.12,0.12,0.05]
 total['no_salventattn'] = [0.06,0.11,0.11,0.05]
 total['no_vis'] = [0.08,0.11,0.11,0.04]
+total['n']
 total = total.transpose()
 total = total/total.loc[['all']].values
 total = total.drop('all')

@@ -3,7 +3,7 @@ import numpy as np
 
 class SubjTable:
 
-    def __init__(self, table_file_name='F:\data\MRI table update new.xlsx', sheet = 'THE BASE'):
+    def __init__(self, table_file_name='G:\data\MRI table update new.xlsx', sheet = 'THE BASE'):
 
         self.table = pd.read_excel(table_file_name,sheet)
 

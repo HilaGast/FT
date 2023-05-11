@@ -26,13 +26,10 @@ def get_local_efficiency(cm, return_dict=False):
     """
 
     cm = np.array(cm)
-    cm = cm / np.nanmax(cm)
+    cm = 1/cm
     cm[np.isnan(cm)] = 0
-    cm = (cm / np.nansum(cm)) * 100
-    cm2 = 1 / cm
-    cm2[cm == 0] = 0
-    g = nx.from_numpy_matrix(cm2)
-    short_paths = dict(nx.all_pairs_dijkstra_path_length(g))
+    g = nx.from_numpy_matrix(cm)
+    short_paths = dict(nx.all_pairs_dijkstra_path_length(g, weight='weight'))
     eff_dict={}
     eff_vec = np.zeros(len(short_paths.keys()))
     for i in short_paths.keys():

@@ -9,11 +9,12 @@ atlas_index_labels = r'G:\data\atlases\yeo\yeo7_200\index2label.txt'
 ncm = ncm_options[0]
 atlas = atlases[0]
 regularization = reg_options[1]
+networks =['SomMot_LH', 'Vis_LH', 'Cont_LH', 'Default_LH', 'SalVentAttn_LH', 'DorsAttn_LH', 'Limbic_LH','SomMot_RH', 'Vis_RH', 'Cont_RH', 'Default_RH', 'SalVentAttn_RH', 'DorsAttn_RH', 'Limbic_RH','SomMot', 'Vis', 'Cont', 'Default', 'SalVentAttn', 'DorsAttn', 'Limbic', 'inter_network']
 
 nw = len(weights)
 traits = ['CogTotalComp_AgeAdj', 'CogFluidComp_AgeAdj', 'CogCrystalComp_AgeAdj']
-number_of_iterations = 50
-explained_var_table = pd.DataFrame(index = weights, columns = ['SomMot', 'Vis', 'Cont', 'Default', 'SalVentAttn', 'DorsAttn', 'Limbic', 'inter_network'])
+number_of_iterations = 200
+explained_var_table = pd.DataFrame(index = weights, columns = networks)
 
 model_r2_table = pd.DataFrame(index = weights, columns = traits, dtype='float')
 model_F_table = pd.DataFrame(index = weights, columns = traits, dtype='float')
@@ -26,10 +27,10 @@ model_allruns_mean = dict()
 
 for model_result in model_results_dict:
     model_allruns[model_result] = pd.DataFrame(columns=['value','trait','weight','iter'])
-figs_folder = r'G:\data\V7\HCP\pca analysis results\Figs\Intelligence multiple matrices - multi runs - PCA50'
+figs_folder = r'G:\data\V7\HCP\pca analysis results\Figs\Intelligence multiple matrices - nets&hemi - 200multi runs - PCA20'
 all_var_table = pd.DataFrame(columns = ['component', 'explained_var','sub_network'])
 
-coefficient_table = pd.DataFrame(columns = ['SomMot', 'Vis', 'Cont', 'Default', 'SalVentAttn', 'DorsAttn', 'Limbic', 'inter_network'])
+coefficient_table = pd.DataFrame(columns = networks)
 for trait_name in traits:
     networks_pca_dict = dict()
     n_components_per_network_dict = dict()
@@ -56,11 +57,11 @@ for trait_name in traits:
                     f'G:\data\V7\HCP\*[0-9]{os.sep}cm{os.sep}{atlas}_{weight_by}_{regularization}_{ncm}_cm_ord.npy')
                 connectivity_matrices = create_all_subject_connectivity_matrices(subjects)
                 networks_matrices, network_mask_vecs = from_whole_brain_to_networks(connectivity_matrices,
-                                                                                    atlas_index_labels)
+                                                                                    atlas_index_labels, hemi_flag=True)
                 networks_pca_dict[weight_by], n_components_per_network_dict[weight_by], explained_var_table, \
                 all_var_table_dict[weight_by] = pca_for_each_network_different_number_of_components(networks_matrices,
                                                                                                     network_mask_vecs,
-                                                                                                    explained_variance_th=0.5,
+                                                                                                    explained_variance_th=0.2,
                                                                                                     explained_var_table=explained_var_table,
                                                                                                     weight_by=weight_by,
                                                                                                     all_var_table=

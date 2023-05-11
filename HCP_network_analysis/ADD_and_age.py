@@ -18,13 +18,13 @@ for sl in shortlist:
     subj_number = sl.split(os.sep)[-2]
 
 
-    add_cm = np.load(f'{dir_name}{os.sep}cm{os.sep}add_{atlas}_cm_ord_histmatch_th.npy')
+    #add_cm = np.load(f'{dir_name}{os.sep}cm{os.sep}add_{atlas}_cm_ord_histmatch_th.npy')
 
-    num_cm = np.load(f'{dir_name}{os.sep}cm{os.sep}num_bna_cm_ord_histmatch_th.npy')
+    #num_cm = np.load(f'{dir_name}{os.sep}cm{os.sep}num_bna_cm_ord_histmatch_th.npy')
 
-    mutual = np.nansum(add_cm*num_cm, axis=0)
+    #mutual = np.nansum(add_cm*num_cm, axis=0)
 
-    add.append(mutual/np.nansum(num_cm, axis=0))
+    #add.append(mutual/np.nansum(num_cm, axis=0))
 
     ages.append(int(table1['Age_in_Yrs'][table1['Subject']==int(subj_number)].values))
 

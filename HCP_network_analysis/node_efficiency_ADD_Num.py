@@ -61,16 +61,16 @@ main_subj_folders = r'G:\data\V7\HCP\surfaces_networks_NodeLevel'
 
 eff_add_mean = np.nanmean(eff_add_mat, axis=0)
 weighted_by_atlas, weights_dict = weight_atlas_by_add(mni_atlas_file_name, eff_add_mean, idx)
-save_as_nii_aal(weighted_by_atlas, mni_atlas_file_name, nii_base, f'{atlas}_LocEff_ADD', main_subj_folders)
+save_as_nii_aal(weighted_by_atlas, mni_atlas_file_name, nii_base, f'{atlas}_{th}_LocEff_ADD', main_subj_folders)
 
 eff_num_mean = np.nanmean(eff_num_mat, axis=0)
 weighted_by_atlas, weights_dict = weight_atlas_by_add(mni_atlas_file_name, eff_num_mean, idx)
-save_as_nii_aal(weighted_by_atlas, mni_atlas_file_name, nii_base, f'{atlas}_LocEff_Num', main_subj_folders)
+save_as_nii_aal(weighted_by_atlas, mni_atlas_file_name, nii_base, f'{atlas}_{th}_LocEff_Num', main_subj_folders)
 
 eff_fa_mean = np.nanmean(eff_fa_mat, axis=0)
 weighted_by_atlas, weights_dict = weight_atlas_by_add(mni_atlas_file_name, eff_fa_mean, idx)
-save_as_nii_aal(weighted_by_atlas, mni_atlas_file_name, nii_base, f'{atlas}_LocEff_FA', main_subj_folders)
+save_as_nii_aal(weighted_by_atlas, mni_atlas_file_name, nii_base, f'{atlas}_{th}_LocEff_FA', main_subj_folders)
 
 eff_dist_mean = np.nanmean(eff_dist_mat, axis=0)
 weighted_by_atlas, weights_dict = weight_atlas_by_add(mni_atlas_file_name, eff_dist_mean, idx)
-save_as_nii_aal(weighted_by_atlas, mni_atlas_file_name, nii_base, f'{atlas}_LocEff_Dist', main_subj_folders)
+save_as_nii_aal(weighted_by_atlas, mni_atlas_file_name, nii_base, f'{atlas}_{th}_LocEff_Dist', main_subj_folders)

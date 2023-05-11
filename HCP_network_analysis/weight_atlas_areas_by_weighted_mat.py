@@ -18,7 +18,7 @@ if __name__ == '__main__':
     atlas = 'yeo7_200'
     idx = np.load(rf'G:\data\V7\HCP\{atlas}_cm_ord_lookup.npy')
     weights = ['Num', 'Dist', 'FA', 'ADD']
-    th = 'HistMatch'
+    th = 'HistMatchNorm'
     ncm = 'SC'
     for w in weights:
         mat_name = f'{main_mat_folder}{os.sep}average_{atlas}_{w}_{th}_{ncm}.npy'

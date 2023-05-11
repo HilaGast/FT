@@ -7,7 +7,7 @@ from HCP_network_analysis.prediction_model.predict_traits_by_networks import cre
     from_whole_brain_to_networks, pca_for_each_network_different_number_of_components, load_trait_vector, \
     linear_regression
 
-num_iters = [5, 10, 50]#, 100, 500, 1000]
+num_iters = [1000]
 trait = 'CogTotalComp_AgeAdj'
 atlas_index_labels = r'G:\data\atlases\yeo\yeo7_200\index2label.txt'
 ncm = ncm_options[0]
@@ -28,6 +28,7 @@ for ve in variation_explained:
     print(f'** {ve} var explained **')
     mean_r = []
     std_r = []
+    run_x = []
     for ni in num_iters:
         print(f'* {ni} iterations')
         adjusted_r2=[]
@@ -52,16 +53,20 @@ for ve in variation_explained:
                                                                     model_results_dict=model_results_dict,
                                                                     weight_by=weight_by, trait_name=trait,
                                                                     lasso_regularized=True, alpha=1)
-            adjusted_r2.append(model_results_dict['R2_adj'])
-        mean_r.append(np.nanmean(adjusted_r2))
-        std_r.append(np.nanstd(adjusted_r2))
-        print(f'{mean_r} , {std_r}')
+            adjusted_r2.append(float(model_results_dict['R2_adj'].loc['ADD'].values))
+            if run % 10 ==0:
+                mean_r.append(np.nanmean(adjusted_r2))
+                std_r.append(np.nanstd(adjusted_r2))
+                run_x.append(run)
+                print(f'{mean_r} , {std_r}')
 
-    plt.errorbar(range(len(num_iters)),mean_r,yerr=std_r,linestyle='None',fmt='o',capsize=3)
+    #plt.errorbar(range(len(num_iters)),mean_r,yerr=std_r,linestyle='None',fmt='o',capsize=3)
+    plt.errorbar(run_x,mean_r,yerr=std_r,linestyle='None',fmt='o',capsize=3)
+
     plt.title(f'Mean adjusted $r^{2}$ \n'
               f'{int(ve*100)}% variation explained')
-    plt.xticks(range(len(num_iters)), num_iters)
+    plt.xticks(run_x[::10], run_x[::10])
     plt.xlabel('# iterations')
     plt.ylabel('Mean adjusted $r^{2}$')
-    plt.savefig(f'{figs_folder}{os.sep}{weight_by}_{int(ve*100)}_var_explained.png')
+    plt.savefig(f'{figs_folder}{os.sep}{weight_by}_{int(ve*100)}_var_explained_cumulative.png')
     plt.show()
