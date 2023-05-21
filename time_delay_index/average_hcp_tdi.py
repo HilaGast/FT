@@ -41,7 +41,7 @@ def calc_avg_mat(subj,fig_type,fol_2_save, calc_type='mean', atlas_type = 'yeo7_
 
 if __name__ == '__main__':
     main_fol = 'G:\data\V7\HCP'
-    atlas = 'yeo7_200'
+    atlas = 'yeo7_100'
     mat_type = 'time_th3'
     all_subj_fol = all_subj_fol = glob.glob(f'{main_fol}{os.sep}*[0-9]{os.sep}')
     weights = ['Num', 'Add', 'Dist', 'FA', 'time_th3']

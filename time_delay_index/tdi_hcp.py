@@ -5,8 +5,8 @@ from Time_from_node_to_node.time_mat import time_weighted_matrix, th_num_mat, n_
 import networkx as nx
 
 main_fol = 'G:\data\V7\HCP'
-all_subj_fol = glob.glob(f'{main_fol}{os.sep}*{os.sep}')
-atlas = 'bnacor'
+all_subj_fol = glob.glob(f'{main_fol}{os.sep}*[0-9]{os.sep}')
+atlas = 'yeo7_100'
 for subj_fol in all_subj_fol:
     subj = subj_fol.split(os.sep)[-2]
     file_name = rf'{subj_fol}cm{os.sep}{atlas}_time_th3_Org_SC_cm_ord.npy'

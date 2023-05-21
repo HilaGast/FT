@@ -3,7 +3,7 @@ import numpy as np
 from ms_h.present_time_mat_by_hemisphere import divide_mat_to_inter_intra_hemi_mats
 
 main_fol = 'F:\Hila\TDI\siemens'
-exp = 'D45d13'
+exp = 'D31d18'
 atlas = 'bnacor'
 mat_type = 'time_th3'
 h_mat_files = glob.glob(f'{main_fol}{os.sep}C*{os.sep}{exp}{os.sep}cm{os.sep}{mat_type}_{atlas}_cm_ord.npy')

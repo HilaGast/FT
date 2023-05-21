@@ -8,7 +8,7 @@ def average_time_mat(group_subj, group_name, main_fol, mat_type, atlas_type):
 
 if __name__ == '__main__':
     main_fol = 'F:\Hila\TDI\siemens'
-    exp = 'D45d13'
+    exp = 'D31d18'
     atlas_type = 'bnacor'
     mat_type = 'time_th3'
     ms_subj_fol = glob.glob(f'{main_fol}{os.sep}T*{os.sep}{exp}')

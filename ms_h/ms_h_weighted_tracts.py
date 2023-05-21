@@ -7,6 +7,7 @@ from Tractography.tractography_vis import show_tracts_simple
 
 # choose representative subject:
 subj_fol = r'F:\Hila\TDI\siemens\C1156_05\D60d11'
+save_to_folder = 'F:\Hila\TDI\siemens\group_cm'
 dat_file = subj_fol+os.sep+'diff_corrected_D60d11.nii'
 affine = nib.load(dat_file).affine
 tract_name = subj_fol+os.sep+'streamlines'+os.sep+'wb_csd_fa.tck'
@@ -14,7 +15,7 @@ streamlines = load_ft(tract_name, dat_file)
 lab = subj_fol+r'\rnewBNA_Labels.nii'
 
 # choose cm for weighting:
-cm = np.load(r'F:\Hila\TDI\siemens\group_cm\median_time_th30_bnacor_D60d11_ms.npy')
+cm = np.load(r'F:\Hila\TDI\siemens\group_cm\D60d11_time_th3_bnacor_cm_ord_ttest.npy')
 cm_lookup = np.load(r'F:\Hila\TDI\siemens\group_cm\bnacor_cm_ord_lookup.npy')
 
 # choose labels for weighting:
@@ -27,5 +28,5 @@ s_list, vec_vols = weight_streamlines_by_cm(streamlines, affine, labels, cm, cm_
 
 # show weighted streamlines:
 
-#show_tracts_simple(s_list, subj_fol, 'ms_minus_h_over_subj', down_samp=1, vec_vols=vec_vols, colormap = 'seismic',min=-0.04,max=0.04, weighted=True)
-show_tracts_simple(s_list, subj_fol, 'ms_over_subj', down_samp=1, vec_vols=vec_vols, scale = [0.05,0.15], weighted=True)
+show_tracts_simple(s_list, save_to_folder, 'ttest_no_pvalue_th', time2present=3, down_samp=1, vec_vols=vec_vols, colormap = 'seismic',min=-7,max=7, weighted=True)
+#show_tracts_simple(s_list, subj_fol, 'ms_over_subj', down_samp=1, vec_vols=vec_vols, scale = [0.05,0.15], weighted=True)

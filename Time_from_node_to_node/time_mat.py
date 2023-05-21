@@ -36,7 +36,7 @@ def n_times_random_walk(graph_num, graph_weights, start_node, node_list, n = 50,
 if __name__ == '__main__':
     main_fol = 'F:\Hila\TDI\siemens'
     all_subj_fol = glob.glob(f'{main_fol}{os.sep}*{os.sep}')
-    exp = 'D45d13'
+    exp = 'D31d18'
     atlas = 'yeo7_200'
     for subj_fol in all_subj_fol:
         if 'group' in subj_fol or 'surfaces' in subj_fol:

@@ -17,11 +17,12 @@ if __name__ == '__main__':
     main_mat_folder = r'F:\Hila\TDI\siemens\group_cm'
     atlas = 'bnacor'
     idx = np.load(rf'F:\Hila\TDI\siemens\group_cm\{atlas}_cm_ord_lookup.npy')
-    mat_type = 'time_th30'
+    mat_type = 'time_th3'
     exp = 'D60d11'
-    group = 'ms'
+    group = 'h'
     mat_name = f'{main_mat_folder}{os.sep}median_{mat_type}_{atlas}_{exp}_{group}.npy'
     mat = np.load(mat_name)
     weight_vec = average_weighted_nonzero_mat(mat)
     weighted_by_atlas, weights_dict = weight_atlas_by_add(mni_atlas_file_name, weight_vec, idx)
     save_as_nii_aal(weighted_by_atlas, mni_atlas_file_name, nii_base, f'{atlas}_NodeAverage_{mat_type}_{exp}_{group}', main_subj_folders)
+

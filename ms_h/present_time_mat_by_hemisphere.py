@@ -12,6 +12,10 @@ def divide_mat_to_inter_intra_hemi_mats(mat, atlas):
         l_idx = np.arange(0, 100)
         r_idx = np.arange(100, 200)
 
+    if atlas == 'yeo7_100':
+        l_idx = np.arange(0, 50)
+        r_idx = np.arange(50, 100)
+
     for c in range(mat.shape[0]):
         for r in range(mat.shape[1]):
             if c in l_idx and r in l_idx:
@@ -41,6 +45,6 @@ def show_inter_intra_hemi_hist(mat_intra, mat_inter, mat =None):
 
 
 if __name__ == '__main__':
-    mat = np.load(r'F:\Hila\TDI\siemens\median_time_th3_bnacor_D60d11_h.npy')
-    mat_intra, mat_inter = divide_mat_to_inter_intra_hemi_mats(mat, 'bnacor')
+    mat = np.load(r'G:\data\V7\HCP\cm\median_yeo7_100_time_th3_Org_SC.npy')
+    mat_intra, mat_inter = divide_mat_to_inter_intra_hemi_mats(mat, 'yeo7_100')
     show_inter_intra_hemi_hist(mat_intra, mat_inter, mat)

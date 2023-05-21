@@ -1,21 +1,21 @@
 import numpy as np
 
 
-def multi_comp_correction(r, p):
+def multi_comp_correction(r, p, th=0.05):
     from statsmodels.stats.multitest import multipletests as fdr
     import copy
     print('Correction for multiple comparisons')
     r = np.asarray(r)
     p = np.asarray(p)
     for_comp = [r > 0]
-    p_corr_fc = fdr(p[for_comp], 0.05, 'fdr_bh')[1]
+    p_corr_fc = fdr(p[for_comp], th, 'fdr_bh')[1]
     p_corr = p
     p_corr[for_comp] = p_corr_fc
 
     r_th = np.asarray(copy.deepcopy(r))
-    r_th[np.asarray(p_corr) > 0.05] = 0
+    r_th[np.asarray(p_corr) > th] = 0
 
-    return list(r),list(p),list(r_th)
+    return r,p ,r_th
 
 
 def calc_corr(x,y,fdr_correct = False, remove_outliers = False):
