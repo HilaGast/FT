@@ -19,4 +19,4 @@ fig_type = 'WB_front'
 streamlines = load_ft(tract_file, nii_ref)
 s_list = [s1 for s1 in streamlines]
 mean_vol_per_tract = weight_streamlines(streamlines,subj_main_folder, weight_by='3_2_AxPasi7')
-show_tracts_simple(s_list, subj_main_folder, fig_type, down_samp=30, vec_vols=mean_vol_per_tract,hue=hue,saturation=saturation,scale=scale, weighted=True)
+show_tracts_simple(s_list, subj_main_folder, fig_type, time2present=1, down_samp=30, vec_vols=mean_vol_per_tract,hue=hue,saturation=saturation,scale=scale, weighted=True)

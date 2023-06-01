@@ -6,20 +6,17 @@ from Tractography.files_loading import load_ft
 from Tractography.tractography_vis import show_tracts_simple
 
 # choose representative subject:
-save_to_folder = 'F:\Hila\TDI\siemens\group_cm'
-#subj_fol = r'F:\Hila\TDI\siemens\C1156_05\D60d11'
-#dat_file = subj_fol+os.sep+'diff_corrected_D60d11.nii'
-subj_fol = r'G:\data\V7\HCP\100307'
-dat_file = subj_fol+os.sep+'data.nii.gz'
+save_to_folder = 'F:\Hila\TDI\TheBase4Ever\cm'
+subj_fol = r'F:\Hila\TDI\TheBase4Ever\002543'
+dat_file = subj_fol+os.sep+'diff_corrected.nii'
 
 affine = nib.load(dat_file).affine
-#tract_name = subj_fol+os.sep+'streamlines'+os.sep+'wb_csd_fa.tck'
-tract_name = subj_fol+os.sep+'streamlines'+os.sep+'HCP_tracts.tck'
+tract_name = subj_fol+os.sep+'streamlines'+os.sep+'tracts_unsifted.tck'
 streamlines = load_ft(tract_name, dat_file)
 lab = subj_fol+r'\rnewBNA_Labels.nii'
 
 # choose cm for weighting:
-cm = np.load(r'F:\Hila\TDI\siemens\group_cm\median_time_th3_bnacor_D60d11_h.npy')
+cm = np.load(r'F:\Hila\TDI\TheBase4Ever\002543\cm\bnacor_time_th3_cm_ord.npy')
 cm[np.isnan(cm)] = 0
 cm_lookup = np.load(r'F:\Hila\TDI\siemens\group_cm\bnacor_cm_ord_lookup.npy')
 
@@ -34,4 +31,4 @@ s_list, vec_vols = weight_streamlines_by_cm(streamlines, affine, labels, cm, cm_
 # show weighted streamlines:
 
 #show_tracts_simple(s_list, save_to_folder, 'median_ms', time2present=4, down_samp=2, vec_vols=vec_vols, colormap = 'seismic',min=-7,max=7, weighted=True)
-show_tracts_simple(s_list, save_to_folder, 'median_h', time2present=4, down_samp=2, vec_vols=vec_vols, scale = [0,600], weighted=True)
+show_tracts_simple(s_list, save_to_folder, 'median_h', time2present=1, down_samp=1, vec_vols=vec_vols, scale = [0,600], weighted=True)

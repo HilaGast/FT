@@ -39,12 +39,13 @@ def show_inter_intra_hemi_hist(mat_intra, mat_inter, mat =None):
     plt.legend(['Intra-hemispheric links', 'Inter-hemispheric links'])
     plt.show()
 
+
     plt.hist(mat[~np.isnan(mat)], bins=50, color='green', alpha = 0.2, range=(0, 500))
     plt.hist(mat[~np.isnan(mat)], bins=50, histtype='step', color='green', linewidth=2, range=(0, 500))
     plt.show()
 
 
 if __name__ == '__main__':
-    mat = np.load(r'G:\data\V7\HCP\cm\median_yeo7_100_time_th3_Org_SC.npy')
+    mat = np.load(r'G:\data\V7\HCP\cm\median_yeo7_100_Num_Org_SC.npy')
     mat_intra, mat_inter = divide_mat_to_inter_intra_hemi_mats(mat, 'yeo7_100')
     show_inter_intra_hemi_hist(mat_intra, mat_inter, mat)

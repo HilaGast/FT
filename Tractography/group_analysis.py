@@ -12,14 +12,18 @@ def create_all_subject_connectivity_matrices(subjects):
 
 def norm_matrices(matrices, norm_type = 'scaling'):
     norm_matrices = matrices.copy()
-    norm_matrices[norm_matrices==0] = np.nan
     for s in range(matrices.shape[-1]):
         if norm_type == 'scaling':
+            norm_matrices[norm_matrices==0] = np.nan
             norm_matrices[:,:,s] = norm_scaling(matrices[:,:,s])
         elif norm_type == 'fisher':
+            norm_matrices[norm_matrices == 0] = np.nan
             norm_matrices[:,:,s] = fisher_transformation(matrices[:,:,s])
         elif norm_type == 'z-score':
+            norm_matrices[norm_matrices == 0] = np.nan
             norm_matrices[:,:,s] = z_score(matrices[:,:,s])
+        elif norm_type == 'rating':
+            norm_matrices[:,:,s] = rating(matrices[:,:,s])
 
     return norm_matrices
 
@@ -33,4 +37,9 @@ def fisher_transformation(matrix):
 
 def z_score(matrix):
     matrix = (matrix - np.nanmean(matrix)) / np.nanstd(matrix)
+    return matrix
+
+def rating(matrix):
+    from scipy.stats import rankdata
+    matrix = rankdata(matrix, method='dense').reshape(matrix.shape)-1
     return matrix

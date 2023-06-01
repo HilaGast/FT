@@ -32,6 +32,7 @@ for subj_fol in all_subj_fol:
         # plt.title(subj)
         # plt.show()
     medians[subj] = np.nanmedian(mat[mat>0])
+
 plt.hist(control_group_vals, bins=50, histtype='step', color='blue',linewidth=2, density=True, range=(0,500))
 plt.hist(ms_group_vals, bins=50, histtype='step', color='red',linewidth=2, density = True, range=(0,500))
 plt.show()

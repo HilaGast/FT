@@ -62,11 +62,27 @@ def clean(sub_dir):
     for fold in scans:
         shutil.rmtree(fold)
 
+def out_from_axsi_folder(sub):
+    if os.path.exists(f'{sub}{os.sep}AxSI'):
+        for file in glob(f'{sub}{os.sep}AxSI{os.sep}*'):
+            shutil.move(file, sub)
+        shutil.rmtree(f'{sub}{os.sep}AxSI')
+
+
+def move_streamlines_into_fol(sub):
+    dir_name = f'{sub}{os.sep}streamlines'
+    if not os.path.exists(dir_name):
+        os.mkdir(dir_name)
+    for file in os.listdir(sub):
+        if '.tck' in file or '.trk' in file:
+            shutil.move(os.path.join(sub,file), dir_name)
 
 
 if __name__ == '__main__':
 
-    for sub in glob(r'F:\Hila\TDI\moreTheBase4Ever\*'):
-        dicom2nii(sub)
-        clean(sub)
-        rename(sub)
+    for sub in glob(r'F:\Hila\TDI\TheBase4Ever\*')[::]:
+        #dicom2nii(sub)
+        #clean(sub)
+        #rename(sub)
+        out_from_axsi_folder(sub)
+        move_streamlines_into_fol(sub)

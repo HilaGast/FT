@@ -8,7 +8,7 @@ def average_time_mat(group_subj, group_name, main_fol, mat_type, atlas_type):
 
 if __name__ == '__main__':
     main_fol = 'F:\Hila\TDI\siemens'
-    exp = 'D31d18'
+    exp = 'D60d11'
     atlas_type = 'bnacor'
     mat_type = 'time_th3'
     ms_subj_fol = glob.glob(f'{main_fol}{os.sep}T*{os.sep}{exp}')
@@ -19,10 +19,10 @@ if __name__ == '__main__':
     a = np.load(rf'F:\Hila\TDI\siemens\median_{mat_type}_{atlas_type}_{exp}_h.npy')
     b = np.load(rf'F:\Hila\TDI\siemens\median_{mat_type}_{atlas_type}_{exp}_ms.npy')
 
-    plt.hist(a[a > 0], bins=50, color='blue', alpha=0.2, range=(0, 500), density=True)
-    plt.hist(b[b > 0], bins=50, color='red', alpha=0.2, range=(0, 500), density=True)
-    plt.hist(a[a > 0], bins=50, histtype='step', color='blue', linewidth=2, range=(0, 500), density=True)
-    plt.hist(b[b > 0], bins=50, histtype='step', color='red', linewidth=2, range=(0, 500), density=True)
+    plt.hist(a[a > 0], bins=50, color='blue', alpha=0.2, range=(0, 500))
+    plt.hist(b[b > 0], bins=50, color='red', alpha=0.2, range=(0, 500))
+    plt.hist(a[a > 0], bins=50, histtype='step', color='blue', linewidth=2, range=(0, 500))
+    plt.hist(b[b > 0], bins=50, histtype='step', color='red', linewidth=2, range=(0, 500))
     plt.legend(['Healthy', 'MS'])
     plt.show()
 

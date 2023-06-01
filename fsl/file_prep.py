@@ -36,8 +36,12 @@ def basic_files(cortex_only=True,atlas_type='mega',folder_name=r'C:\Users\Admin\
         atlas_template = r'G:\data\atlases\BNA\MNI152_T1_1mm.nii'
 
     elif atlas_type == 'bna_cor':
-        atlas_label = r'F:\data\atlases\BNA\newBNA_Labels.nii'
+        atlas_label = r'G:\data\atlases\BNA\newBNA_Labels.nii'
         atlas_template = r'G:\data\atlases\BNA\MNI152_T1_1mm.nii'
+
+    elif atlas_type == 'yeo7_100':
+        atlas_label = r'G:\data\atlases\yeo\yeo7_100\yeo7_100_atlas.nii'
+        atlas_template = r'G:\data\atlases\yeo\yeo7_100\Schaefer_template.nii'
 
 
     atlas_label = os_path_2_fsl(atlas_label)
@@ -262,9 +266,9 @@ def all_func_to_run(s, folder_name, atlas_template, atlas_label, fast = True, at
 
 if __name__ == '__main__':
     from multiprocessing import Process
-    subj, folder_name, atlas_template, atlas_label = basic_files(False, atlas_type='yeo7_200',folder_name = 'F:\Hila\TDI\moreTheBase4Ever')
+    #subj, folder_name, atlas_template, atlas_label = basic_files(False, atlas_type='yeo7_200',folder_name = 'F:\Hila\TDI\moreTheBase4Ever')
 
 
-    subj, folder_name, atlas_template, atlas_label = basic_files(False, atlas_type='bna_cor', folder_name = 'F:\Hila\TDI\moreTheBase4Ever')
-    for s in subj[4::]:
+    subj, folder_name, atlas_template, atlas_label = basic_files(False, atlas_type='yeo7_100', folder_name = 'F:\Hila\TDI\LeftOutAgeAnalysis')
+    for s in subj:
         all_func_to_run(s, folder_name, atlas_template, atlas_label, fast=False, atlas_registration_only=True)

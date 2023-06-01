@@ -21,9 +21,9 @@ def weight_streamlines(streamlines, folder_name, weight_by='3_2_AxPasi7'):
 
 def weight_streamlines_by_cm(streamlines, affine, labels, cm, cm_lookup):
     from dipy.tracking import utils
-
-    cm = cm[cm_lookup,:]
-    cm = cm[:,cm_lookup]
+    idx = np.argsort(cm_lookup)
+    cm = cm[idx,:]
+    cm = cm[:,idx]
 
     m, grouping = utils.connectivity_matrix(streamlines, affine, labels, return_mapping=True, mapping_as_streamlines=True)
     s_list = []
