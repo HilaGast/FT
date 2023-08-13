@@ -1,2 +1,2 @@
 # FT
-All code relevant to Fiber Tracking, including preprocessing, and network analysis 
+All code relevant to Fiber Tracking, Preprocessing, and network analysis 
