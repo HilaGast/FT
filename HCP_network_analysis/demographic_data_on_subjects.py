@@ -33,9 +33,13 @@ def age_info(table1, short_list):
     print(f"Age range: {min(ages)}-{max(ages)}, Mean: {np.mean(ages)}")
 
 if __name__ == "__main__":
-    subj_list = glob.glob(f'G:\data\V7\HCP\*{os.sep}')
+    subj_list = glob.glob(f'G:\data\V7\HCP\*[0-9]{os.sep}')
+    relevant_subj=[]
+    for subj in subj_list:
+        if os.path.exists(subj+'cm'+os.sep+'yeo7_100_fmri_Org_SC_cm_ord.npy') and os.path.exists(subj+'cm'+os.sep+'yeo7_100_time_th3_Org_SC_cm_ord.npy'):
+            relevant_subj.append(subj)
     table1 = pd.read_csv('G:\data\V7\HCP\HCP_demographic_data.csv')
-    short_list = count_subjects(subj_list)
+    short_list = count_subjects(relevant_subj)
     count_females(table1, short_list)
     age_info(table1, short_list)
 

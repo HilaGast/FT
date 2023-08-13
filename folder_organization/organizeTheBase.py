@@ -25,7 +25,16 @@ def copy_files(subj_list):
                 if sign:
                     shutil.copytree(scan, os.path.join(r'C:\Users\Admin\Desktop\v7_calibration\thebase4ever',scan.split(os.sep)[-2], scan_name))
 
-
+def copy_more_tracts_file(subj_list, dest_dir):
+    for sub in subj_list:
+        sub_name = sub.split(os.sep)[-1]
+        dest_name = os.path.join(dest_dir, sub_name,'streamlines')
+        if not os.path.exists(dest_name):
+            os.mkdir(dest_name)
+        for tract_file in glob(os.path.join(sub, '*.tck')):
+            tract_name = tract_file.split(os.sep)[-1]
+            if not os.path.exists(os.path.join(dest_name, tract_name)):
+                shutil.copy(tract_file, dest_name)
 
 def dicom2nii(sub_dir):
     scans = glob(os.path.join(sub_dir, '*/'))
@@ -74,15 +83,21 @@ def move_streamlines_into_fol(sub):
     if not os.path.exists(dir_name):
         os.mkdir(dir_name)
     for file in os.listdir(sub):
-        if '.tck' in file or '.trk' in file:
+        if '.tck' in file or '.trk' in file and not os.path.exists(os.path.join(dir_name, file)):
             shutil.move(os.path.join(sub,file), dir_name)
+        elif '.tck' in file or '.trk' in file and os.path.exists(os.path.join(dir_name, file)):
+            os.remove(os.path.join(sub,file))
+
 
 
 if __name__ == '__main__':
 
-    for sub in glob(r'F:\Hila\TDI\TheBase4Ever\*')[::]:
-        #dicom2nii(sub)
-        #clean(sub)
-        #rename(sub)
-        out_from_axsi_folder(sub)
-        move_streamlines_into_fol(sub)
+    subj_list = glob(r'Y:\qnap_hcp\TheBase4Ever4Hila\*[0-9]')
+    dest_fold = r'F:\Hila\TDI\TheBase4Ever'
+    copy_more_tracts_file(subj_list, dest_fold)
+    # for sub in glob(r'F:\Hila\TDI\TheBase4Ever\*')[::]:
+    #     #dicom2nii(sub)
+    #     #clean(sub)
+    #     #rename(sub)
+    #     out_from_axsi_folder(sub)
+    #     move_streamlines_into_fol(sub)

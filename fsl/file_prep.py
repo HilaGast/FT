@@ -269,6 +269,6 @@ if __name__ == '__main__':
     #subj, folder_name, atlas_template, atlas_label = basic_files(False, atlas_type='yeo7_200',folder_name = 'F:\Hila\TDI\moreTheBase4Ever')
 
 
-    subj, folder_name, atlas_template, atlas_label = basic_files(False, atlas_type='yeo7_100', folder_name = 'F:\Hila\TDI\LeftOutAgeAnalysis')
+    subj, folder_name, atlas_template, atlas_label = basic_files(False, atlas_type='yeo7_100', folder_name = 'F:\Hila\TDI\TheBase4Ever')
     for s in subj:
         all_func_to_run(s, folder_name, atlas_template, atlas_label, fast=False, atlas_registration_only=True)

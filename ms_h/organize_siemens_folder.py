@@ -7,7 +7,7 @@ from fsl.file_prep import os_path_2_fsl
 
 def copy_files(subj):
     s = glob.glob(f'{subj}{os.sep}*{os.sep}')[0]
-    folders = ['.*d11.3D60$', '.*d13.2D45$', '.*_MPRAGE.*']
+    folders = ['.*d11.3D60$', '.*d13.2D45$','.*d18D31$', '.*_MPRAGE.*']
     scans = glob.glob(f'{s}*')
     for scan in scans:
         scan_name = scan.split(os.sep)[-1]
@@ -52,8 +52,8 @@ def rename(subj):
                 os.rename(scan, os.path.join(scan_parts[0], 'diff_corrected_D31d18.bvec'))
             elif '.nii' in scan_parts[-1]:
                 os.rename(scan, os.path.join(scan_parts[0], 'diff_corrected_D31d18.nii'))
-        #elif 'MPRAGE' in scan_parts[-1]:
-            #os.rename(scan, os.path.join(scan_parts[0], 'MPRAGE.nii'))
+        elif 'MPRAGE' in scan_parts[-1]:
+            os.rename(scan, os.path.join(scan_parts[0], 'MPRAGE.nii'))
 
 
 def clean(subj):
@@ -63,21 +63,15 @@ def clean(subj):
 
 
 if __name__ == '__main__':
-    main_folder = r'C:\Users\HilaG\Desktop\MS_Healthy_subjects\siemens'
+    main_folder = r'F:\Hila\TDI\siemens\more'
     all_subj = glob.glob(f'{main_folder}{os.sep}*')
     #all_subj = [all_subj[38],all_subj[45],all_subj[48],all_subj[52],all_subj[54],all_subj[55]]
-    for subj in all_subj:
+    for subj in all_subj[2:]:
         #copy_files(subj)
         dicom2nii(subj)
         clean(subj)
         rename(subj)
-        for file in glob.glob(f'{subj}{os.sep}diff_corrected_D31d18.nii'):
-            file_name = file[:-4]
-            file_name = os_path_2_fsl(file_name)
-            file_name = file_name.replace(os.sep, '/')
-            bet_4_file(file_name)
-
-        # for file in glob.glob(f'{subj}{os.sep}diff_corrected_D45d13.nii'):
+        # for file in glob.glob(f'{subj}{os.sep}diff_corrected_D31d18.nii'):
         #     file_name = file[:-4]
         #     file_name = os_path_2_fsl(file_name)
         #     file_name = file_name.replace(os.sep, '/')

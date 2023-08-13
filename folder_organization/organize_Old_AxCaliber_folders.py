@@ -34,7 +34,8 @@ def rename_folder_files(main_path):
         for scan in glob(sub+'\*'):
             scan_name_parts = scan.split(os.sep)
 
-            if 'CHARMED' not in scan and 'TRACEW' not in scan and '_TE1' not in scan and 'AxCaliber' in scan_name_parts[-1]:
+
+            if 'CHARMED' not in scan and 'TRACEW' not in scan and '_TE95' in scan and 'AxCaliber' in scan_name_parts[-1]:
                 if 'd11' in scan or 'd13' in scan or 'd18' in scan:
                     if scan_name_parts[-1].startswith('d'):
                         continue
@@ -78,7 +79,7 @@ def bet_4_file(file_name):
 
 if __name__ == '__main__':
 
-    main_path = r'F:\Hila\Ax3D_Pack\V6\v7calibration\Old_AxCaliber\MS'
+    main_path = r'F:\Hila\TDI\siemens\more'
     rename_folder_files(main_path)
     for sub in glob(f'{main_path}\*'):
         for subj_fol in glob(sub+'\*'):
