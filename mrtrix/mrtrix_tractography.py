@@ -13,7 +13,7 @@ def create_tissue_map(mprage_brain, fivett):
 
 def fiber_tracking(base, data, fivett_reg2diff, response_wm, response_gm, response_csf, brain_mask, bvals, bvecs, response, fod, algorithm, ntracts, pixdim, minlength, tracts, fod_wm, sifted_tracts, final_ntracts):
 
-    # step 7: the actual atractography
+    # step 7: the actual tractography
     '''you'll need: data (either the original one from the eddy, the one with only b-1000 or the one that went through resizing. depending on what you need), brain_mask, bvals & bvecs, brain_mask.
 
     you'll get: response functions for each tissue. fod, wither for each tissue or for WM, depending on the data'''
@@ -33,10 +33,11 @@ def fiber_tracking(base, data, fivett_reg2diff, response_wm, response_gm, respon
 
 
 if __name__ == '__main__':
-    main_fol = r'F:\Hila\TDI\TheBase4Ever'
-    all_subj_fol = glob.glob(f'{main_fol}{os.sep}[0-9]*{os.sep}')
+    main_fol = r'F:\Hila\TDI\siemens'
+    exp = 'D45d13'
+    all_subj_fol = glob.glob(f'{main_fol}{os.sep}[C,T]*{os.sep}{exp}{os.sep}')
     for subj in all_subj_fol:
-        if os.path.exists(subj + f'streamlines{os.sep}wb_msmt_act_mrtrix.tck'):
+        if os.path.exists(subj + f'streamlines{os.sep}wb_ssmt_act_mrtrix.tck'):
            continue
         subj = os_path_2_fsl(subj)
         mprage_brain = subj + 'rMPRAGE_brain.nii'

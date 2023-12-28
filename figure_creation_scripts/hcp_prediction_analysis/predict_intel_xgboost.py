@@ -17,10 +17,10 @@ nw = len(weights)
 
 model_params = {}
 model_params['test_size'] = 0.2
-model_params['alpha'] = 0  # 0.5 Lasso regularization alpha
+model_params['alpha'] = 0.5  # 0.5 Lasso regularization alpha
 model_params['eta'] = 0.05
-model_params['n_estimators'] = 300
-figs_folder = r'G:\data\V7\HCP\pca analysis results\Figs\xgboost - without regularization\subnetworks_pca20'
+model_params['n_estimators'] = 200
+figs_folder = r'G:\data\V7\HCP\pca analysis results\Figs\trash'
 
 explained_var_table = pd.DataFrame(index = weights, columns = networks)
 trait_name= traits[0]
@@ -60,7 +60,7 @@ for trait_name in traits:
             networks_pca_dict[weight_by], n_components_per_network_dict[weight_by], explained_var_table, \
                 all_var_table_dict[weight_by] = pca_for_each_network_different_number_of_components(networks_matrices,
                                                                                                     network_mask_vecs,
-                                                                                                    explained_variance_th=0.2,
+                                                                                                    explained_variance_th=0.3,
                                                                                                     explained_var_table=explained_var_table,
                                                                                                     weight_by=weight_by,
                                                                                                     all_var_table=
@@ -75,10 +75,10 @@ for trait_name in traits:
         print(f'R2: {model_results_dict["R2"][trait_name][weight_by]}')
         print(f'RMSE: {model_results_dict["RMSE"][trait_name][weight_by]}')
         print('******************************')
-
-        if show_graphs:
-            from_model_2_bar_fi(model, network_list, all_var_table_dict[weight_by], n_components_per_network_dict[weight_by], trait_name, weight_by, ncm, atlas, figs_folder)
-
+        #
+        # if show_graphs:
+        #     from_model_2_bar_fi(model, network_list, all_var_table_dict[weight_by], n_components_per_network_dict[weight_by], trait_name, weight_by, ncm, atlas, figs_folder)
+        #
 
 
 

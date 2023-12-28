@@ -65,7 +65,7 @@ def bet_4_file(file_name):
 
     out_brain = file_name+'_brain'
     out_mask = out_brain+'_mask'
-    cmd = fr'bash -lc "bet {file_name} {out_brain} -f 0.40 -g 0 -n -m"'
+    cmd = fr'bash -lc "bet {file_name} {out_brain} -f 0.5 -g -0.1 -m"'
     os.system(cmd)
 
     first_vol_mask = os.path.split(file_name)[0]+'hifi_nodif_brain_mask'

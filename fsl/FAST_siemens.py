@@ -1,7 +1,7 @@
 from fsl.file_prep import fast_seg,os_path_2_fsl, create_inv_mat, reg_from_mprage_2_chm_inv
 import glob, os
 
-main_fol = 'F:\Hila\siemens'
+main_fol = 'F:\Hila\siemens\more'
 all_subj_fol = glob.glob(f'{main_fol}{os.sep}*{os.sep}')
 
 experiments = ['D31d18','D45d13','D60d11']

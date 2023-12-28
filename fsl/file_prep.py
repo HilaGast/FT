@@ -93,10 +93,13 @@ def bet_4_regis_mprage(subj_folder,mprage_file_name,diff_file_name):
     return subj_mprage, out_brain
 
 
-def reg_from_chm_2_mprage(subj_folder,subj_mprage):
-    subj_first_charmed = subj_folder + '/diff_corrected_1st.nii'
-    out_registered = subj_folder + '/rdiff_corrected_1st.nii'
-    out_registered_mat = out_registered[:-4] +'.mat'
+def reg_from_chm_2_mprage(subj_folder,subj_mprage,subj_first_charmed = None, out_registered = None, out_registered_mat = None):
+    if subj_first_charmed == None:
+        subj_first_charmed = subj_folder + '/diff_corrected_1st.nii'
+    if out_registered == None:
+        out_registered = subj_folder + '/rdiff_corrected_1st.nii'
+    if out_registered_mat == None:
+        out_registered_mat = out_registered[:-4] +'.mat'
     options = '-bins 256 -cost normmi -searchrx -90 90 -searchry -90 90 -searchrz -90 90 -dof 12'
 
     cmd = 'bash -lc "flirt -ref {0} -in {1} -out {2} -omat {3} {4}"'.format(subj_mprage, subj_first_charmed, out_registered, out_registered_mat, options)
@@ -108,7 +111,7 @@ def reg_from_chm_2_mprage(subj_folder,subj_mprage):
 
 def create_inv_mat(out_registered_mat):
     inv_mat = out_registered_mat[:-4] + '_inv.mat'
-    cmd = 'bash -lc "convert_xfm -omat {0} -inverse {1}"'.format(inv_mat, out_registered_mat)
+    cmd = f'bash -lc "convert_xfm -omat {inv_mat} -inverse {out_registered_mat}"'
     cmd = cmd.replace(os.sep,'/')
     os.system(cmd)
 
@@ -141,7 +144,7 @@ def flirt_primary_guess(subj_folder,atlas_template, out_registered):
     options = r'-bins 256 -cost corratio -searchrx -90 90 -searchry -90 90 -searchrz -90 90 -dof 12 -interp trilinear'
     atlas_brain = atlas_template[:-4] + '_brain.nii'
 
-    atlas_registered_flirt = os.path.join(subj_folder+ 'r' + atlas_brain.split(sep="\\")[-1])
+    atlas_registered_flirt = os.path.join(subj_folder, 'r' + atlas_brain.split(sep="/")[-1])
     atlas_registered_flirt_mat = atlas_registered_flirt[:-4] + '.mat'
 
     cmd = f'bash -lc "flirt -ref {out_registered} -in {atlas_brain} -out {atlas_registered_flirt} -omat {atlas_registered_flirt_mat} {options}"'
@@ -164,7 +167,7 @@ def fnirt_from_atlas_2_subj(subj_folder,out_registered, atlas_brain, atlas_regis
 
 
 def apply_fnirt_warp_on_template(subj_folder, atlas_brain, out_registered, warp_name):
-    atlas_registered = os.path.join(subj_folder+ 'rr' + atlas_brain.split(sep="\\")[-1])
+    atlas_registered = os.path.join(subj_folder, 'rr' + atlas_brain.split(sep="/")[-1])
     cmd = f'bash -lc "applywarp --ref={out_registered} --in={atlas_brain} --out={atlas_registered} --warp={warp_name} --interp=nn"'
     cmd = cmd.replace(os.sep,'/')
     os.system(cmd)
@@ -173,7 +176,7 @@ def apply_fnirt_warp_on_template(subj_folder, atlas_brain, out_registered, warp_
 
 
 def apply_fnirt_warp_on_label(subj_folder, atlas_label, out_registered, warp_name):
-    atlas_labels_registered = os.path.join(subj_folder+ 'r' + atlas_label.split(sep="\\")[-1])
+    atlas_labels_registered = os.path.join(subj_folder, 'r' + atlas_label.split(sep="/")[-1])
     cmd = 'bash -lc "applywarp --ref={0} --in={1} --out={2} --warp={3} --interp={4}"'.format(out_registered, atlas_label, atlas_labels_registered, warp_name, 'nn')
     cmd = cmd.replace(os.sep,'/')
     os.system(cmd)
@@ -206,6 +209,7 @@ def os_path_2_fsl(path):
         path = path.replace('G:', '/mnt/g')
     elif 'Y:' in path:
         path = path.replace('Y:', '/mnt/y')
+    path = path.replace(os.sep,'/')
     return path
 
 
@@ -269,6 +273,6 @@ if __name__ == '__main__':
     #subj, folder_name, atlas_template, atlas_label = basic_files(False, atlas_type='yeo7_200',folder_name = 'F:\Hila\TDI\moreTheBase4Ever')
 
 
-    subj, folder_name, atlas_template, atlas_label = basic_files(False, atlas_type='yeo7_100', folder_name = 'F:\Hila\TDI\TheBase4Ever')
-    for s in subj:
-        all_func_to_run(s, folder_name, atlas_template, atlas_label, fast=False, atlas_registration_only=True)
+    subj, folder_name, atlas_template, atlas_label = basic_files(False, atlas_type='yeo7_100', folder_name = 'F:\Hila\TDI\moreTheBase4Ever')
+    for s in subj[13:]:
+        all_func_to_run(s, folder_name, atlas_template, atlas_label, fast=True, atlas_registration_only=False)

@@ -12,7 +12,7 @@ def find_neighbours(graph, node, path_list):
 def choose_neighbour_weighted_by_edge_weight(graph, node, neighbours):
     '''Choose a neighbour of a node in a graph, weighted by the edge weight'''
     weights = [graph[node][neighbour]['weight'] for neighbour in neighbours]
-    weights = np.array(weights)
+    #weights = np.log(np.array(weights))
     weights = weights / np.nanmax(weights)
     chosen_neighbour = random.choices(neighbours, weights=weights)
 

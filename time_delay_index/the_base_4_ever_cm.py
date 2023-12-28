@@ -39,7 +39,7 @@ if __name__ == '__main__':
     all_subj_fol = glob.glob(f'{main_fol}{os.sep}*[0-9]{os.sep}')
     all_atlas = ['yeo7_100', 'yeo7_200','bnacor']
     for atlas in all_atlas:
-        create_num_add_dist_cm(all_subj_fol, atlas,tract_file_name='tracts_short.tck',cm_name_extras='_shortth')
+        create_num_add_dist_cm(all_subj_fol, atlas,tract_file_name='tracts.tck',cm_name_extras='')
 
 
 

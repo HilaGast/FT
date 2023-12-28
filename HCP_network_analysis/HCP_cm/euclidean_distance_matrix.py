@@ -7,12 +7,16 @@ import numpy as np
 def find_labels_file(cm_name_path):
 
     path_parts = cm_name_path.split(os.sep)
-    atlas_name = path_parts[-1].split('_')[0]
+    atlas_name = path_parts[-1]
 
-    if 'bna' in atlas_name:
+    if 'bna_' in atlas_name:
         labels_file = 'rBN_Atlas_274_combined_1mm.nii'
-    elif 'yeo7' in atlas_name:
+    elif 'yeo7_200' in atlas_name:
         labels_file = 'ryeo7_200_atlas.nii'
+    elif 'yeo7_100' in atlas_name:
+        labels_file = 'ryeo7_100_atlas.nii'
+    elif 'bnacor' in atlas_name:
+        labels_file = 'rnewBNA_Labels.nii'
 
     else:
         print('could not find labels file')

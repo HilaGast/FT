@@ -21,7 +21,7 @@ model_params['test_size'] = 0.2
 model_params['alpha'] = 1  # 0.5 Lasso regularization alpha
 model_params['eta'] = 0.05
 model_params['n_estimators'] = 200
-figs_folder = r'G:\data\V7\HCP\pca analysis results\Figs\xgboost_results_WB - PCA30'
+figs_folder = r'G:\data\V7\HCP\pca analysis results\Figs\trash'
 
 explained_var_table = pd.DataFrame(index = weights, columns = ['wb'])
 trait_name= traits[0]
@@ -60,7 +60,7 @@ for trait_name in traits:
             networks_pca_dict[weight_by], n_components_per_network_dict[weight_by], explained_var_table, \
                 all_var_table_dict[weight_by] = pca_for_each_network_different_number_of_components(networks_matrices,
                                                                                                     network_mask_vecs,
-                                                                                                    explained_variance_th=0.3,
+                                                                                                    explained_variance_th=0.4,
                                                                                                     explained_var_table=explained_var_table,
                                                                                                     weight_by=weight_by,
                                                                                                     all_var_table=

@@ -1,11 +1,29 @@
 import os
 import nibabel as nib
+from dipy.tracking.streamline import transform_streamlines
+from dipy.tracking.streamlinespeed import set_number_of_points
+from dipy.viz import window, actor
+from fury.colormap import create_colormap
+import numpy as np
+
+from Tractography.connectivity_matrices import ConMat
 
 
-def show_tracts_simple(s_list, folder_name, fig_type, time2present=1, down_samp=1, vec_vols=None,hue=[0.25, -0.05],saturation=[0.1,1],scale=[3, 6], weighted=False, colormap=None, min=0, max=1):
-    from dipy.viz import window, actor
-    from fury.colormap import create_colormap
-    import numpy as np
+def show_tracts_simple(
+    s_list,
+    folder_name,
+    fig_type,
+    time2present=1,
+    down_samp=1,
+    vec_vols=None,
+    hue=[0.25, -0.05],
+    saturation=[0.1, 1],
+    scale=[3, 6],
+    weighted=False,
+    colormap=None,
+    min=0,
+    max=1,
+):
     if weighted:
         if down_samp != 1:
             vec_vols = vec_vols[::down_samp]
@@ -14,52 +32,97 @@ def show_tracts_simple(s_list, folder_name, fig_type, time2present=1, down_samp=
         if colormap:
             vec_vols.append(max)
             vec_vols.append(min)
-            cmap = create_colormap(np.asarray(vec_vols), name='seismic')
+            cmap = create_colormap(np.asarray(vec_vols), name="seismic")
             vec_vols = vec_vols[:-2]
             cmap = cmap[:-2]
             streamlines_actor = actor.line(s_list, cmap, linewidth=2)
 
         else:
-            cmap = actor.colormap_lookup_table(hue_range=hue, saturation_range=saturation, scale_range=scale)
-            streamlines_actor = actor.line(s_list, vec_vols, linewidth=2, lookup_colormap=cmap)
+            cmap = actor.colormap_lookup_table(
+                hue_range=hue, saturation_range=saturation, scale_range=scale
+            )
+            streamlines_actor = actor.line(
+                s_list, vec_vols, linewidth=2, lookup_colormap=cmap
+            )
             bar = actor.scalar_bar(cmap)
             r.add(bar)
         r.add(streamlines_actor)
         for i in range(time2present):
-            weighted_img = f'{folder_name}{os.sep}streamlines{os.sep}{fig_type}_{str(i+1)}.png'
+            weighted_img = (
+                f"{folder_name}{os.sep}streamlines{os.sep}{fig_type}_{str(i+1)}.png"
+            )
             window.show(r)
             r.set_camera(r.camera_info())
             window.record(r, out_path=weighted_img, size=(800, 800))
     else:
         if down_samp != 1:
             s_list = s_list[::down_samp]
-        lut_cmap = actor.colormap_lookup_table(hue_range=hue, saturation_range=saturation, scale_range=scale)
+        lut_cmap = actor.colormap_lookup_table(
+            hue_range=hue, saturation_range=saturation, scale_range=scale
+        )
         streamlines_actor = actor.line(s_list, linewidth=2, lookup_colormap=lut_cmap)
         r = window.Scene()
         r.add(streamlines_actor)
         for i in range(time2present):
-            non_weighted_img = f'{folder_name}{os.sep}streamlines{os.sep}non_weighted_{fig_type}_{str(i+1)}.png'
+            non_weighted_img = f"{folder_name}{os.sep}streamlines{os.sep}non_weighted_{fig_type}_{str(i+1)}.png"
             window.show(r)
             r.set_camera(r.camera_info())
             window.record(r, out_path=non_weighted_img, size=(800, 800))
 
 
-def show_tracts_by_mask(folder_name, mask_file_name, s_list, affine,fig_type=None, downsamp=1):
+def show_tracts_by_mask(
+    folder_name, mask_file_name, s_list, affine, fig_type=None, downsamp=1
+):
     from dipy.tracking import utils
     from Tractography.files_saving import save_ft
     from dipy.tracking.streamline import Streamlines
 
-
-    mask_file = os.path.join(folder_name, mask_file_name+'.nii')
+    mask_file = os.path.join(folder_name, mask_file_name + ".nii")
     mask_img = nib.load(mask_file).get_fdata()
     mask_include = mask_img > 0
     masked_streamlines = utils.target(s_list, affine, mask_include)
     masked_streamlines = Streamlines(masked_streamlines)
 
-    save_ft(folder_name, masked_streamlines, mask_file, file_name = f"{mask_file_name}.trk")
+    save_ft(
+        folder_name, masked_streamlines, mask_file, file_name=f"{mask_file_name}.trk"
+    )
     if not fig_type:
         fig_type = mask_file_name
     show_tracts_simple(masked_streamlines, folder_name, fig_type)
 
 
+def show_average_tract_by_atlas_cm(subj_folder, atlas_type, streamlines):
+    diffusion_data = os.path.join(subj_folder, "diff_corrected.nii")
+    for atlas in atlas_type:
+        cm = ConMat(
+            atlas=atlas,
+            diff_file=diffusion_data,
+            subj_folder=subj_folder,
+            tract_name="wb_csd_fa.tck",
+            streamlines=streamlines,
+        )
 
+        avg_tracts = []
+        for pair, tracts in cm.grouping.items():
+            if pair[0] == 0 or pair[1] == 0:
+                continue
+            else:
+                start_node_indices = np.asarray(
+                    np.where(cm.lab_labels_index == pair[0])
+                ).T
+                # end_node_indices = np.asarray(np.where(cm.lab_labels_index == pair[1])).T
+                tracts = transform_streamlines(tracts, np.linalg.inv(cm.affine))
+
+                for i, t in enumerate(tracts):
+                    if list(np.round(t[0])) not in start_node_indices.tolist():
+                        tracts[i] = np.flip(t, axis=0)
+
+                resamp_tracts = set_number_of_points(tracts, 15)
+                resamp_tracts = np.asarray(resamp_tracts)
+                avg_tract = np.mean(resamp_tracts, axis=0)
+                avg_tracts.append(avg_tract)
+
+        r = window.Scene()
+        avg_tracts_actor = actor.line(avg_tracts)
+        r.add(avg_tracts_actor)
+        window.show(r)

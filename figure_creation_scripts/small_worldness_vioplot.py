@@ -28,4 +28,16 @@ for sl in subj_list:
 
 table = pd.DataFrame({'Num':num_swi, 'FA':fa_swi, 'ADD':add_swi})
 pd.DataFrame.to_excel(table, 'G:\data\V7\HCP\swp_table.xlsx')
-create_cc_vioplot(table)
+
+
+import seaborn as sb
+import matplotlib.pyplot as plt
+
+sb.set_theme(
+    rc={'figure.figsize': (14, 10), 'axes.facecolor': 'white', 'figure.facecolor': 'white', 'text.color': 'black',
+        'xtick.color': 'black', 'ytick.color': 'black', 'axes.grid': False, 'grid.color': 'black',
+        'axes.labelcolor': 'black', 'axes.labelsize': 40, 'axes.labelweight': 'bold', 'legend.fontsize': 32,
+        'legend.title_fontsize': 32, 'xtick.labelsize': 32, 'ytick.labelsize': 38})
+
+ax = sb.violinplot(data=table, bw=0.8, cut=0, showmedians=True,  linewidth=5,palette=[[0.2, 0.7, 0.6],[0.3, 0.3, 0.5],[0.8, 0.5, 0.3]])
+plt.show()

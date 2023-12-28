@@ -4,10 +4,11 @@ from ms_h.present_time_mat_by_hemisphere import divide_mat_to_inter_intra_hemi_m
 
 main_fol = 'F:\Hila\TDI\siemens'
 exp = 'D31d18'
-atlas = 'bnacor'
-mat_type = 'time_th3'
-h_mat_files = glob.glob(f'{main_fol}{os.sep}C*{os.sep}{exp}{os.sep}cm{os.sep}{mat_type}_{atlas}_cm_ord.npy')
-ms_mat_files = glob.glob(f'{main_fol}{os.sep}T*{os.sep}{exp}{os.sep}cm{os.sep}{mat_type}_{atlas}_cm_ord.npy')
+atlas = 'yeo7_100'
+mat_type = 'TDI_EucSym'
+#mat_type = "EucDist"
+h_mat_files = glob.glob(f'{main_fol}{os.sep}{exp}{os.sep}C*{os.sep}cm{os.sep}{mat_type}_{atlas}_cm_ord.npy')
+ms_mat_files = glob.glob(f'{main_fol}{os.sep}{exp}{os.sep}T*{os.sep}cm{os.sep}{mat_type}_{atlas}_cm_ord.npy')
 
 h_wb = []
 h_inter = []
@@ -36,9 +37,9 @@ for ms_mat_file in ms_mat_files:
     mat_inter[mat_inter == 0] = np.nan
     ms_inter.append(np.nanmean(mat_inter))
 
-print(f'WB: H: {np.mean(h_wb)}, MS: {np.mean(ms_wb)}')
-print(f'Intra: H: {np.mean(h_intra)}, MS: {np.mean(ms_intra)}')
-print(f'Inter: H: {np.mean(h_inter)}, MS: {np.mean(ms_inter)}')
+print(f'WB: H: {np.nanmean(h_wb)}, MS: {np.nanmean(ms_wb)}')
+print(f'Intra: H: {np.nanmean(h_intra)}, MS: {np.nanmean(ms_intra)}')
+print(f'Inter: H: {np.nanmean(h_inter)}, MS: {np.nanmean(ms_inter)}')
 
 import seaborn as sb
 import matplotlib.pyplot as plt

@@ -38,10 +38,24 @@ def copy_more_tracts_file(subj_list, dest_dir):
 
 def dicom2nii(sub_dir):
     scans = glob(os.path.join(sub_dir, '*/'))
-    #folders = ['d15D45_AP', 'd15D45_PA', 'MPRAGE']
+    mprage_scans = []
     for scan in scans:
-    #    if folders[0] in scan or folders[1] in scan or folders[2] in scan or folders[3] in scan:
-        cmd = fr'"C:\Program Files\mricron\dcm2nii" -g n -o {sub_dir} {scan}'
+        if 'd15D45_AP' in scan or 'd15D45_PA' in scan:
+            if 'SBRef' not in scan:
+                cmd = fr'"C:\Program Files\mricron\dcm2nii" -g n -o {sub_dir} {scan}'
+                print(cmd)
+                os.system(cmd)
+        if 'MPRAGE' in scan:
+            mprage_scans.append(scan)
+    if len(mprage_scans)>1:
+        nums = []
+        for scan in mprage_scans:
+            nums.append(int(scan.split(os.sep)[-2].split('_')[0]))
+        cmd = fr'"C:\Program Files\mricron\dcm2nii" -g n -o {sub_dir} {mprage_scans[nums.index(max(nums))]}'
+        print(cmd)
+        os.system(cmd)
+    else:
+        cmd = fr'"C:\Program Files\mricron\dcm2nii" -g n -o {sub_dir} {mprage_scans[0]}'
         print(cmd)
         os.system(cmd)
 
@@ -64,6 +78,7 @@ def rename(nifti_dir):
                 os.remove(scan)
         elif 'MPRAGE' in scan_parts[-1]:
             os.rename(scan, os.path.join(scan_parts[0], 'MPRAGE.nii'))
+
 
 
 def clean(sub_dir):
@@ -92,12 +107,12 @@ def move_streamlines_into_fol(sub):
 
 if __name__ == '__main__':
 
-    subj_list = glob(r'Y:\qnap_hcp\TheBase4Ever4Hila\*[0-9]')
-    dest_fold = r'F:\Hila\TDI\TheBase4Ever'
-    copy_more_tracts_file(subj_list, dest_fold)
-    # for sub in glob(r'F:\Hila\TDI\TheBase4Ever\*')[::]:
-    #     #dicom2nii(sub)
-    #     #clean(sub)
-    #     #rename(sub)
-    #     out_from_axsi_folder(sub)
-    #     move_streamlines_into_fol(sub)
+    #subj_list = glob(r'Y:\qnap_hcp\TheBase4Ever4Hila\*[0-9]')
+    #dest_fold = r'F:\Hila\TDI\TheBase4Ever'
+    #copy_more_tracts_file(subj_list, dest_fold)
+    for sub in glob(r'F:\Hila\TDI\moreTheBase4Ever\*')[1:]:
+         dicom2nii(sub)
+         clean(sub)
+         rename(sub)
+         # out_from_axsi_folder(sub)
+         # move_streamlines_into_fol(sub)

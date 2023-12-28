@@ -9,8 +9,7 @@ def save_ft(folder_name, streamlines, nii_file, file_name = "wholebrain.trk"):
         os.mkdir(dir_name)
 
     tract_name = dir_name + os.sep + file_name
-
     if tract_name.endswith('.trk'):
-        save_trk(StatefulTractogram(streamlines,nii_file,Space.RASMM),tract_name)
+        save_trk(StatefulTractogram(streamlines,nii_file,Space.RASMM),tract_name, bbox_valid_check=False)
     elif tract_name.endswith('.tck'):
-        save_tck(StatefulTractogram(streamlines,nii_file,Space.RASMM),tract_name)
+        save_tck(StatefulTractogram(streamlines,nii_file,Space.RASMM),tract_name, bbox_valid_check=False)

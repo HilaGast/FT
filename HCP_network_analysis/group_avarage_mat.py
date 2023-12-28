@@ -11,7 +11,7 @@ def calc_group_average_mat(all_files_name, atlas, type='mean'):
     mutual_mat = np.asarray(mutual_mat)
     mask_mat = mutual_mat > 0
     mask_mat = np.sum(mask_mat, axis=0) / mask_mat.shape[0]
-    mask_mat = mask_mat>=0.2 #choose only edges that appeared in >x% of subjects
+    mask_mat = mask_mat>=0.2 #choose only edges that appeared in >x% of subjects usually 0.2
     mean_mat=np.zeros(mask_mat.shape)
 
     if type == 'mean':
@@ -35,8 +35,8 @@ if __name__ == '__main__':
     subj_list = glob.glob(rf'G:\data\V7\HCP\*[0-9]{os.sep}')
     # weights = ['Num_Org', 'Num_HistMatch', 'FA_Org', 'FA_HistMatch', 'ADD_Org', 'ADD_HistMatch', 'Dist_Org',
     #            'Dist_HistMatch']
-    weights = ['Num', 'Dist', 'FA', 'ADD']
-    th = 'HistMatchNorm'
+    weights = ['ADD', 'FA', 'Num']
+    th = 'HistMatch'
     atlases = ['yeo7_200']#, 'bna']
     ncm_options = ['SC']#, 'SPE']
 
@@ -47,7 +47,7 @@ if __name__ == '__main__':
                 average_mat = calc_group_average_mat(file_names, atlas)
 
                 # np.save(rf'G:\data\V7\HCP\cm\{atlas}_cm_ord_lookup', idx)
-                np.save(rf'G:\data\V7\HCP\cm\average_{atlas}_{w}_{th}_{ncm}.npy', average_mat)
+                np.save(rf'G:\data\V7\HCP\cm\average_{atlas}_{w}_{th}_{ncm}_atleast_half_subjects.npy', average_mat)
 
 
 
