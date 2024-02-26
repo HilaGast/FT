@@ -16,19 +16,28 @@ from fsl.file_prep_siemens import (
     bet_4_regis_mprage,
     reg_mprage_2_diff,
     atlas_registration,
+    bet_4_corrected_diff,
 )
 
 
-def preprocessing(subj_folder, exp, atlas_types):
+def preprocessing(subj_folder, exp, atlas_types, corrected_diffusion_fname):
     diffusion_file, bval_file, bvec_file, mprage_file = subj_files(exp)
-
-    if not os.path.exists(os.path.join(subj_folder, "diff_corrected.nii")):
+    if not os.path.exists(os.path.join(subj_folder, corrected_diffusion_fname)):
         diffusion_correct_siemens(subj_folder, diffusion_file, bval_file, bvec_file)
 
-    if not os.path.exists(os.path.join(subj_folder, "MPRAGE_brain_reg.nii")):
+    if not os.path.exists(os.path.join(subj_folder, "MPRAGE_brain.nii")):
         subj_mprage, out_brain, diffusion_1st = bet_4_regis_mprage(
-            subj_folder, mprage_file, "diff_corrected.nii"
+            subj_folder, mprage_file, corrected_diffusion_fname
         )
+        diffusion_1st = bet_4_corrected_diff(diffusion_1st)
+    else:
+        subj_mprage = os_path_2_fsl(os.path.join(subj_folder, mprage_file))
+        diffusion_1st = os_path_2_fsl(
+            os.path.join(subj_folder, corrected_diffusion_fname[:-7] + "_1st")
+        )
+        out_brain = subj_mprage[:-4] + "_brain"
+
+    if not os.path.exists(os.path.join(subj_folder, "MPRAGE_brain_reg.nii")):
         mprage_registered = reg_mprage_2_diff(
             subj_folder, subj_mprage, diffusion_1st, out_brain
         )
@@ -44,24 +53,25 @@ def preprocessing(subj_folder, exp, atlas_types):
         fast_seg(mprage_registered)
 
 
-def fiber_tracking(subj_folder):
-    diff_data = os.path.join(subj_folder, "diff_corrected.nii")
-    if not os.path.exists(subj_folder + f"{os.sep}streamlines{os.sep}wb_csd_fa.tck"):
+def fiber_tracking(subj_folder, tracts_type, corrected_diffusion_fname):
+    diff_data = os.path.join(subj_folder, corrected_diffusion_fname)
+    if not os.path.exists(
+        subj_folder + f"{os.sep}streamlines{os.sep}{tracts_type}.tck"
+    ):
         tissue_labels_file_name = "MPRAGE_brain_reg_seg.nii"
         pve_file_name = "MPRAGE_brain_reg_pve"
         parameters_dict = fiber_tracking_parameters(
             max_angle=30,
-            sh_order=8,
             seed_density=4,
             streamlines_lengths_mm=[50, 500],
             step_size=1,
-            sh_order=6,
+            sh_order=4,
             fa_th=0.18,
         )
         tracts = Tractography(
             subj_folder,
-            "fa",
             "csd",
+            "fa",
             "wb",
             parameters_dict,
             diff_data,
@@ -71,13 +81,13 @@ def fiber_tracking(subj_folder):
         tracts.fiber_tracking()
         streamlines = tracts.streamlines
     else:
-        tract_name = os.path.join(subj_folder, "streamlines", "wb_csd_fa.tck")
+        tract_name = os.path.join(subj_folder, "streamlines", f"wb_csd_fa.tck")
         streamlines = load_ft(tract_name, diff_data)
 
     return streamlines
 
 
-def weighted_con_mat(subj_folder, atlas_type, streamlines):
+def weighted_con_mat(subj_folder, atlas_type, streamlines, tracts_type):
     diffusion_data = os.path.join(subj_folder, "diff_corrected.nii")
     for atlas in atlas_type:
         if not os.path.exists(f"{subj_folder}{os.sep}cm{os.sep}num_{atlas}_cm_ord.npy"):
@@ -85,7 +95,7 @@ def weighted_con_mat(subj_folder, atlas_type, streamlines):
                 atlas=atlas,
                 diff_file=diffusion_data,
                 subj_folder=subj_folder,
-                tract_name="wb_csd_fa.tck",
+                tract_name=f"{tracts_type}.tck",
                 streamlines=streamlines,
             )
             cm.save_cm(fig_name=f"num_{atlas}", mat_type="cm_ord")
@@ -96,7 +106,7 @@ def weighted_con_mat(subj_folder, atlas_type, streamlines):
                 atlas=atlas,
                 diff_file=diffusion_data,
                 subj_folder=subj_folder,
-                tract_name="wb_csd_fa.tck",
+                tract_name=f"{tracts_type}.tck",
                 streamlines=streamlines,
             )
             cm.save_cm(fig_name=f"add_{atlas}", mat_type="cm_ord")
@@ -109,7 +119,7 @@ def weighted_con_mat(subj_folder, atlas_type, streamlines):
                 atlas=atlas,
                 diff_file=diffusion_data,
                 subj_folder=subj_folder,
-                tract_name="wb_csd_fa.tck",
+                tract_name=f"{tracts_type}.tck",
                 streamlines=streamlines,
             )
             cm.save_cm(fig_name=f"DistMode_{atlas}", mat_type="cm_ord")
@@ -122,7 +132,7 @@ def weighted_con_mat(subj_folder, atlas_type, streamlines):
                 atlas=atlas,
                 diff_file=diffusion_data,
                 subj_folder=subj_folder,
-                tract_name="wb_csd_fa.tck",
+                tract_name=f"{tracts_type}.tck",
                 streamlines=streamlines,
             )
             cm.save_cm(fig_name=f"DistSampAvg_{atlas}", mat_type="cm_ord")
@@ -143,18 +153,23 @@ def time_delay_index_cm():
 
 if __name__ == "__main__":
     main_folder = r"F:\Hila\TDI\siemens"
-    experiments = ["D31d18", "D45d13", "D60d11"]
+    experiments = ["D45d13", "D60d11", "D31d18"]
     atlas_types = ["yeo7_100"]
+    tracts_type = "wb_csd_fa"
+
     for exp in experiments:
         subj_folders = glob.glob(f"{main_folder}{os.sep}{exp}{os.sep}[C,T]*")
         # subj_folders = subj_folders[:5] + subj_folders[42:48]
-        for subj_folder in subj_folders:
+        for subj_folder in subj_folders[:]:
             print(subj_folder)
-            preprocessing(subj_folder, exp, atlas_types)
+            corrected_diffusion_fname = "motion_correction_denoised.nii.gz"
+            preprocessing(subj_folder, exp, atlas_types, corrected_diffusion_fname)
             if not os.path.exists(
                 subj_folder
                 + f"{os.sep}cm{os.sep}DistSampAvg_{atlas_types[-1]}_cm_ord.npy"
             ):
-                streamlines = fiber_tracking(subj_folder)
-                weighted_con_mat(subj_folder, atlas_types, streamlines)
+                streamlines = fiber_tracking(
+                    subj_folder, tracts_type, corrected_diffusion_fname
+                )
+                weighted_con_mat(subj_folder, atlas_types, streamlines, tracts_type)
             # show_average_tract_by_atlas_cm(subj_folder, atlas_types, streamlines)

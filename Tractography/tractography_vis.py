@@ -117,7 +117,7 @@ def show_average_tract_by_atlas_cm(subj_folder, atlas_type, streamlines):
                     if list(np.round(t[0])) not in start_node_indices.tolist():
                         tracts[i] = np.flip(t, axis=0)
 
-                resamp_tracts = set_number_of_points(tracts, 15)
+                resamp_tracts = set_number_of_points(tracts, 20)
                 resamp_tracts = np.asarray(resamp_tracts)
                 avg_tract = np.mean(resamp_tracts, axis=0)
                 avg_tracts.append(avg_tract)

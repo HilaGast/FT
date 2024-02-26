@@ -1,4 +1,4 @@
-import glob, os
+ import glob, os
 from parcellation.add_weighted_gm_mask import GM_mask
 from parcellation.nodes_add_correlation_to_age import subj_2_include
 from parcellation.group_weight import atlas_and_idx, weight_atlas_by_add, save_as_nii

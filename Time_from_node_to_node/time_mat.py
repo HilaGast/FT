@@ -1,6 +1,7 @@
 import numpy as np
-from Time_from_node_to_node.random_walk import *
+from Time_from_node_to_node.random_walk import random_walk
 import glob, os
+import networkx as nx
 
 
 def time_weighted_matrix(add_mat, dist_mat):
@@ -10,6 +11,15 @@ def time_weighted_matrix(add_mat, dist_mat):
 
 
 def th_num_mat(num_mat, th, binarize=False):
+    """keeps only edges with strength above a certain threshold (th) and binarize the matrix if binarize=True.
+    If binarize=False, the matrix is normalized between 0 to 1.
+    Input:
+    num_mat - the connectivity matrix
+    th - the threshold
+    binarize - if True, the matrix is binarized
+    Output:
+    num_mat - the thresholded matrix
+    """
     num_th = np.nanpercentile(num_mat[num_mat > 0], th)
     if binarize:
         num_mat[num_mat < num_th] = 0
@@ -25,6 +35,7 @@ def th_num_mat(num_mat, th, binarize=False):
 def th_num_mat_sparsity(num_mat, dist_mat, sparsity=75, binarize=False):
     """keeps edges of MST (minimum spanning tree) and % of top strength edges (x is define as the sparsity parameter: x=100-sparsity)"""
     # normalize num_mat according to distance:
+    num_mat[num_mat < 50] = 0
     norm_num_mat = num_mat / dist_mat
     norm_num_mat[norm_num_mat == np.inf] = 0
     norm_num_mat[norm_num_mat == -np.inf] = 0
@@ -81,56 +92,57 @@ def n_times_random_walk(
     return node_vec_mean
 
 
-if __name__ == "__main__":
-    main_fol = "F:\Hila\TDI\siemens"
-    experiments = ["D31d18"]
-    atlases = ["bnacor"]
-
-    for atlas in atlases:
-        for exp in experiments:
-            print(f"{atlas} -   {exp}")
-            all_subj_fol = glob.glob(f"{main_fol}{os.sep}{exp}{os.sep}[C,T]*{os.sep}")
-            for subj_fol in all_subj_fol:
-                file_name = rf"{subj_fol}cm{os.sep}TDI_DistModeSym_{atlas}_cm_ord.npy"
-                if os.path.exists(file_name):
-                    continue
-                subj = subj_fol.split(os.sep)[-2]
-                print(subj)
-                try:
-                    num_mat = np.load(f"{subj_fol}cm{os.sep}num_{atlas}_cm_ord.npy")
-                except FileNotFoundError:
-                    print(f"couldn't find num_mat for {subj}")
-                    continue
-                add_mat = np.load(f"{subj_fol}cm{os.sep}add_{atlas}_cm_ord.npy")
-                dist_mat = np.load(f"{subj_fol}cm{os.sep}DistMode_{atlas}_cm_ord.npy")
-                dist_sum = np.nansum(dist_mat)
-                if dist_sum < 100000:
-                    print(f"dist_sum is {dist_sum}, skipping {subj}")
-                    continue
-                time_mat = time_weighted_matrix(
-                    add_mat, dist_mat
-                )  # 1.25 is the voxel dimensions
-
-                num_mat = th_num_mat_sparsity(num_mat, dist_mat, 75, False)
-                time_mat[num_mat == 0] = 0
-
-                graph_num = nx.from_numpy_matrix(num_mat)
-                graph_weights = nx.from_numpy_matrix(time_mat)
-                time_from_node_to_node = np.zeros(num_mat.shape)
-                node_list = list(graph_num.nodes())
-                for start_node in node_list:
-                    node_vec_mean = n_times_random_walk(
-                        graph_num,
-                        graph_weights,
-                        start_node,
-                        node_list,
-                        n=2000,
-                        max_steps=int(0.25 * len(num_mat)),
-                        max_path_weight=3000,
-                    )
-                    time_from_node_to_node[start_node, :] = node_vec_mean
-                # make it symmetric:
-                time_from_node_to_node = (
-                    time_from_node_to_node + time_from_node_to_node.T
-                ) / 2
-                np.save(file_name, time_from_node_to_node)
+# if __name__ == "__main__":
+# main_fol = "F:\Hila\TDI\siemens"
+# experiments = ["D60d11", "D45d13", "D31d18"]
+# atlases = ["yeo7_100"]
+# dist_method = "DistSampAvg"
+# for atlas in atlases:
+#     for exp in experiments:
+#         print(f"{atlas} -   {exp}")
+#         all_subj_fol = glob.glob(f"{main_fol}{os.sep}{exp}{os.sep}[C,T]*{os.sep}")
+#         for subj_fol in all_subj_fol:
+#             file_name = rf"{subj_fol}cm{os.sep}TDI_{dist_method}_{atlas}_cm_ord.npy"
+#             if os.path.exists(file_name):
+#                 continue
+#             subj = subj_fol.split(os.sep)[-2]
+#             print(subj)
+#             try:
+#                 num_mat = np.load(f"{subj_fol}cm{os.sep}num_{atlas}_cm_ord.npy")
+#             except FileNotFoundError:
+#                 print(f"couldn't find num_mat for {subj}")
+#                 continue
+#             add_mat = np.load(f"{subj_fol}cm{os.sep}add_{atlas}_cm_ord.npy")
+#             dist_mat = np.load(
+#                 f"{subj_fol}cm{os.sep}{dist_method}_{atlas}_cm_ord.npy"
+#             )
+#             dist_sum = np.nansum(dist_mat)
+#             if dist_sum < 100000:
+#                 print(f"dist_sum is {dist_sum}, skipping {subj}")
+#                 continue
+#             time_mat = time_weighted_matrix(
+#                 add_mat, dist_mat
+#             )  # 1.25 is the voxel dimensions
+#             num_mat = th_num_mat_sparsity(num_mat, dist_mat, 75, False)
+#             time_mat[num_mat == 0] = 0
+#
+#             graph_num = nx.from_numpy_matrix(num_mat)
+#             graph_weights = nx.from_numpy_matrix(time_mat)
+#             time_from_node_to_node = np.zeros(num_mat.shape)
+#             node_list = list(graph_num.nodes())
+#             for start_node in node_list:
+#                 node_vec_mean = n_times_random_walk(
+#                     graph_num,
+#                     graph_weights,
+#                     start_node,
+#                     node_list,
+#                     n=2000,
+#                     max_steps=int(0.25 * len(num_mat)),
+#                     max_path_weight=3000,
+#                 )
+#                 time_from_node_to_node[start_node, :] = node_vec_mean
+#             # make it symmetric:
+#             time_from_node_to_node = (
+#                 time_from_node_to_node + time_from_node_to_node.T
+#             ) / 2
+#             np.save(file_name, time_from_node_to_node)
